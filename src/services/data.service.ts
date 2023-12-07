@@ -13,6 +13,7 @@ interface AlphaCandle {
   low: string;
   close: string;
   volume: string;
+  adjusted_close?: string;
 }
 
 interface AlphaSearchResult {
@@ -74,14 +75,14 @@ export class DataService {
     } else {
       switch (interval) {
         case 'W':
-          return `https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY&symbol=${symbol}&datatype=csv&apikey=${this.apiKey}`;
+          return `https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY_ADJUSTED&symbol=${symbol}&datatype=csv&apikey=${this.apiKey}`;
         case 'D':
-          return `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&outputsize=full&datatype=csv&apikey=${this.apiKey}`;
+          return `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${symbol}&outputsize=full&datatype=csv&apikey=${this.apiKey}`;
       }
     }
 
     // Montly is fallback
-    return `https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY&symbol=${symbol}&datatype=csv&apikey=${this.apiKey}`;
+    return `https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY_ADJUSTED&symbol=${symbol}&datatype=csv&apikey=${this.apiKey}`;
   }
 
   async search(executeSearchDto: SearchDto): Promise<SearchResultDto[]> {
@@ -134,12 +135,14 @@ export class DataService {
 
   mapAlphaCandles(csvData: AlphaCandle[]): CandleDto[] {
     const candles = csvData.map((c) => {
+      const mult = Number(c.adjusted_close) > 0 ? Number(c.close) / Number(c.adjusted_close) : 1;
+
       return {
         time: new Date(c.timestamp).getTime(),
-        open: Number(c.open),
-        high: Number(c.high),
-        low: Number(c.low),
-        close: Number(c.close),
+        open: Number(c.open) * mult,
+        high: Number(c.high) * mult,
+        low: Number(c.low) * mult,
+        close: Number(c.close) * mult,
         volume: Number(c.volume),
       };
     });
