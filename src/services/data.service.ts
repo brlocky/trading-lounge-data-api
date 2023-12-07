@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { CandleDto, GetCandlesDto, GetCandlesResultDto, SearchResultDto } from 'src/dto';
 import * as fastCsv from 'fast-csv';
 import { Readable } from 'stream';
+import * as moment from 'moment';
 
 interface AlphaCandle {
   timestamp: string;
@@ -14,6 +15,7 @@ interface AlphaCandle {
   close: string;
   volume: string;
   adjusted_close?: string;
+  ['adjusted close']?: string;
 }
 
 interface AlphaSearchResult {
@@ -40,7 +42,7 @@ export class DataService {
   }
 
   async getCandles(getCandlesDto: GetCandlesDto): Promise<GetCandlesResultDto> {
-    const { symbol, interval, from, to } = getCandlesDto;
+    const { symbol, interval } = getCandlesDto;
     const emptyResponse = {
       symbol: symbol,
       interval: interval,
@@ -59,19 +61,40 @@ export class DataService {
 
     const candles = this.mapAlphaCandles(csvData);
 
+    const prevCandle =
+      candles[0] && Number(interval) > 0
+        ? {
+            symbol: symbol,
+            interval: interval,
+            time: candles[0].time,
+          }
+        : null;
+
+    const nextCandle =
+      candles.length > 1 && Number(interval) > 0
+        ? {
+            symbol: symbol,
+            interval: interval,
+            time: candles[candles.length - 1].time,
+          }
+        : null;
+
     return {
       ...emptyResponse,
       candles: candles,
+      prevCandle: prevCandle,
+      nextCandle: nextCandle,
     };
   }
 
   buildCandlesEndpoint(getCandlesDto: GetCandlesDto) {
-    const { symbol, interval, from, to } = getCandlesDto;
+    const { symbol, interval, to } = getCandlesDto;
     const isIntraday = Number(interval) > 0;
 
     if (isIntraday) {
-      // &month=2009-01
-      return `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${symbol}&datatype=csv&interval=${interval}min&outputsize=full&apikey=${this.apiKey}`;
+      const month = to ? moment(new Date(to.time)).subtract(1, 'months').format('YYYY-MM') : null;
+      const extraQ = month ? `&month=${month}` : '';
+      return `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${symbol}&datatype=csv&interval=${interval}min&outputsize=full&apikey=${this.apiKey}${extraQ}`;
     } else {
       switch (interval) {
         case 'W':
@@ -135,7 +158,8 @@ export class DataService {
 
   mapAlphaCandles(csvData: AlphaCandle[]): CandleDto[] {
     const candles = csvData.map((c) => {
-      const mult = Number(c.adjusted_close) > 0 ? Number(c.close) / Number(c.adjusted_close) : 1;
+      const x = c.adjusted_close || c['adjusted close'] || 0;
+      const mult = Number(x) > 0 ? Number(x) / Number(c.close) : 1;
 
       return {
         time: new Date(c.timestamp).getTime(),

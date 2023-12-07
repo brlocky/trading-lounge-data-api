@@ -1,23 +1,21 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class GetCandlesDto {
-  @ApiProperty()
-  symbol: string;
-  @ApiProperty()
-  interval: string;
-  @ApiProperty()
-  from?: string;
-  @ApiProperty()
-  to?: string;
-}
-
 export class CandlePointer {
   @ApiProperty()
   symbol: string;
   @ApiProperty()
   interval: string;
   @ApiProperty()
-  time: string;
+  time: number;
+}
+
+export class GetCandlesDto {
+  @ApiProperty()
+  symbol: string;
+  @ApiProperty()
+  interval: string;
+  @ApiProperty()
+  to?: CandlePointer;
 }
 
 export class GetCandlesResultDto {
