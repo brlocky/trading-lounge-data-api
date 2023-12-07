@@ -100,7 +100,7 @@ export class DataService {
         symbol: m['1. symbol'],
         name: m['2. name'],
         type: m['3. type'],
-        country: m['4. region'],
+        region: m['4. region'],
       };
     });
   }

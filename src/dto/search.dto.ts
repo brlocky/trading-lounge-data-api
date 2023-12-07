@@ -16,5 +16,5 @@ export class SearchResultDto {
   type: string;
 
   @ApiProperty()
-  country: string;
+  region: string;
 }
