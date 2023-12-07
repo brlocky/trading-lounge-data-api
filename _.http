@@ -1,4 +1,7 @@
-@host = http://localhost:3000
+// @host = http://localhost:3000
+//@host = https://trading-lounge-data-api-brlocky.vercel.app/
+@host = https://tradingloungedataapi.onrender.com
+
 
 Get {{host}}/api
 
@@ -19,5 +22,5 @@ content-type: application/json
 
 {
     "symbol": "nvda",
-    "interval": "5"
+    "interval": "D"
 }
