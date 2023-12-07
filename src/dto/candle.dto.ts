@@ -37,13 +37,13 @@ export class CandleDto {
   @ApiProperty()
   time: number;
   @ApiProperty()
-  open: string;
+  open: number;
   @ApiProperty()
-  high: string;
+  high: number;
   @ApiProperty()
-  low: string;
+  low: number;
   @ApiProperty()
-  close: string;
+  close: number;
   @ApiProperty()
-  volume: string;
+  volume: number;
 }

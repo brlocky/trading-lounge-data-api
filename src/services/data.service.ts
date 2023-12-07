@@ -136,11 +136,11 @@ export class DataService {
     const candles = csvData.map((c) => {
       return {
         time: new Date(c.timestamp).getTime(),
-        open: c.open,
-        high: c.high,
-        low: c.low,
-        close: c.close,
-        volume: c.volume,
+        open: Number(c.open),
+        high: Number(c.high),
+        low: Number(c.low),
+        close: Number(c.close),
+        volume: Number(c.volume),
       };
     });
 
