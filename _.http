@@ -1,0 +1,23 @@
+@host = http://localhost:3000
+
+Get {{host}}/api
+
+###
+
+Post {{host}}/search
+content-type: application/json
+
+{
+    "text": "nvda"
+}
+
+###
+
+
+Post {{host}}/candles
+content-type: application/json
+
+{
+    "symbol": "nvda",
+    "interval": "5"
+}
