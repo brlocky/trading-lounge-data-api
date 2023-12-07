@@ -1,4 +1,4 @@
-@host = http://localhost
+@host = http://localhost:3000
 
 Get {{host}}/api
 
