@@ -92,9 +92,12 @@ export class DataService {
     const isIntraday = Number(interval) > 0;
 
     if (isIntraday) {
-      const month = to ? moment(new Date(to.time)).subtract(1, 'months').format('YYYY-MM') : null;
-      const extraQ = month ? `&month=${month}` : '';
-      return `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${symbol}&datatype=csv&interval=${interval}min&outputsize=full&apikey=${this.apiKey}${extraQ}`;
+      const month = to
+        ? moment(new Date(to.time * 1000))
+            .subtract(1, 'months')
+            .format('YYYY-MM')
+        : moment().format('YYYY-MM');
+      return `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${symbol}&datatype=csv&interval=${interval}min&outputsize=full&apikey=${this.apiKey}&month=${month}`;
     } else {
       switch (interval) {
         case 'W':
@@ -162,7 +165,7 @@ export class DataService {
       const mult = Number(x) > 0 ? Number(x) / Number(c.close) : 1;
 
       return {
-        time: new Date(c.timestamp).getTime(),
+        time: new Date(c.timestamp).getTime() / 1000,
         open: Number(c.open) * mult,
         high: Number(c.high) * mult,
         low: Number(c.low) * mult,
