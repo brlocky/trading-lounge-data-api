@@ -62,7 +62,7 @@ export class DataService {
     let candles = this.mapAlphaCandles(csvData);
     if (to && to.time) {
       candles = candles.filter((c) => {
-        return c.time > to.time;
+        return c.time < to.time;
       });
     }
 
