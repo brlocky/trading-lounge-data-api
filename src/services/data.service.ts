@@ -42,7 +42,7 @@ export class DataService {
   }
 
   async getCandles(getCandlesDto: GetCandlesDto): Promise<GetCandlesResultDto> {
-    const { symbol, interval } = getCandlesDto;
+    const { symbol, interval, to } = getCandlesDto;
     const emptyResponse = {
       symbol: symbol,
       interval: interval,
@@ -59,7 +59,12 @@ export class DataService {
     }
     const csvData = await this.parseCsvData(response.data);
 
-    const candles = this.mapAlphaCandles(csvData);
+    let candles = this.mapAlphaCandles(csvData);
+    if (to && to.time) {
+      candles = candles.filter((c) => {
+        return c.time > to.time;
+      });
+    }
 
     const prevCandle =
       candles[0] && Number(interval) > 0
