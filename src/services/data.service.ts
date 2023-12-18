@@ -59,7 +59,7 @@ export class DataService {
     }
     const csvData = await this.parseCsvData(response.data);
 
-    let candles = this.mapAlphaCandles(csvData);
+    let candles = this.mapAlphaCandles(csvData, interval);
     if (to && to.time) {
       candles = candles.filter((c) => {
         return c.time < to.time;
@@ -103,17 +103,9 @@ export class DataService {
             .format('YYYY-MM')
         : moment().format('YYYY-MM');
       return `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${symbol}&datatype=csv&interval=${interval}min&outputsize=full&apikey=${this.apiKey}&month=${month}`;
-    } else {
-      switch (interval) {
-        case 'W':
-          return `https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY_ADJUSTED&symbol=${symbol}&datatype=csv&apikey=${this.apiKey}`;
-        case 'D':
-          return `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${symbol}&outputsize=full&datatype=csv&apikey=${this.apiKey}`;
-      }
     }
 
-    // Montly is fallback
-    return `https://www.alphavantage.co/query?function=TIME_SERIES_MONTHLY_ADJUSTED&symbol=${symbol}&datatype=csv&apikey=${this.apiKey}`;
+    return `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${symbol}&outputsize=full&datatype=csv&apikey=${this.apiKey}`;
   }
 
   async search(executeSearchDto: SearchDto): Promise<SearchResultDto[]> {
@@ -164,7 +156,7 @@ export class DataService {
     });
   }
 
-  mapAlphaCandles(csvData: AlphaCandle[]): CandleDto[] {
+  mapAlphaCandles(csvData: AlphaCandle[], interval: string): CandleDto[] {
     const candles = csvData.map((c) => {
       const x = c.adjusted_close || c['adjusted close'] || 0;
       const mult = Number(x) > 0 ? Number(x) / Number(c.close) : 1;
@@ -183,6 +175,49 @@ export class DataService {
       return a.time - b.time;
     });
 
-    return candles;
+    switch (interval) {
+      case 'W':
+        return this.aggregateCandlesByInterval(candles, 7); // 7 days in a week
+      case 'M':
+        return this.aggregateCandlesByInterval(candles, 30); // Assuming 30 days in a month
+      // You can add more cases for other intervals if needed
+      default:
+        return candles;
+    }
+  }
+
+  aggregateCandlesByInterval(candles: CandleDto[], interval: number): CandleDto[] {
+    const result: CandleDto[] = [];
+    let currentInterval: CandleDto[] = [];
+
+    for (const candle of candles) {
+      currentInterval.push(candle);
+
+      if (currentInterval.length === interval) {
+        result.push(this.aggregateCandles(currentInterval));
+        currentInterval = [];
+      }
+    }
+
+    // Handle the remaining candles if they don't fit perfectly into intervals
+    if (currentInterval.length > 0) {
+      result.push(this.aggregateCandles(currentInterval));
+    }
+
+    return result;
+  }
+
+  aggregateCandles(candles: CandleDto[]): CandleDto {
+    const firstCandle = candles[0];
+    const lastCandle = candles[candles.length - 1];
+
+    return {
+      time: firstCandle.time,
+      open: firstCandle.open,
+      high: Math.max(...candles.map((c) => c.high)),
+      low: Math.min(...candles.map((c) => c.low)),
+      close: lastCandle.close,
+      volume: candles.reduce((total, c) => total + c.volume, 0),
+    };
   }
 }
