@@ -189,34 +189,39 @@ export class DataService {
   aggregateCandlesByInterval(candles: CandleDto[], interval: string): CandleDto[] {
     const result: CandleDto[] = [];
     let currentInterval: CandleDto[] = [];
+    let lastCandleTime: number | null = null;
 
-    const isNextWeekStart = (currentDate: Date): boolean => {
-      const dayOfWeek = currentDate.getUTCDay();
-      return dayOfWeek === 0; // Sunday is considered the start of the week
+    const isNextWeekStart = (currentDate: Date, lastDate: Date): boolean => {
+      const currentWeekNumber = moment(currentDate).isoWeek();
+      const lastWeekNumber = moment(lastDate).isoWeek();
+
+      return currentWeekNumber !== lastWeekNumber;
     };
 
-    const isNextMonthStart = (currentDate: Date): boolean => {
-      return (
-        currentDate.getUTCDate() === 1 &&
-        currentDate.getUTCHours() === 0 &&
-        currentDate.getUTCMinutes() === 0 &&
-        currentDate.getUTCSeconds() === 0
-      );
+    const isNextMonthStart = (currentDate: Date, lastDate: Date): boolean => {
+      return moment(currentDate).month() !== moment(lastDate).month();
     };
 
     for (const candle of candles) {
       const currentDate = new Date(candle.time * 1000);
 
-      // Check if the current candle time exceeds the next interval start
-      if ((interval === 'W' && isNextWeekStart(currentDate)) || (interval === 'M' && isNextMonthStart(currentDate))) {
-        // Start a new interval before adding the candle
-        if (currentInterval.length > 0) {
-          result.push(this.aggregateCandles(currentInterval));
-          currentInterval = [];
+      if (lastCandleTime !== null) {
+        const lastCandleDate = new Date(lastCandleTime * 1000);
+        // Check if the current candle time exceeds the next interval start
+        if (
+          (interval === 'W' && isNextWeekStart(currentDate, lastCandleDate)) ||
+          (interval === 'M' && isNextMonthStart(currentDate, lastCandleDate))
+        ) {
+          // Start a new interval before adding the candle
+          if (currentInterval.length > 0) {
+            result.push(this.aggregateCandles(currentInterval));
+            currentInterval = [];
+          }
         }
       }
 
       currentInterval.push(candle);
+      lastCandleTime = candle.time;
     }
 
     // Handle the remaining candles if they don't fit perfectly into intervals
@@ -226,6 +231,7 @@ export class DataService {
 
     return result;
   }
+
   aggregateCandles(candles: CandleDto[]): CandleDto {
     const firstCandle = candles[0];
     const lastCandle = candles[candles.length - 1];
