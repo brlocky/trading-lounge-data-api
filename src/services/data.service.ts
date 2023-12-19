@@ -177,26 +177,46 @@ export class DataService {
 
     switch (interval) {
       case 'W':
-        return this.aggregateCandlesByInterval(candles, 7); // 7 days in a week
+        return this.aggregateCandlesByInterval(candles, 'W'); // 7 days in a week
       case 'M':
-        return this.aggregateCandlesByInterval(candles, 30); // Assuming 30 days in a month
+        return this.aggregateCandlesByInterval(candles, 'M'); // Assuming 30 days in a month
       // You can add more cases for other intervals if needed
       default:
         return candles;
     }
   }
 
-  aggregateCandlesByInterval(candles: CandleDto[], interval: number): CandleDto[] {
+  aggregateCandlesByInterval(candles: CandleDto[], interval: string): CandleDto[] {
     const result: CandleDto[] = [];
     let currentInterval: CandleDto[] = [];
 
-    for (const candle of candles) {
-      currentInterval.push(candle);
+    const isNextWeekStart = (currentDate: Date): boolean => {
+      const dayOfWeek = currentDate.getUTCDay();
+      return dayOfWeek === 0; // Sunday is considered the start of the week
+    };
 
-      if (currentInterval.length === interval) {
-        result.push(this.aggregateCandles(currentInterval));
-        currentInterval = [];
+    const isNextMonthStart = (currentDate: Date): boolean => {
+      return (
+        currentDate.getUTCDate() === 1 &&
+        currentDate.getUTCHours() === 0 &&
+        currentDate.getUTCMinutes() === 0 &&
+        currentDate.getUTCSeconds() === 0
+      );
+    };
+
+    for (const candle of candles) {
+      const currentDate = new Date(candle.time * 1000);
+
+      // Check if the current candle time exceeds the next interval start
+      if ((interval === 'W' && isNextWeekStart(currentDate)) || (interval === 'M' && isNextMonthStart(currentDate))) {
+        // Start a new interval before adding the candle
+        if (currentInterval.length > 0) {
+          result.push(this.aggregateCandles(currentInterval));
+          currentInterval = [];
+        }
       }
+
+      currentInterval.push(candle);
     }
 
     // Handle the remaining candles if they don't fit perfectly into intervals
@@ -206,7 +226,6 @@ export class DataService {
 
     return result;
   }
-
   aggregateCandles(candles: CandleDto[]): CandleDto {
     const firstCandle = candles[0];
     const lastCandle = candles[candles.length - 1];
