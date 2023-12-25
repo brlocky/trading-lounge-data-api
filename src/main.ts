@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { CandleDto, CandlePointer, GetCandlesDto, GetCandlesResultDto, SearchDto, SearchResultDto } from './dto';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
@@ -18,6 +19,7 @@ async function bootstrap() {
 
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(3000);
+  const configService = new ConfigService();
+  await app.listen(configService.get<number>('PORT') || 3000);
 }
 bootstrap();
