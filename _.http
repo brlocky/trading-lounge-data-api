@@ -24,3 +24,14 @@ content-type: application/json
     "symbol": "nvda",
     "interval": "M"
 }
+
+
+### 
+
+
+Post {{host}}/chat
+content-type: application/json
+
+{
+    "prompt": "Hello"
+}

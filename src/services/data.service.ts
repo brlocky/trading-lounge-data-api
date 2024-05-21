@@ -5,7 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { CandleDto, GetCandlesDto, GetCandlesResultDto, SearchResultDto } from 'src/dto';
 import * as fastCsv from 'fast-csv';
 import { Readable } from 'stream';
-import * as moment from 'moment';
+import { utc as moment } from 'moment';
 
 interface AlphaCandle {
   timestamp: string;
