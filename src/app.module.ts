@@ -7,9 +7,7 @@ import { ChatController } from './chat/chat.controller';
 import { ChatService } from './services/chat.service';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot(), // Load environment variables
-  ],
+  imports: [ConfigModule.forRoot()],
   controllers: [SearchController, CandlesController, ChatController],
   providers: [DataService, ChatService],
 })
