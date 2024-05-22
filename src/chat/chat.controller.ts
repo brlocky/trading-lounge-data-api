@@ -8,7 +8,7 @@ export class ChatController {
   constructor(private readonly service: ChatService) {}
 
   @Post('/')
-  async chatEndPoint(@Body() chatDto: ChatDto, @Res() res: Response) {
+  async chatEndPoint(@Body() chatDto: ChatDto, @Res() res: Response): Promise<void> {
     const stream = this.service.inferenceModel(chatDto.prompt);
 
     res.setHeader('Content-Type', 'application/json');
