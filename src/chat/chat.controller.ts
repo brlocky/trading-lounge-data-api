@@ -13,7 +13,6 @@ export class ChatController {
 
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Transfer-Encoding', 'chunked');
-    res.setHeader('X-Content-Type-Options', 'nosniff');
 
     for await (const event of stream) {
       if (event.event === 'done') {
