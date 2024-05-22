@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Replicate, { ServerSentEvent } from 'replicate';
+import { Observable } from 'rxjs';
 
 const input = {
   top_k: 0,
@@ -36,5 +37,21 @@ export class ChatService {
     for await (const event of this.aiClient.stream(model, { input })) {
       yield event;
     }
+  }
+  getInferenceStream(prompt: string): Observable<ServerSentEvent> {
+    const stream = this.inferenceModel(prompt);
+
+    return new Observable<ServerSentEvent>((observer) => {
+      (async () => {
+        try {
+          for await (const event of stream) {
+            observer.next(event);
+          }
+          observer.complete();
+        } catch (error) {
+          observer.error(error);
+        }
+      })();
+    });
   }
 }

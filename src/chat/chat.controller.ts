@@ -1,5 +1,6 @@
-import { Body, Controller, Post, Res } from '@nestjs/common';
+import { Body, Controller, Param, Post, Res, Sse } from '@nestjs/common';
 import { Response } from 'express';
+import { map, Observable } from 'rxjs';
 import { ChatDto } from 'src/dto/chat.dto';
 import { ChatService } from 'src/services/chat.service';
 
@@ -23,5 +24,16 @@ export class ChatController {
     }
 
     res.end();
+  }
+
+  @Sse('/messages/:prompt')
+  feedDeviceStatus(@Param('prompt') prompt: string): Observable<MessageEvent> {
+    return this.service.getInferenceStream(prompt).pipe(
+      map((event) => {
+        return new MessageEvent('message', {
+          data: JSON.stringify(event),
+        });
+      }),
+    );
   }
 }
