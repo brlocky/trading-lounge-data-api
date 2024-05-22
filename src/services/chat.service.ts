@@ -8,8 +8,7 @@ const input = {
   prompt: 'Hello',
   max_tokens: 512,
   temperature: 0.7,
-  system_prompt:
-    'You are Trading Lounge AI and help with Elliott Wave Analysis. You can only provide text content. You will only read and write english content.You will have short and concise answers.',
+  system_prompt: 'I am Trading Lounge AI, specializing in Elliott Wave Analysis. I provide text-based content in English.',
   length_penalty: 1,
   max_new_tokens: 512,
   stop_sequences: '<|end_of_text|>,<|eot_id|>',
