@@ -1,16 +1,23 @@
-import { Body, Controller, Param, Post, Res, Sse } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import { Body, Controller, Inject, Param, Post, Res, Sse } from '@nestjs/common';
 import { Response } from 'express';
-import { map, Observable } from 'rxjs';
-import { ChatDto } from 'src/dto/chat.dto';
+import { EMPTY, map, Observable } from 'rxjs';
+import { ChatRequestDto } from 'src/dto/chat.dto';
 import { ChatService } from 'src/services/chat.service';
+import { v4 } from 'uuid';
 
 @Controller('chat')
 export class ChatController {
-  constructor(private readonly service: ChatService) {}
+  constructor(
+    private readonly service: ChatService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) {}
 
-  @Post('/')
-  async chatEndPoint(@Body() chatDto: ChatDto, @Res() res: Response): Promise<void> {
-    const stream = this.service.inferenceModel(chatDto.prompt);
+  // Not working in google cloud
+  @Post('/message')
+  async chatMessage(@Body() chatDto: ChatRequestDto, @Res() res: Response): Promise<void> {
+    const stream = this.service.inferenceModel(chatDto);
 
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Transfer-Encoding', 'chunked');
@@ -26,9 +33,25 @@ export class ChatController {
     res.end();
   }
 
-  @Sse('/messages/:prompt')
-  feedDeviceStatus(@Param('prompt') prompt: string): Observable<MessageEvent> {
-    return this.service.getInferenceStream(prompt).pipe(
+  /*
+   * Start Chat
+   * receive a chat DTO and store it memory
+   */
+  @Post('/')
+  chatEndPoint(@Body() chatDto: ChatRequestDto): string {
+    const chatId = v4();
+    this.cacheManager.set(chatId, chatDto);
+
+    return chatId;
+  }
+
+  @Sse('/messages/:chatId')
+  async feedDeviceStatus(@Param('chatId') chatId: string): Promise<Observable<MessageEvent> | null> {
+    const storedQuery = await this.cacheManager.get<ChatRequestDto>(chatId);
+
+    if (!storedQuery) return EMPTY;
+
+    return this.service.getInferenceStream(storedQuery).pipe(
       map((event) => {
         return new MessageEvent('message', {
           data: JSON.stringify(event),

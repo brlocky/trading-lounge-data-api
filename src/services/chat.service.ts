@@ -2,11 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Replicate, { ServerSentEvent } from 'replicate';
 import { Observable } from 'rxjs';
+import { ChatMessage, ChatRequestDto } from 'src/dto/chat.dto';
 
 const input = {
+  prompt: 'Hello',
+  messages: [],
   top_k: 0,
   top_p: 0.95,
-  prompt: 'Hello',
   max_tokens: 512,
   temperature: 0.7,
   system_prompt: 'I am Trading Lounge AI, specializing in Elliott Wave Analysis. I provide text-based content in English.',
@@ -22,6 +24,7 @@ const input = {
 @Injectable()
 export class ChatService {
   aiClient: Replicate;
+
   constructor(private readonly configService: ConfigService) {
     const apiKey = this.configService.get<string>('REPLICATE_API_TOKEN') || 'demo';
     this.aiClient = new Replicate({
@@ -30,16 +33,27 @@ export class ChatService {
     });
   }
 
-  async *inferenceModel(prompt: string): AsyncGenerator<ServerSentEvent, any, unknown> {
-    const model = 'meta/meta-llama-3-8b-instruct';
-    input.prompt = prompt;
+  preparePrompt(messages: ChatMessage[]): string {
+    const limitedHistory = messages.slice(-10);
+    const messageHistory = limitedHistory.map((msg) => `${msg.role}: ${msg.content}`).join('\n');
+    const prompt = `${messageHistory}\nassistant: `;
+    return prompt;
+  }
 
-    for await (const event of this.aiClient.stream(model, { input })) {
+  async *inferenceModel(dto: ChatRequestDto): AsyncGenerator<ServerSentEvent, any, unknown> {
+    const model = 'meta/meta-llama-3-8b-instruct';
+    const prompt = this.preparePrompt(dto.messages);
+    const newInput = {
+      ...input,
+      prompt,
+    };
+
+    for await (const event of this.aiClient.stream(model, { input: newInput })) {
       yield event;
     }
   }
-  getInferenceStream(prompt: string): Observable<ServerSentEvent> {
-    const stream = this.inferenceModel(prompt);
+  getInferenceStream(dto: ChatRequestDto): Observable<ServerSentEvent> {
+    const stream = this.inferenceModel(dto);
 
     return new Observable<ServerSentEvent>((observer) => {
       (async () => {

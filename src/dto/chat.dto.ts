@@ -1,6 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class ChatDto {
+export class ChatRequestDto {
   @ApiProperty()
   prompt: string;
+  messages: ChatMessage[];
+}
+
+export class ChatMessage {
+  @ApiProperty()
+  role: string;
+  content: string;
 }
