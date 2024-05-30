@@ -1,17 +1,16 @@
+import { CacheModule, CacheInterceptor } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
-import { SearchController } from './search/search.controller';
-import { CandlesController } from './candles/candles.controller';
-import { DataService } from './services';
 import { ConfigModule } from '@nestjs/config';
-import { ChatController } from './chat/chat.controller';
-import { ChatService } from './services/chat.service';
-import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
-import { RedisOptions } from './config/app-options.contants';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { CandlesController } from './candles/candles.controller';
+import { ChatController } from './chat/chat.controller';
+import { ElliottWavesModule } from './elliott-waves/elliott-waves.module';
+import { DataService, ChatService } from './services';
+import { RedisOptions } from './config/app-options.contants';
 
 @Module({
-  imports: [ConfigModule.forRoot(), CacheModule.registerAsync(RedisOptions)],
-  controllers: [SearchController, CandlesController, ChatController],
+  imports: [ConfigModule.forRoot(), CacheModule.registerAsync(RedisOptions), ElliottWavesModule],
+  controllers: [CandlesController, ChatController],
   providers: [
     DataService,
     ChatService,
