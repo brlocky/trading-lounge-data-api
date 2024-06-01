@@ -68,7 +68,7 @@ export class ElliottWavesService {
     this.chartService.createCandlestickChart(candles, pivots, 'z-wave-count.png', false);
     this.chartService.createCandlestickChart(candles, pivotslogScale, 'z-scale-wave-count.png', true);
 
-    const motivePatterns = this.getWave1Patterns(candles, pivotslogScale, degree - 1, logScale);
+    const motivePatterns = this.getWave1Patterns(candles, pivots, degree - 1, logScale);
 
     const isTargetInsidePivots = !!pivots.find(
       (p) => endPivot && p.time === endPivot.time && p.price === endPivot.price && p.type === endPivot.type,
