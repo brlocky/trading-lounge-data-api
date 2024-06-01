@@ -1,13 +1,10 @@
 import { Degree } from 'src/elliott-waves/enums';
+import { CandleTime, determineCommonInterval } from './candle.utils';
 
 interface WaveDegree {
   name: Degree;
   minCandles: number;
   maxCandles: number;
-}
-
-interface Candle {
-  time: number; // time in milliseconds since Unix epoch
 }
 
 export class WaveDegreeCalculator {
@@ -25,43 +22,14 @@ export class WaveDegreeCalculator {
     { name: Degree.SUBMINUETTE, minCandles: 0, maxCandles: 1 / 24 },
   ];
 
-  private candles: Candle[];
+  private candles: CandleTime[];
 
-  constructor(candles: Candle[]) {
+  constructor(candles: CandleTime[]) {
     this.candles = candles;
   }
 
-  private calculateIntervals(): number[] {
-    const intervals: number[] = [];
-    for (let i = 1; i < this.candles.length; i++) {
-      const interval = (this.candles[i].time - this.candles[i - 1].time) / (60 * 60 * 24);
-      intervals.push(interval);
-    }
-    return intervals;
-  }
-
-  private determineCommonInterval(intervals: number[]): number {
-    const intervalCounts: { [key: number]: number } = {};
-    for (const interval of intervals) {
-      if (!intervalCounts[interval]) {
-        intervalCounts[interval] = 0;
-      }
-      intervalCounts[interval]++;
-    }
-    let commonInterval = 0;
-    let maxCount = 0;
-    for (const interval in intervalCounts) {
-      if (intervalCounts[interval] > maxCount) {
-        maxCount = intervalCounts[interval];
-        commonInterval = parseFloat(interval);
-      }
-    }
-    return commonInterval;
-  }
-
   public calculateWaveDegree(): Degree {
-    const intervals = this.calculateIntervals();
-    const commonInterval = this.determineCommonInterval(intervals);
+    const commonInterval = determineCommonInterval(this.candles);
 
     if (commonInterval === 0) {
       throw new Error('Could not identify Degree.');

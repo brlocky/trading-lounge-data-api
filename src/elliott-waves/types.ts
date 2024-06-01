@@ -19,7 +19,7 @@ export class ClusterWaves {
   waves: Wave[];
 }
 
-export type PivotStatus = 'CONFIRMED' | 'WAITING';
+export type PivotStatus = 'CONFIRMED' | 'WAITING' | 'PROJECTED';
 
 export class Pivot {
   constructor(id: string, candleIndex: number, type: PivotType, price: number, time: number) {

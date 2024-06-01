@@ -1,6 +1,6 @@
 import { CandleDto } from 'src/dto';
 import { MotiveWaveInterface } from 'src/elliott-waves/interfaces/motive-wave.interface';
-import { ClusterWaves, Pivot, Wave } from 'src/elliott-waves/types';
+import { ClusterWaves, Pivot } from 'src/elliott-waves/types';
 import { Fibonacci } from '../../utils/fibonacci.class';
 import { Degree, WaveName, WaveType } from 'src/elliott-waves/enums';
 
@@ -23,15 +23,15 @@ export class MotiveExtendedWave1 extends MotiveWaveInterface {
   }
 
   getWave2RetracementPercentages(): [number, number] {
-    return [14.6, 88.6];
+    return [14.6, 99.9];
   }
   getWave3ProjectionPercentages(): [number, number] {
-    return [50, 78.6];
+    return [50, 99.9];
   }
   getWave4RetracementPercentages(): [number, number] {
     return [14.6, 50];
   }
   getWave5ProjectionPercentages(): [number, number] {
-    return [14.6, 88.6];
+    return [14.6, 99.9];
   }
 }

@@ -140,4 +140,43 @@ describe('Fibonacci', () => {
       expect(result).toBeCloseTo(181.252);
     });
   });
+
+  describe('calculateRetracement', () => {
+    it('should calculate retracement correctly', () => {
+      expect(instanceLinear.calculateRetracement(100, 80)).toBe(20);
+      expect(instanceLinear.calculateRetracement(100, 50)).toBe(50);
+      expect(instanceLinear.calculateRetracement(200, 50)).toBe(75);
+
+      expect(instanceLog.calculateRetracement(100, 80)).toBe(20);
+      expect(instanceLog.calculateRetracement(100, 50)).toBe(50);
+      expect(instanceLog.calculateRetracement(200, 50)).toBe(75);
+    });
+
+    it('should return 0 when p1 is zero', () => {
+      expect(instanceLinear.calculateRetracement(0, 80)).toBe(0);
+      expect(instanceLog.calculateRetracement(0, 80)).toBe(0);
+    });
+
+    it('should handle cases where p2 is zero', () => {
+      expect(instanceLinear.calculateRetracement(100, 0)).toBe(100);
+      expect(instanceLog.calculateRetracement(100, 0)).toBe(100);
+    });
+
+    it('should handle negative prices correctly', () => {
+      expect(instanceLinear.calculateRetracement(100, -50)).toBe(150);
+      expect(instanceLinear.calculateRetracement(100, -100)).toBe(200);
+      expect(instanceLog.calculateRetracement(100, -50)).toBe(150);
+      expect(instanceLog.calculateRetracement(100, -100)).toBe(200);
+    });
+
+    it('should handle identical p1 and p2 correctly', () => {
+      expect(instanceLinear.calculateRetracement(100, 100)).toBe(0);
+      expect(instanceLog.calculateRetracement(100, 100)).toBe(0);
+    });
+
+    it('should handle p2 greater than p1 correctly', () => {
+      expect(instanceLinear.calculateRetracement(100, 150)).toBe(-50);
+      expect(instanceLog.calculateRetracement(100, 150)).toBe(-50);
+    });
+  });
 });

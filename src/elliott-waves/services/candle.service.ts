@@ -5,6 +5,7 @@ import { Pivot, PivotSearchResult } from '../types';
 import { v4 } from 'uuid';
 import { getHHBeforeBreak, getLLBeforeBreak, getTrend } from '../class/utils/pivot.utils';
 import { PivotType, Trend } from '../enums';
+import { Fibonacci } from '../class/utils/fibonacci.class';
 interface WaveRetracement {
   p1: Pivot;
   p2: Pivot;
@@ -147,20 +148,7 @@ export class CandleService {
     const trend = getTrend(pivots);
 
     const retracements: WaveRetracement[] = [];
-
-    const calculateRetracement = (p1: Pivot, p2: Pivot): number => {
-      const useLogScale = true;
-      if (useLogScale) {
-        const logPrice1 = Math.log(p1.price);
-        const logPrice2 = Math.log(p2.price);
-        const logDifference = logPrice1 - logPrice2;
-        const expDifference = Math.exp(logDifference);
-        return ((expDifference - 1) / expDifference) * 100;
-      } else {
-        return ((p1.price - p2.price) / p1.price) * 100;
-      }
-    };
-
+    const fibonacci = new Fibonacci();
     let index = 0;
     while (index < pivots.length) {
       const pivot = pivots[index];
@@ -182,7 +170,7 @@ export class CandleService {
         continue;
       }
 
-      const retracementValue = calculateRetracement(pivot, nextPivot);
+      const retracementValue = fibonacci.calculateRetracement(pivot.price, nextPivot.price);
       if (retracementValue > threshold) {
         retracements.push({ p1: pivot, p2: nextPivot, retracement: retracementValue });
       }

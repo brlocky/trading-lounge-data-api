@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { CandleDto } from 'src/dto';
-import { degreeToString, waveNameToString, waveTypeToString } from './enums';
+import { Degree, degreeToString, waveNameToString, waveTypeToString } from './enums';
 import { ClusterPivot, ClusterWaves, Pivot, Wave } from './types';
 
 export class EnumStruct {
@@ -38,10 +38,11 @@ export class WaveCounClustertRequest extends BaseRequest {
 }
 
 export class PivotResponse {
-  constructor(pivot: Pivot | ClusterPivot) {
+  constructor(pivot: Pivot | ClusterPivot, degree: Degree) {
     this.id = pivot.id;
     this.type = pivot.type;
     this.price = pivot.price;
+    this.degree = degree;
     this.time = pivot.time;
     this.status = (pivot as ClusterPivot)?.status || 'WAITING';
   }
@@ -53,9 +54,20 @@ export class PivotResponse {
   @ApiProperty()
   price: number;
   @ApiProperty()
+  degree: Degree;
+  @ApiProperty()
   time: number;
   @ApiProperty()
   status: string;
+}
+
+export class SubWaveCounClustertRequest extends BaseRequest {
+  @ApiProperty()
+  candles: CandleDto[];
+  @ApiProperty()
+  startPivot: PivotResponse;
+  @ApiProperty()
+  endPivot: PivotResponse;
 }
 
 export class WaveClusterResponse {
@@ -81,8 +93,8 @@ export class WaveResponse {
     this.id = wave.id;
     this.wave = mapEnumToStruct(waveNameToString(wave.wave), wave.wave);
     this.degree = mapEnumToStruct(degreeToString(wave.degree), wave.degree);
-    this.pStart = new PivotResponse(wave.pStart);
-    this.pEnd = new PivotResponse(wave.pEnd);
+    this.pStart = new PivotResponse(wave.pStart, wave.degree);
+    this.pEnd = new PivotResponse(wave.pEnd, wave.degree);
   }
 
   @ApiProperty()

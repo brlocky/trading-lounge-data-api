@@ -5,22 +5,25 @@ import { Trend } from '../enums';
 import { Pivot } from '../types';
 
 export abstract class BaseWaveInterface {
-  private candles: CandleDto[] = [];
-  private pivots: Pivot[] = [];
-  private currentIndex: number;
+  protected candles: CandleDto[] = [];
+  protected pivots: Pivot[] = [];
   protected trend: Trend;
   protected fibonacci: Fibonacci;
+  protected targetPivot: Pivot | null;
 
   constructor(candles: CandleDto[], pivots: Pivot[], fibonacci: Fibonacci) {
     this.candles = candles;
     this.pivots = pivots;
     this.fibonacci = fibonacci;
     this.trend = getTrend(this.candles);
-    this.currentIndex = 0;
   }
 
-  private isPivot(test: any): test is Pivot {
-    return typeof test === 'object';
+  public setTargetPivot(pivot: Pivot) {
+    this.targetPivot = pivot;
+  }
+
+  protected useTargetPivot() {
+    return !!this.targetPivot;
   }
 
   public isSupportBroken(support: Pivot | number, test: Pivot | number): boolean {
@@ -35,8 +38,8 @@ export abstract class BaseWaveInterface {
     return this.trend === Trend.UP ? testPrice > resistancePrice : testPrice < resistancePrice;
   }
 
-  public getPivot(): Pivot {
-    return this.pivots[this.currentIndex];
+  private isPivot(test: any): test is Pivot {
+    return typeof test === 'object';
   }
 
   public getPivotsAfter(pivot: Pivot): Pivot[] {
@@ -45,18 +48,6 @@ export abstract class BaseWaveInterface {
       return [];
     }
     return this.pivots.slice(index + 1);
-  }
-
-  public moveToNextCandle(): boolean {
-    if (this.currentIndex < this.candles.length - 1) {
-      this.currentIndex++;
-      return true;
-    }
-    return false;
-  }
-
-  protected resetIndex(): void {
-    this.currentIndex = 0;
   }
 
   // Some time functions to avoid expose candles and pivotsd
