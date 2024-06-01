@@ -26,8 +26,8 @@ interface IGetSubWaveCounts {
   degree: number;
   logScale: boolean;
   candles: CandleDto[];
-  startPivot: PivotResponse;
-  endPivot: PivotResponse;
+  startPivot: Pivot;
+  endPivot: Pivot;
 }
 
 @Injectable()
@@ -61,42 +61,36 @@ export class ElliottWavesService {
     return waveClusters;
   }
 
-  getSubWaveCounts({ candles, startPivot, endPivot, logScale }: IGetSubWaveCounts): ClusterWaves[] {
+  getSubWaveCounts({ candles, degree, startPivot, endPivot, logScale }: IGetSubWaveCounts): ClusterWaves[] {
     const pivots = this.candleService.getZigZag(candles);
     const pivotslogScale = this.candleService.generateRetracements(pivots, 12);
 
     this.chartService.createCandlestickChart(candles, pivots, 'z-wave-count.png', false);
     this.chartService.createCandlestickChart(candles, pivotslogScale, 'z-scale-wave-count.png', true);
 
-    const motivePatterns = this.getWave1Patterns(candles, pivots, startPivot.degree - 1, logScale);
+    const motivePatterns = this.getWave1Patterns(candles, pivotslogScale, degree - 1, logScale);
 
-    let targetPivot = null;
-    for (const p of pivots.reverse()) {
-      if (p.type === endPivot.type) {
-        targetPivot = p;
-        break;
-      }
-    }
-
-    if (!targetPivot) {
-      return [];
-    }
+    const isTargetInsidePivots = !!pivots.find(
+      (p) => endPivot && p.time === endPivot.time && p.price === endPivot.price && p.type === endPivot.type,
+    );
 
     const waveClusters: ClusterWaves[] = [];
     for (const pattern of motivePatterns) {
-      pattern.setTargetPivot(targetPivot);
+      isTargetInsidePivots && pattern.setTargetPivot(endPivot);
       const clusters = pattern.find();
       if (!clusters.length) continue;
       waveClusters.push(...clusters);
     }
 
-    const filteredCluster = waveClusters.filter((w) => {
-      if (w.waves.length !== 5) return false;
-      const lastWave = w.waves[w.waves.length - 1];
+    const filteredCluster = isTargetInsidePivots
+      ? waveClusters.filter((w) => {
+          if (w.waves.length !== 5) return false;
+          const lastWave = w.waves[w.waves.length - 1];
 
-      if (lastWave.pEnd.price !== endPivot.price || lastWave.pEnd.time !== endPivot.time) return false;
-      return true;
-    });
+          if (lastWave.pEnd.price !== endPivot.price || lastWave.pEnd.time !== endPivot.time) return false;
+          return true;
+        })
+      : waveClusters;
 
     return filteredCluster;
   }

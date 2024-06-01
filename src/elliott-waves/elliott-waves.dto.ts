@@ -65,9 +65,9 @@ export class SubWaveCounClustertRequest extends BaseRequest {
   @ApiProperty()
   candles: CandleDto[];
   @ApiProperty()
-  startPivot: PivotResponse;
+  startPivot: Pivot;
   @ApiProperty()
-  endPivot: PivotResponse;
+  endPivot: Pivot;
 }
 
 export class WaveClusterResponse {
