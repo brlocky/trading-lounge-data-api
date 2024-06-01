@@ -93,8 +93,8 @@ export class ElliottWavesService {
   private getWave1Patterns(candles: CandleDto[], pivots: Pivot[], degree: Degree, logScale: boolean): MotiveWaveInterface[] {
     const fibonacci = new Fibonacci(logScale);
     return [
-      //new MotiveContractingDiagonal(candles, pivots, fibonacci, degree),
-      //new MotiveExpandingDiagonal(candles, pivots, fibonacci, degree),
+      new MotiveContractingDiagonal(candles, pivots, fibonacci, degree),
+      new MotiveExpandingDiagonal(candles, pivots, fibonacci, degree),
       //new MotiveExtendedWave1(candles, pivots, fibonacci, degree),
       new MotiveExtendedWave3(candles, pivots, fibonacci, degree),
       //new MotiveExtendedWave5(candles, pivots, fibonacci, degree),
