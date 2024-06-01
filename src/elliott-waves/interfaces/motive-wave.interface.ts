@@ -4,7 +4,7 @@ import { ClusterPivot, ClusterWaves, Pivot, Wave } from '../types';
 import { BaseWaveInterface } from './base-wave.interface';
 import { Fibonacci } from '../class/utils/fibonacci.class';
 import { WaveType, Degree, Trend, WaveName, PivotType } from '../enums';
-import { determineCommonInterval, getHHBeforeBreak, getLLBeforeBreak } from '../class/utils';
+import { getHHBeforeBreak, getLLBeforeBreak } from '../class/utils';
 
 export abstract class MotiveWaveInterface extends BaseWaveInterface {
   _waveType: WaveType;
@@ -41,9 +41,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
   }
 
   protected getImpulseWaves(): ClusterWaves[] {
-    const p0 = this.pivots[0];
-
-    const impulseWaves: Wave[][] = this.getInitialImpulses(this.candles, this.pivots, p0);
+    const impulseWaves: Wave[][] = this.getInitialImpulses(this.candles, this.pivots);
 
     const incompleteClusters = impulseWaves.filter((c) => c.length !== 5);
 
@@ -102,8 +100,8 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
     return false;
   } */
 
-  protected getInitialImpulses(candles: CandleDto[], pivots: Pivot[], startPivot: Pivot): Wave[][] {
-    const p0 = startPivot;
+  protected getInitialImpulses(candles: CandleDto[], pivots: Pivot[]): Wave[][] {
+    const p0 = pivots[0];
     let minP1 = this.trend === Trend.UP ? -Infinity : Infinity;
 
     const finalWaves: Wave[][] = [];

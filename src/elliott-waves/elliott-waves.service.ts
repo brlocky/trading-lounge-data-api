@@ -70,7 +70,18 @@ export class ElliottWavesService {
 
     const motivePatterns = this.getWave1Patterns(candles, pivots, startPivot.degree - 1, logScale);
 
-    const targetPivot = pivots[pivots.length - 1];
+    let targetPivot = null;
+    for (const p of pivots.reverse()) {
+      if (p.type === endPivot.type) {
+        targetPivot = p;
+        break;
+      }
+    }
+
+    if (!targetPivot) {
+      return [];
+    }
+
     const waveClusters: ClusterWaves[] = [];
     for (const pattern of motivePatterns) {
       pattern.setTargetPivot(targetPivot);
