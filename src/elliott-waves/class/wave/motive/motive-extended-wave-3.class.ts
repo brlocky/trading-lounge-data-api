@@ -26,13 +26,14 @@ export class MotiveExtendedWave3 extends MotiveWaveInterface {
     return [14.6, 99.9];
   }
   getWave3ProjectionPercentages(): [number, number] {
-    return [141.4, 861.8];
+    return [88.6, 423.6];
+    //return [141.4, 423.6];
   }
   getWave4RetracementPercentages(): [number, number] {
     return [14.6, 61.8];
   }
   getWave5ProjectionPercentages(): [number, number] {
     //return [14.6, 99.9];
-    return [14.6, 861.8];
+    return [14.6, 423.6];
   }
 }

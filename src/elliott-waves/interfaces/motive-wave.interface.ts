@@ -335,9 +335,16 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
       // Get last wave from the cluster
       const [wave1, wave2, wave3, wave4] = wavesCluster;
 
-      const wave5Pivots = this.useTargetPivot()
-        ? [this.targetPivot!]
-        : this.findWave5Pivots(wave1.pStart, wave1.pEnd, wave2.pEnd, wave3.pEnd, wave4.pEnd);
+      let wave5Pivots = this.findWave5Pivots(wave1.pStart, wave1.pEnd, wave2.pEnd, wave3.pEnd, wave4.pEnd);
+
+      if (this.useTargetPivot()) {
+        const foundPivot = wave5Pivots?.find((p) => p.price === this.targetPivot?.price && p.time == this.targetPivot.time);
+        if (foundPivot) {
+          wave5Pivots = [foundPivot];
+        } else {
+          wave5Pivots = [];
+        }
+      }
 
       // When wave5Pivots is null means that there are no possible pivots 5
       if (wave5Pivots === null) {
