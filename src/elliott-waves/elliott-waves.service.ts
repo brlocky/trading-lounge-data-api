@@ -98,7 +98,7 @@ export class ElliottWavesService {
     return [
       new MotiveContractingDiagonal(candles, pivots, fibonacci, degree),
       new MotiveExpandingDiagonal(candles, pivots, fibonacci, degree),
-      //new MotiveExtendedWave1(candles, pivots, fibonacci, degree),
+      new MotiveExtendedWave1(candles, pivots, fibonacci, degree),
       new MotiveExtendedWave3(candles, pivots, fibonacci, degree),
       //new MotiveExtendedWave5(candles, pivots, fibonacci, degree),
     ];
