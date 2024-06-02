@@ -19,7 +19,7 @@ export class MotiveExtendedWave3 extends MotiveWaveInterface {
   }
 
   calculateWave5ProjectionFromWave3Lenght(): boolean {
-    return true;
+    return false;
   }
 
   getWave2RetracementPercentages(): [number, number, number] {
