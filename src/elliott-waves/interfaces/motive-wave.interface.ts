@@ -173,8 +173,8 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
     if (lastWave.wave === WaveName._2) {
       const [max, min] = this.getWave3ProjectionPrices(p0, p1, p2);
       const projectedPrice = min;
-      const wave1Wave2Duration = p2.time - p0.time;
-      const projectedTime = lastWave.pEnd.time + wave1Wave2Duration * 2.618;
+      const wave1Duration = p1.time - p0.time;
+      const projectedTime = lastWave.pEnd.time + wave1Duration * 1.618;
       const p3 = this.buildClusterPivot(lastWave.pStart.type, projectedPrice, projectedTime);
       lastWave = new Wave(v4(), WaveName._3, lastWave.degree, lastWave.pEnd, new ClusterPivot(p3, 'PROJECTED'));
       waves.push(lastWave);
