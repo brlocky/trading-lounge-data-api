@@ -4,7 +4,7 @@ import { ClusterPivot, ClusterWaves, Pivot, Wave } from '../types';
 import { BaseWaveInterface } from './base-wave.interface';
 import { Fibonacci } from '../class/utils/fibonacci.class';
 import { WaveType, Degree, Trend, WaveName, PivotType } from '../enums';
-import { getHHBeforeBreak, getLLBeforeBreak } from '../class/utils';
+import { calculateAngle, getHHBeforeBreak, getLLBeforeBreak, projectTime } from '../class/utils';
 
 export abstract class MotiveWaveInterface extends BaseWaveInterface {
   _waveType: WaveType;
@@ -166,16 +166,18 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
 
     const [wave1, wave2] = waves;
 
+    const useLogScale = this.fibonacci.isLogScale();
     let lastWave = waves[waves.length - 1];
     const { pStart: p0, pEnd: p1 } = wave1;
     const { pEnd: p2 } = wave2;
 
+    const wave1Angle = calculateAngle(p0, p1);
+    console.log('wave 1 angle ', wave1Angle);
     // Wave 3
     if (lastWave.wave === WaveName._2) {
       const [max, min] = this.getWave3ProjectionPrices(p0, p1, p2);
       const projectedPrice = min;
-      const wave1Duration = p1.time - p0.time;
-      const projectedTime = lastWave.pEnd.time + wave1Duration * 1.618;
+      const projectedTime = projectTime(p2, projectedPrice, (45 / wave1Angle) * wave1Angle, useLogScale);
       const p3 = this.buildClusterPivot(lastWave.pStart.type, projectedPrice, projectedTime);
       lastWave = new Wave(v4(), WaveName._3, lastWave.degree, lastWave.pEnd, new ClusterPivot(p3, 'PROJECTED'));
       waves.push(lastWave);
@@ -186,8 +188,8 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
       const { pEnd } = lastWave;
       const [max, min] = this.getWave4RetracementPrices(p2, pEnd);
       const projectedPrice = min;
-      const wave2Duration = p2.time - p1.time;
-      const projectedTime = lastWave.pEnd.time + wave2Duration * 2.618;
+      const projectedTime = projectTime(pEnd, projectedPrice, (45 / wave1Angle) * wave1Angle, useLogScale);
+
       const p4 = this.buildClusterPivot(lastWave.pStart.type, projectedPrice, projectedTime);
       lastWave = new Wave(v4(), WaveName._4, lastWave.degree, lastWave.pEnd, new ClusterPivot(p4, 'PROJECTED'));
       waves.push(lastWave);
@@ -199,10 +201,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
       const { pEnd } = lastWave;
       const [max, min] = this.getWave5ProjectionPrices(p0, p1, p2, wave3.pEnd, pEnd);
       const projectedPrice = this.isSupportBroken(wave3.pEnd.price, min) ? wave3.pEnd.price : min;
-      const optionalWaveDuration = this.calculateWave5ProjectionFromWave3Lenght()
-        ? wave3.pEnd.time - wave3.pStart.time
-        : wave1.pEnd.time - wave1.pStart.time;
-      const projectedTime = lastWave.pEnd.time + (optionalWaveDuration / 2) * 0.618;
+      const projectedTime = projectTime(pEnd, projectedPrice, (45 / wave1Angle) * wave1Angle, useLogScale);
       const p5 = this.buildClusterPivot(lastWave.pStart.type, projectedPrice, projectedTime);
       lastWave = new Wave(v4(), WaveName._5, lastWave.degree, lastWave.pEnd, new ClusterPivot(p5, 'PROJECTED'));
       waves.push(lastWave);
@@ -482,7 +481,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
     const isValid = this.validateWave4RetracementPercentage(this.fibonacci.getRetracementPercentage(p2.price, p3.price, p.price));
 
     if (!isValid) {
-      return null;
+      return [];
     }
 
     return [p];
