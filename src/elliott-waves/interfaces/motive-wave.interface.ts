@@ -170,6 +170,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
     const { pStart: p0, pEnd: p1 } = wave1;
     const { pEnd: p2 } = wave2;
 
+    // Wave 3
     if (lastWave.wave === WaveName._2) {
       const [max, min] = this.getWave3ProjectionPrices(p0, p1, p2);
       const projectedPrice = min;
@@ -180,6 +181,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
       waves.push(lastWave);
     }
 
+    // Wave 4
     if (lastWave.wave === WaveName._3) {
       const { pEnd } = lastWave;
       const [max, min] = this.getWave4RetracementPrices(p2, pEnd);
@@ -191,6 +193,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
       waves.push(lastWave);
     }
 
+    // Wave 5
     if (lastWave.wave === WaveName._4) {
       const wave3 = waves[waves.length - 2];
       const { pEnd } = lastWave;
