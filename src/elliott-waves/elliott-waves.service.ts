@@ -63,10 +63,8 @@ export class ElliottWavesService {
 
   getSubWaveCounts({ candles, degree, startPivot, endPivot, logScale }: IGetSubWaveCounts): ClusterWaves[] {
     const pivots = this.candleService.getZigZag(candles);
-    const pivotslogScale = this.candleService.generateRetracements(pivots, 12);
 
     this.chartService.createCandlestickChart(candles, pivots, 'z-wave-count.png', false);
-    this.chartService.createCandlestickChart(candles, pivotslogScale, 'z-scale-wave-count.png', true);
 
     const motivePatterns = this.getWave1Patterns(candles, pivots, degree - 1, logScale);
 

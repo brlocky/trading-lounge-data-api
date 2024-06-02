@@ -106,6 +106,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
 
     const finalWaves: Wave[][] = [];
 
+    let minRetracementAllowedForWave2 = -Infinity;
     // Ensure index is resetted
     for (const p1 of pivots) {
       // Cannot go bellow Pivot 0
@@ -129,7 +130,21 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
       // Curent waves list is used to gather all waves in the current Pivot 1 context
       const wave1 = new Wave(v4(), WaveName._1, this._degree, p0, p1);
 
-      const wave2Waves = this.findWaves2([[wave1]]);
+      let wave2Waves = this.findWaves2([[wave1]]);
+
+      if (wave2Waves.length) {
+        // Update min retracement for current scan
+        minRetracementAllowedForWave2 = wave2Waves.reduce(
+          (max, obj) => Math.max(max, this.fibonacci.calculateRetracement(p1.price, obj[1].pEnd.price)),
+          minRetracementAllowedForWave2,
+        );
+
+        wave2Waves = wave2Waves.filter((w) => {
+          const retracement = this.fibonacci.calculateRetracement(p1.price, w[1].pEnd.price);
+          if (retracement >= minRetracementAllowedForWave2 * 0.5) return true;
+          return false;
+        });
+      }
 
       const [openWave3Waves, closedWave2Waves] = this.findWaves3(wave2Waves);
       finalWaves.push(...closedWave2Waves);
@@ -361,7 +376,8 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
         const newWaveCluster = [...wavesCluster];
         const pEndConnetion = newWaveCluster[3].pEnd;
         pEndConnetion.confirmPivot();
-        const wave5 = new Wave(v4(), WaveName._5, wave4.degree, pEndConnetion, new ClusterPivot(p5, 'WAITING'));
+        const pivotStatus = this.useTargetPivot() ? 'CONFIRMED' : 'WAITING';
+        const wave5 = new Wave(v4(), WaveName._5, wave4.degree, pEndConnetion, new ClusterPivot(p5, pivotStatus));
         newWaveCluster.push(wave5);
         outputClusterOpen.push(newWaveCluster);
       }
@@ -500,9 +516,6 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
 
       // Stop when max expected price is reached and return what ever we have
       if (this.isResistanceBroken(maxPrice, p)) {
-        if (results.length === 0) {
-          return null;
-        }
         break;
       }
 
@@ -536,9 +549,8 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
         const retracementWave1 = this.fibonacci.getRetracementPercentage(p0.price, p.price, testPivot.price);
         const retracementWave4 = this.fibonacci.getRetracementPercentage(p4.price, p.price, testPivot.price);
 
-        console.log('retracement ', retracementWave1, retracementWave4);
-        // Min retracement to consider a wave 1 8%
-        if (retracementWave1 > 10 && retracementWave4 > 50) {
+        // Min retracement to consider a wave 1
+        if (retracementWave1 > 10 && retracementWave4 > 30) {
           results.push(p);
         }
       }
