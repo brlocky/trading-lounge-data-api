@@ -1,10 +1,10 @@
 import { CandleDto } from 'src/dto';
 import { v4 } from 'uuid';
+import { calculateAngle, getHHBeforeBreak, getLLBeforeBreak, TimeProjection } from '../class/utils';
+import { Fibonacci } from '../class/utils/fibonacci.class';
+import { Degree, PivotType, Trend, WaveName, WaveType } from '../enums';
 import { ClusterPivot, ClusterWaves, Pivot, Wave } from '../types';
 import { BaseWaveInterface } from './base-wave.interface';
-import { Fibonacci } from '../class/utils/fibonacci.class';
-import { WaveType, Degree, Trend, WaveName, PivotType } from '../enums';
-import { calculateAngle, getHHBeforeBreak, getLLBeforeBreak, projectTime } from '../class/utils';
 
 export abstract class MotiveWaveInterface extends BaseWaveInterface {
   _waveType: WaveType;
@@ -19,10 +19,10 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
   // Retracement and Projection Levels
   abstract find(): ClusterWaves[];
 
-  abstract getWave2RetracementPercentages(): [number, number];
-  abstract getWave3ProjectionPercentages(): [number, number];
-  abstract getWave4RetracementPercentages(): [number, number];
-  abstract getWave5ProjectionPercentages(): [number, number];
+  abstract getWave2RetracementPercentages(): [number, number, number];
+  abstract getWave3ProjectionPercentages(): [number, number, number];
+  abstract getWave4RetracementPercentages(): [number, number, number];
+  abstract getWave5ProjectionPercentages(): [number, number, number];
 
   getExtendedWave(): WaveName | null {
     return null;
@@ -36,6 +36,23 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
     return false;
   }
 
+  // Wave validation regarding time and other relations
+  isValidWave2Stucture(p0: Pivot, p1: Pivot, p2: Pivot, p3: Pivot): boolean {
+    return true;
+  }
+
+  isValidWave3Stucture(p0: Pivot, p1: Pivot, p2: Pivot, p3: Pivot): boolean {
+    return true;
+  }
+
+  isValidWave4Stucture(p0: Pivot, p1: Pivot, p2: Pivot, p3: Pivot, p4: Pivot): boolean {
+    return true;
+  }
+
+  isValidWave5Stucture(p0: Pivot, p1: Pivot, p2: Pivot, p3: Pivot, p4: Pivot, p5: Pivot): boolean {
+    return true;
+  }
+
   public get waveType(): WaveType {
     return this._waveType;
   }
@@ -47,7 +64,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
 
     const projectedClusters = incompleteClusters.map((c) => this.getProjectedWaves(c));
 
-    const completedClusters = [...impulseWaves.filter((c) => c.length == 5), ...projectedClusters];
+    const completedClusters = [...impulseWaves.filter((c) => c.length === 5), ...projectedClusters];
 
     const waveClusters: ClusterWaves[] = [];
 
@@ -132,15 +149,16 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
 
       let wave2Waves = this.findWaves2([[wave1]]);
 
+      // Avoid to detect new waves2 with lower retracement
       if (wave2Waves.length) {
         // Update min retracement for current scan
         minRetracementAllowedForWave2 = wave2Waves.reduce(
-          (max, obj) => Math.max(max, this.fibonacci.calculateRetracement(p1.price, obj[1].pEnd.price)),
+          (max, obj) => Math.max(max, this.fibonacci.calculatePercentageDecrease(p1.price, obj[1].pEnd.price)),
           minRetracementAllowedForWave2,
         );
 
         wave2Waves = wave2Waves.filter((w) => {
-          const retracement = this.fibonacci.calculateRetracement(p1.price, w[1].pEnd.price);
+          const retracement = this.fibonacci.calculatePercentageDecrease(p1.price, w[1].pEnd.price);
           if (retracement >= minRetracementAllowedForWave2 * 0.5) return true;
           return false;
         });
@@ -162,12 +180,13 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
   }
 
   protected getProjectedWaves(waves: Wave[]): Wave[] {
-    if (waves.length < 2 || waves.length > 4) return waves;
+    const newWaves = [...waves];
+    if (newWaves.length < 2 || newWaves.length > 4) return newWaves;
 
-    const [wave1, wave2] = waves;
+    const [wave1, wave2] = newWaves;
 
     const useLogScale = this.fibonacci.isLogScale();
-    let lastWave = waves[waves.length - 1];
+    let lastWave = newWaves[newWaves.length - 1];
     const { pStart: p0, pEnd: p1 } = wave1;
     const { pEnd: p2 } = wave2;
 
@@ -175,39 +194,51 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
     console.log('wave 1 angle ', wave1Angle);
     // Wave 3
     if (lastWave.wave === WaveName._2) {
-      const [max, min] = this.getWave3ProjectionPrices(p0, p1, p2);
-      const projectedPrice = min;
-      const projectedTime = projectTime(p2, projectedPrice, (45 / wave1Angle) * wave1Angle, useLogScale);
-      const p3 = this.buildClusterPivot(lastWave.pStart.type, projectedPrice, projectedTime);
+      const [maxW1, medW1, minW2] = this.getWave2RetracementPercentages();
+      const perfectPrice = this.fibonacci.getRetracementPrice(p0.price, p1.price, medW1);
+      const perfectP2 = p2.copy();
+      perfectP2.price = perfectPrice;
+      const [max, med, min] = this.getWave3ProjectionPrices(p0, p1, perfectP2);
+
+      const projectedPrice = med;
+      const { mediumTime } = TimeProjection.calculateWave3Time(p0, p2);
+      const p3 = this.buildClusterPivot(lastWave.pStart.type, projectedPrice, mediumTime);
       lastWave = new Wave(v4(), WaveName._3, lastWave.degree, lastWave.pEnd, new ClusterPivot(p3, 'PROJECTED'));
-      waves.push(lastWave);
+      newWaves.push(lastWave);
     }
 
     // Wave 4
     if (lastWave.wave === WaveName._3) {
       const { pEnd } = lastWave;
-      const [max, min] = this.getWave4RetracementPrices(p2, pEnd);
-      const projectedPrice = min;
-      const projectedTime = projectTime(pEnd, projectedPrice, (45 / wave1Angle) * wave1Angle, useLogScale);
 
-      const p4 = this.buildClusterPivot(lastWave.pStart.type, projectedPrice, projectedTime);
+      const [max, med, min] = this.getWave4RetracementPrices(p2, pEnd);
+      const projectedPrice = med;
+      const { mediumTime } = TimeProjection.calculateWave4Time(p1, pEnd);
+
+      const p4 = this.buildClusterPivot(lastWave.pStart.type, projectedPrice, mediumTime);
       lastWave = new Wave(v4(), WaveName._4, lastWave.degree, lastWave.pEnd, new ClusterPivot(p4, 'PROJECTED'));
-      waves.push(lastWave);
+      newWaves.push(lastWave);
     }
 
     // Wave 5
     if (lastWave.wave === WaveName._4) {
-      const wave3 = waves[waves.length - 2];
+      const wave3 = newWaves[newWaves.length - 2];
       const { pEnd } = lastWave;
-      const [max, min] = this.getWave5ProjectionPrices(p0, p1, p2, wave3.pEnd, pEnd);
-      const projectedPrice = this.isSupportBroken(wave3.pEnd.price, min) ? wave3.pEnd.price : min;
-      const projectedTime = projectTime(pEnd, projectedPrice, (45 / wave1Angle) * wave1Angle, useLogScale);
-      const p5 = this.buildClusterPivot(lastWave.pStart.type, projectedPrice, projectedTime);
+
+      const [maxW1, medW1, minW2] = this.getWave4RetracementPercentages();
+      const perfectPrice = this.fibonacci.getRetracementPrice(p2.price, wave3.pEnd.price, medW1);
+      const perfectP2 = p2.copy();
+      perfectP2.price = perfectPrice;
+
+      const [max, med, min] = this.getWave5ProjectionPrices(p0, p1, p2, wave3.pEnd, perfectP2);
+      const projectedPrice = med;
+      const { mediumTime } = TimeProjection.calculateWave5Time(p2, pEnd);
+      const p5 = this.buildClusterPivot(lastWave.pStart.type, projectedPrice, mediumTime);
       lastWave = new Wave(v4(), WaveName._5, lastWave.degree, lastWave.pEnd, new ClusterPivot(p5, 'PROJECTED'));
-      waves.push(lastWave);
+      newWaves.push(lastWave);
     }
 
-    return waves;
+    return newWaves;
   }
 
   private buildClusterPivot(type: PivotType, price: number, time: number) {
@@ -318,7 +349,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
       // Get last wave from the cluster
       const [wave1, wave2, wave3] = wavesCluster;
 
-      const wave4Pivots = this.findWave4Pivots(wave1.pEnd, wave2.pEnd, wave3.pEnd);
+      const wave4Pivots = this.findWave4Pivots(wave1.pStart, wave1.pEnd, wave2.pEnd, wave3.pEnd);
 
       // When wave3Pivots is null means that there are no possible pivots 3
       if (wave4Pivots === null) {
@@ -404,7 +435,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
     const results: Pivot[] = [];
     const pivots = this.getPivotsAfter(p2);
     let minP3 = this.trend === Trend.UP ? -Infinity : Infinity;
-    const [maxPrice, minPrice] = this.getWave3ProjectionPrices(p0, p1, p2);
+    const [maxPrice, medPrice, minPrice] = this.getWave3ProjectionPrices(p0, p1, p2);
     for (const p of pivots) {
       // Stop if P2 support is broken
       if (this.isSupportBroken(p2, p.price)) {
@@ -442,7 +473,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
         continue;
       }
 
-      if (this.isValidRange(maxPrice, minPrice, p.price)) {
+      if (this.isValidRange(maxPrice, minPrice, p.price) && this.isValidWave3Stucture(p0, p1, p2, p)) {
         results.push(p);
       }
     }
@@ -462,7 +493,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
    * @param p3
    * @returns
    */
-  findWave4Pivots(p1: Pivot, p2: Pivot, p3: Pivot): Pivot[] | null {
+  findWave4Pivots(p0: Pivot, p1: Pivot, p2: Pivot, p3: Pivot): Pivot[] | null {
     const pivots = this.getPivotsAfter(p3);
 
     const { pivot: p } = this.trend === Trend.UP ? getLLBeforeBreak(pivots, p3) : getHHBeforeBreak(pivots, p3);
@@ -478,7 +509,9 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
       return null;
     }
 
-    const isValid = this.validateWave4RetracementPercentage(this.fibonacci.getRetracementPercentage(p2.price, p3.price, p.price));
+    const isValid =
+      this.validateWave4RetracementPercentage(this.fibonacci.getRetracementPercentage(p2.price, p3.price, p.price)) &&
+      this.isValidWave4Stucture(p0, p1, p2, p3, p);
 
     if (!isValid) {
       return [];
@@ -539,7 +572,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
         continue;
       }
 
-      if (this.isValidRange(maxPrice, minPrice, p.price)) {
+      if (this.isValidRange(maxPrice, minPrice, p.price) && this.isValidWave5Stucture(p0, p1, p2, p3, p4, p)) {
         const testPivots = this.getPivotsAfter(p);
         // Check if we have a possible new wave 2
         const { pivot: testPivot, type } = this.trend === Trend.UP ? getLLBeforeBreak(testPivots, p) : getHHBeforeBreak(testPivots, p);
@@ -566,52 +599,56 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
     return check >= max && check <= min;
   }
 
-  getWave2RetracementPrices(p0: Pivot, p1: Pivot): [number, number] {
-    const [min, max] = this.getWave2RetracementPercentages();
+  getWave2RetracementPrices(p0: Pivot, p1: Pivot): [number, number, number] {
+    const [min, med, max] = this.getWave2RetracementPercentages();
     const pMax = this.fibonacci.getRetracementPrice(p0.price, p1.price, max);
     const pMin = this.fibonacci.getRetracementPrice(p0.price, p1.price, min);
-    return [pMax, pMin];
+    const pMed = this.fibonacci.getRetracementPrice(p0.price, p1.price, med);
+    return [pMax, pMed, pMin];
   }
 
-  getWave3ProjectionPrices(p0: Pivot, p1: Pivot, p2: Pivot): [number, number] {
-    const [min, max] = this.getWave3ProjectionPercentages();
+  getWave3ProjectionPrices(p0: Pivot, p1: Pivot, p2: Pivot): [number, number, number] {
+    const [min, med, max] = this.getWave3ProjectionPercentages();
     const pMax = this.fibonacci.getProjectionPrice(p0.price, p1.price, p2.price, max);
     const pMin = this.fibonacci.getProjectionPrice(p0.price, p1.price, p2.price, min);
-    return [pMax, pMin];
+    const pMed = this.fibonacci.getProjectionPrice(p0.price, p1.price, p2.price, med);
+    return [pMax, pMed, pMin];
   }
 
-  getWave4RetracementPrices(p2: Pivot, p3: Pivot): [number, number] {
-    const [min, max] = this.getWave4RetracementPercentages();
+  getWave4RetracementPrices(p2: Pivot, p3: Pivot): [number, number, number] {
+    const [min, med, max] = this.getWave4RetracementPercentages();
     const pMax = this.fibonacci.getRetracementPrice(p2.price, p3.price, max);
     const pMin = this.fibonacci.getRetracementPrice(p2.price, p3.price, min);
-    return [pMax, pMin];
+    const pMed = this.fibonacci.getRetracementPrice(p2.price, p3.price, med);
+    return [pMax, pMed, pMin];
   }
 
-  getWave5ProjectionPrices(p0: Pivot, p1: Pivot, p2: Pivot, p3: Pivot, p4: Pivot): [number, number] {
-    const [min, max] = this.getWave5ProjectionPercentages();
+  getWave5ProjectionPrices(p0: Pivot, p1: Pivot, p2: Pivot, p3: Pivot, p4: Pivot): [number, number, number] {
+    const [min, med, max] = this.getWave5ProjectionPercentages();
 
     const useAlternativePivots = this.calculateWave5ProjectionFromWave3Lenght();
     const pStart = useAlternativePivots ? p2 : p0;
     const pEnd = useAlternativePivots ? p3 : p1;
     const pMax = this.fibonacci.getProjectionPrice(pStart.price, pEnd.price, p4.price, max);
     const pMin = this.fibonacci.getProjectionPrice(pStart.price, pEnd.price, p4.price, min);
-    return [pMax, pMin];
+    const pMed = this.fibonacci.getProjectionPrice(pStart.price, pEnd.price, p4.price, med);
+    return [pMax, pMed, pMin];
   }
 
   validateWave2RetracementPercentage(percentage: number): boolean {
-    const [min, max] = this.getWave2RetracementPercentages();
+    const [min, med, max] = this.getWave2RetracementPercentages();
     return percentage >= min && percentage <= max;
   }
   validateWave3ProjectionPercentage(percentage: number): boolean {
-    const [min, max] = this.getWave3ProjectionPercentages();
+    const [min, med, max] = this.getWave3ProjectionPercentages();
     return percentage >= min && percentage <= max;
   }
   validateWave4RetracementPercentage(percentage: number): boolean {
-    const [min, max] = this.getWave4RetracementPercentages();
+    const [min, med, max] = this.getWave4RetracementPercentages();
     return percentage >= min && percentage <= max;
   }
   validateWave5ProjectionPercentage(percentage: number): boolean {
-    const [min, max] = this.getWave5ProjectionPercentages();
+    const [min, med, max] = this.getWave5ProjectionPercentages();
     return percentage >= min && percentage <= max;
   }
 

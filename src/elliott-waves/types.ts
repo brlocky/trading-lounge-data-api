@@ -30,6 +30,10 @@ export class Pivot {
     this.time = time;
   }
 
+  public copy(): Pivot {
+    return new Pivot(this.id, this.candleIndex, this.type, this.price, this.time);
+  }
+
   public isHigh(): boolean {
     return this.type === PivotType.HIGH;
   }

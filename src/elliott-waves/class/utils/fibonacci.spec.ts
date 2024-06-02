@@ -141,42 +141,74 @@ describe('Fibonacci', () => {
     });
   });
 
-  describe('calculateRetracement', () => {
+  describe('calculatePercentageDecrease', () => {
     it('should calculate retracement correctly', () => {
-      expect(instanceLinear.calculateRetracement(100, 80)).toBe(20);
-      expect(instanceLinear.calculateRetracement(100, 50)).toBe(50);
-      expect(instanceLinear.calculateRetracement(200, 50)).toBe(75);
+      expect(instanceLinear.calculatePercentageDecrease(100, 80)).toBe(20);
+      expect(instanceLinear.calculatePercentageDecrease(100, 50)).toBe(50);
+      expect(instanceLinear.calculatePercentageDecrease(200, 50)).toBe(75);
 
-      expect(instanceLog.calculateRetracement(100, 80)).toBe(20);
-      expect(instanceLog.calculateRetracement(100, 50)).toBe(50);
-      expect(instanceLog.calculateRetracement(200, 50)).toBe(75);
+      expect(instanceLog.calculatePercentageDecrease(100, 80)).toBe(20);
+      expect(instanceLog.calculatePercentageDecrease(100, 50)).toBe(50);
+      expect(instanceLog.calculatePercentageDecrease(200, 50)).toBe(75);
     });
 
     it('should return 0 when p1 is zero', () => {
-      expect(instanceLinear.calculateRetracement(0, 80)).toBe(0);
-      expect(instanceLog.calculateRetracement(0, 80)).toBe(0);
+      expect(instanceLinear.calculatePercentageDecrease(0, 80)).toBe(0);
+      expect(instanceLog.calculatePercentageDecrease(0, 80)).toBe(0);
     });
 
     it('should handle cases where p2 is zero', () => {
-      expect(instanceLinear.calculateRetracement(100, 0)).toBe(100);
-      expect(instanceLog.calculateRetracement(100, 0)).toBe(100);
+      expect(instanceLinear.calculatePercentageDecrease(100, 0)).toBe(100);
+      expect(instanceLog.calculatePercentageDecrease(100, 0)).toBe(100);
     });
 
     it('should handle negative prices correctly', () => {
-      expect(instanceLinear.calculateRetracement(100, -50)).toBe(150);
-      expect(instanceLinear.calculateRetracement(100, -100)).toBe(200);
-      expect(instanceLog.calculateRetracement(100, -50)).toBe(150);
-      expect(instanceLog.calculateRetracement(100, -100)).toBe(200);
+      expect(instanceLinear.calculatePercentageDecrease(100, -50)).toBe(150);
+      expect(instanceLinear.calculatePercentageDecrease(100, -100)).toBe(200);
+      expect(instanceLog.calculatePercentageDecrease(100, -50)).toBe(150);
+      expect(instanceLog.calculatePercentageDecrease(100, -100)).toBe(200);
     });
 
     it('should handle identical p1 and p2 correctly', () => {
-      expect(instanceLinear.calculateRetracement(100, 100)).toBe(0);
-      expect(instanceLog.calculateRetracement(100, 100)).toBe(0);
+      expect(instanceLinear.calculatePercentageDecrease(100, 100)).toBe(0);
+      expect(instanceLog.calculatePercentageDecrease(100, 100)).toBe(0);
     });
 
     it('should handle p2 greater than p1 correctly', () => {
-      expect(instanceLinear.calculateRetracement(100, 150)).toBe(-50);
-      expect(instanceLog.calculateRetracement(100, 150)).toBe(-50);
+      expect(instanceLinear.calculatePercentageDecrease(100, 150)).toBe(-50);
+      expect(instanceLog.calculatePercentageDecrease(100, 150)).toBe(-50);
+    });
+  });
+
+  describe('calculatePercentageGain', () => {
+    it('should return 20 when increasing from 100 to 120', () => {
+      expect(instanceLinear.calculatePercentageGain(100, 120)).toBe(20);
+      expect(instanceLog.calculatePercentageGain(100, 120)).toBe(20);
+    });
+
+    it('should return 50 when increasing from 100 to 150', () => {
+      expect(instanceLinear.calculatePercentageGain(100, 150)).toBe(50);
+      expect(instanceLog.calculatePercentageGain(100, 150)).toBe(50);
+    });
+
+    it('should return 300 when increasing from 50 to 200', () => {
+      expect(instanceLinear.calculatePercentageGain(50, 200)).toBe(300);
+      expect(instanceLog.calculatePercentageGain(50, 200)).toBe(300);
+    });
+
+    it('should return 0 when increasing from 100 to 100', () => {
+      expect(instanceLinear.calculatePercentageGain(100, 100)).toBe(0);
+      expect(instanceLog.calculatePercentageGain(100, 100)).toBe(0);
+    });
+
+    it('should return -50 when decreasing from 100 to 50 (negative gain)', () => {
+      expect(instanceLinear.calculatePercentageGain(100, 50)).toBe(-50);
+      expect(instanceLog.calculatePercentageGain(100, 50)).toBe(-50);
+    });
+
+    it('should return 0 when starting value is 0', () => {
+      expect(instanceLinear.calculatePercentageGain(0, 50)).toBe(0);
+      expect(instanceLog.calculatePercentageGain(0, 50)).toBe(0);
     });
   });
 });

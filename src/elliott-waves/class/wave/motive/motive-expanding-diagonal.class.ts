@@ -18,16 +18,34 @@ export class MotiveExpandingDiagonal extends MotiveWaveInterface {
     return true;
   }
 
-  getWave2RetracementPercentages(): [number, number] {
-    return [50, 100];
+  isValidWave3Stucture(p0: Pivot, p1: Pivot, p2: Pivot, p3: Pivot): boolean {
+    const w1Gains = this.fibonacci.calculatePercentageGain(p0.price, p1.price);
+    const w3Gains = this.fibonacci.calculatePercentageGain(p2.price, p3.price);
+    return w3Gains > w1Gains;
   }
-  getWave3ProjectionPercentages(): [number, number] {
-    return [100, 181.8];
+
+  isValidWave4Stucture(p0: Pivot, p1: Pivot, p2: Pivot, p3: Pivot, p4: Pivot): boolean {
+    const w2Gains = this.fibonacci.calculatePercentageDecrease(p1.price, p2.price);
+    const w4Gains = this.fibonacci.calculatePercentageDecrease(p3.price, p4.price);
+    return w4Gains > w2Gains;
   }
-  getWave4RetracementPercentages(): [number, number] {
-    return [50, 100];
+
+  isValidWave5Stucture(p0: Pivot, p1: Pivot, p2: Pivot, p3: Pivot, p4: Pivot, p5: Pivot): boolean {
+    const w3Gains = this.fibonacci.calculatePercentageGain(p2.price, p3.price);
+    const w5Gains = this.fibonacci.calculatePercentageGain(p4.price, p5.price);
+    return w5Gains > w3Gains;
   }
-  getWave5ProjectionPercentages(): [number, number] {
-    return [100, 181.8];
+
+  getWave2RetracementPercentages(): [number, number, number] {
+    return [50, 78.6, 99.9];
+  }
+  getWave3ProjectionPercentages(): [number, number, number] {
+    return [127.2, 161.8, 181.8];
+  }
+  getWave4RetracementPercentages(): [number, number, number] {
+    return [61.8, 78.6, 100];
+  }
+  getWave5ProjectionPercentages(): [number, number, number] {
+    return [100, 161.8, 181.8];
   }
 }

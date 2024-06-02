@@ -98,37 +98,3 @@ export const calculateAngle = (pivot1: { price: number; time: number }, pivot2: 
 
   return Math.abs(angleInDegrees);
 };
-
-export const projectTime = (
-  pivot: { price: number; time: number },
-  targetPrice: number,
-  angleDegrees: number,
-  useLogScale: boolean = false,
-): number => {
-  // Ensure prices are positive for logarithmic scale
-  if (useLogScale && (pivot.price <= 0 || targetPrice <= 0)) {
-    throw new Error('Prices must be greater than zero when using logarithmic scale');
-  }
-
-  const angleRadians = angleDegrees * (Math.PI / 180);
-
-  let deltaPrice: number;
-
-  if (useLogScale) {
-    // Use logarithmic scale for prices
-    const logPivotPrice = Math.log(pivot.price);
-    const logTargetPrice = Math.log(targetPrice);
-    deltaPrice = logTargetPrice - logPivotPrice;
-  } else {
-    // Use linear scale for prices
-    deltaPrice = targetPrice - pivot.price;
-  }
-
-  // Calculate the time difference
-  const deltaTime = Math.abs(deltaPrice) / Math.tan(angleRadians);
-
-  // Convert deltaTime back to the original scale if you used a scale factor previously
-  const projectedTime = pivot.time + deltaTime * 10000000;
-
-  return projectedTime;
-};

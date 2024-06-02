@@ -10,20 +10,20 @@ class ConcreteMotiveWave extends MotiveWaveInterface {
     return [];
   }
 
-  getWave2RetracementPercentages(): [number, number] {
-    return [50, 61.8];
+  getWave2RetracementPercentages(): [number, number, number] {
+    return [14.2, 61.8, 99.9];
   }
 
-  getWave3ProjectionPercentages(): [number, number] {
-    return [161.8, 261.8];
+  getWave3ProjectionPercentages(): [number, number, number] {
+    return [138.2, 161.8, 261.8];
   }
 
-  getWave4RetracementPercentages(): [number, number] {
-    return [38.2, 50];
+  getWave4RetracementPercentages(): [number, number, number] {
+    return [14.2, 38.2, 50];
   }
 
-  getWave5ProjectionPercentages(): [number, number] {
-    return [100, 161.8];
+  getWave5ProjectionPercentages(): [number, number, number] {
+    return [38.2, 61.8, 161.8];
   }
 }
 

@@ -122,7 +122,7 @@ export class CandleService {
 
   generateRetracements(pivots: Pivot[], minWaves: number): Pivot[] {
     const detailDecrement = 3;
-    let detail = 100;
+    let detail = 90;
     const minDetail = 1;
     let waveRetracements: WaveRetracement[] = [];
 
@@ -170,7 +170,7 @@ export class CandleService {
         continue;
       }
 
-      const retracementValue = fibonacci.calculateRetracement(pivot.price, nextPivot.price);
+      const retracementValue = fibonacci.calculatePercentageDecrease(pivot.price, nextPivot.price);
       if (retracementValue > threshold) {
         retracements.push({ p1: pivot, p2: nextPivot, retracement: retracementValue });
       }
