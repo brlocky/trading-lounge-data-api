@@ -100,17 +100,16 @@ export class AlphaVantageService implements SearchProvider {
       });
     }
 
-    const prevCandle =
-      candles[0] && Number(interval) > 0
-        ? {
-            symbol: symbol,
-            interval: interval,
-            time: candles[0].time,
-          }
-        : null;
+    const prevCandle = candles[0]
+      ? {
+          symbol: symbol,
+          interval: interval,
+          time: candles[0].time,
+        }
+      : null;
 
     const nextCandle =
-      candles.length > 1 && Number(interval) > 0
+      candles.length > 1
         ? {
             symbol: symbol,
             interval: interval,
@@ -128,18 +127,34 @@ export class AlphaVantageService implements SearchProvider {
 
   buildCandlesEndpoint(getCandlesDto: GetCandlesDto) {
     const { symbol, interval, end } = getCandlesDto;
-    const isIntraday = Number(interval) > 0;
-
+    const isIntraday = !['M', 'W', 'D'].includes(interval);
     if (isIntraday) {
+      const alphavanteInterval = this.convertInterval(interval);
       const month = end
         ? moment(new Date(end.time * 1000))
             .subtract(1, 'months')
             .format('YYYY-MM')
-        : moment().format('YYYY-MM');
-      return `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${symbol}&datatype=csv&interval=${interval}min&outputsize=full&apikey=${this.apiKey}&month=${month}`;
+        : undefined;
+
+      return `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${symbol}&datatype=csv&interval=${alphavanteInterval}&outputsize=full&apikey=${this.apiKey}&month=${month}`;
     }
 
     return `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${symbol}&outputsize=full&datatype=csv&apikey=${this.apiKey}`;
+  }
+
+  convertInterval(interval: string) {
+    switch (interval) {
+      case '5m':
+        return '5min';
+      case '30m':
+        return '30min';
+      case '1h':
+        return '60min';
+      case '4h':
+        return '60min';
+    }
+
+    return interval;
   }
 
   async parseCsvData(csvData: string): Promise<AlphaCandle[]> {
