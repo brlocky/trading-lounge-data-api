@@ -1,9 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { CandleDto, CandlePointer, GetCandlesDto, GetCandlesResultDto, SearchDto, SearchResultDto } from './dto';
 import { ConfigService } from '@nestjs/config';
 import * as bodyParser from 'body-parser';
+import { CandleDto, CandlePointer, GetCandlesDto, GetCandlesResultDto, SearchResultDto } from './search/dto';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true, forceCloseConnections: true });
@@ -19,7 +19,7 @@ async function bootstrap() {
     .addTag('TAG')
     .build();
   const document = SwaggerModule.createDocument(app, config, {
-    extraModels: [SearchDto, SearchResultDto, GetCandlesDto, GetCandlesResultDto, CandlePointer, CandleDto],
+    extraModels: [SearchResultDto, GetCandlesDto, GetCandlesResultDto, CandleDto, CandlePointer],
   });
 
   SwaggerModule.setup('api', app, document);

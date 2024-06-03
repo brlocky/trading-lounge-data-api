@@ -1,7 +1,7 @@
 import { PreconditionFailedException } from '@nestjs/common';
-import { CandleDto } from 'src/dto';
 import { PivotType, Trend } from 'src/elliott-waves/enums';
 import { Pivot, PivotSearchResult } from 'src/elliott-waves/types';
+import { CandleDto } from 'src/search/dto';
 
 /**
  * Get next Low before it breaks the Resistance

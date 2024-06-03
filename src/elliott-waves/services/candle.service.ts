@@ -1,11 +1,10 @@
-import { CandleDto } from 'src/dto';
-
 import { Injectable, PreconditionFailedException } from '@nestjs/common';
 import { Pivot, PivotSearchResult } from '../types';
 import { v4 } from 'uuid';
 import { getHHBeforeBreak, getLLBeforeBreak, getTrend } from '../class/utils/pivot.utils';
 import { PivotType, Trend } from '../enums';
 import { Fibonacci } from '../class/utils/fibonacci.class';
+import { CandleDto } from 'src/search/dto';
 interface WaveRetracement {
   p1: Pivot;
   p2: Pivot;

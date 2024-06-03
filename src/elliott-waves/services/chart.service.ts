@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import QuickChart from 'quickchart-js';
-import { CandleDto } from 'src/dto';
 import { Pivot } from '../types';
+import { CandleDto } from 'src/search/dto';
 
 @Injectable()
 export class ChartService {

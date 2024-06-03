@@ -1,4 +1,20 @@
+// src/search/dto/search-result.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
+
+export class CandleDto {
+  @ApiProperty()
+  time: number;
+  @ApiProperty()
+  open: number;
+  @ApiProperty()
+  high: number;
+  @ApiProperty()
+  low: number;
+  @ApiProperty()
+  close: number;
+  @ApiProperty()
+  volume: number;
+}
 
 export class CandlePointer {
   @ApiProperty()
@@ -15,7 +31,9 @@ export class GetCandlesDto {
   @ApiProperty()
   interval: string;
   @ApiProperty()
-  to?: CandlePointer;
+  start?: CandlePointer;
+  @ApiProperty()
+  end?: CandlePointer;
 }
 
 export class GetCandlesResultDto {
@@ -29,19 +47,4 @@ export class GetCandlesResultDto {
   prevCandle: CandlePointer | null;
   @ApiProperty()
   nextCandle: CandlePointer | null;
-}
-
-export class CandleDto {
-  @ApiProperty()
-  time: number;
-  @ApiProperty()
-  open: number;
-  @ApiProperty()
-  high: number;
-  @ApiProperty()
-  low: number;
-  @ApiProperty()
-  close: number;
-  @ApiProperty()
-  volume: number;
 }

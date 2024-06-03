@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { CandleDto } from 'src/dto';
 import { Degree, degreeToString, waveNameToString, waveTypeToString } from './enums';
 import { ClusterPivot, ClusterWaves, Pivot, Wave } from './types';
+import { CandleDto } from 'src/search/dto';
 
 export class EnumStruct {
   @ApiProperty()

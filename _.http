@@ -35,3 +35,52 @@ content-type: application/json
 {
     "prompt": "Hello"
 }
+
+
+### 
+
+
+
+
+Get {{host}}/search?query=nvda
+ 
+###
+
+
+
+Get {{host}}/search?query=aapl
+ 
+###
+
+
+Get {{host}}/search?query=spx
+ 
+###
+
+
+Get {{host}}/search?query=spy
+ 
+###
+
+
+Post {{host}}/candles
+content-type: application/json
+
+{
+    "symbol": "NASDAQ:AAPL",
+    "interval": "1h"
+}
+
+
+### 
+
+
+Post {{host}}/candles
+content-type: application/json
+
+{
+    "symbol": "INDEX:SPX",
+    "interval": "1h"
+}
+
+### 

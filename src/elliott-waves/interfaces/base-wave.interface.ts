@@ -1,4 +1,4 @@
-import { CandleDto } from 'src/dto';
+import { CandleDto } from 'src/search/dto';
 import { Fibonacci } from '../class/utils/fibonacci.class';
 import { getTrend } from '../class/utils/pivot.utils';
 import { Trend } from '../enums';

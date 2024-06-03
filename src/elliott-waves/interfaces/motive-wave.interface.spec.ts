@@ -1,8 +1,8 @@
-import { CandleDto } from 'src/dto';
 import { MotiveWaveInterface } from '../interfaces/motive-wave.interface';
 import { Pivot, ClusterWaves } from '../types';
 import { Fibonacci } from '../class/utils/fibonacci.class';
 import { Degree, WaveType } from '../enums';
+import { CandleDto } from 'src/search/dto';
 
 class ConcreteMotiveWave extends MotiveWaveInterface {
   find(): ClusterWaves[] {

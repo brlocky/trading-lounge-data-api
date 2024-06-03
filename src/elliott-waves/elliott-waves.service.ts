@@ -5,14 +5,12 @@ import { MotiveContractingDiagonal } from './class/wave/motive/motive-contractin
 import { MotiveExpandingDiagonal } from './class/wave/motive/motive-expanding-diagonal.class';
 import { MotiveExtendedWave1 } from './class/wave/motive/motive-extended-wave-1.class';
 import { MotiveExtendedWave3 } from './class/wave/motive/motive-extended-wave-3.class';
-import { MotiveExtendedWave5 } from './class/wave/motive/motive-extended-wave-5.class';
 import { CandleService } from './services/candle.service';
 import { ChartService } from './services/chart.service';
-import { ClusterWaves, Pivot, Wave } from './types';
+import { ClusterWaves, Pivot } from './types';
 import { Degree, degreeToString, waveTypeToString } from './enums';
-import { CandleDto } from 'src/dto';
 import { MotiveWaveInterface } from './interfaces/motive-wave.interface';
-import { PivotResponse } from './elliott-waves.dto';
+import { CandleDto } from 'src/search/dto';
 
 interface IGetWaveCounts {
   degree: number;

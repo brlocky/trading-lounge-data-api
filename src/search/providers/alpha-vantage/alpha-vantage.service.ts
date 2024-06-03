@@ -1,22 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { SearchDto } from '../dto/search.dto';
-import axios from 'axios';
 import { ConfigService } from '@nestjs/config';
-import { CandleDto, GetCandlesDto, GetCandlesResultDto, SearchResultDto } from 'src/dto';
-import * as fastCsv from 'fast-csv';
+import axios from 'axios';
+import moment from 'moment';
+import { SearchResultDto, GetCandlesDto, GetCandlesResultDto, CandleDto } from 'src/search/dto';
+import { SearchProvider } from 'src/search/search-provider.interface';
 import { Readable } from 'stream';
-import { utc as moment } from 'moment';
-
-interface AlphaCandle {
-  timestamp: string;
-  open: string;
-  high: string;
-  low: string;
-  close: string;
-  volume: string;
-  adjusted_close?: string;
-  ['adjusted close']?: string;
-}
+import * as fastCsv from 'fast-csv';
 
 interface AlphaSearchResult {
   '1. symbol': string;
@@ -30,19 +19,64 @@ interface AlphaSearchResult {
   '9. matchScore': string;
 }
 
+interface AlphaCandle {
+  timestamp: string;
+  open: string;
+  high: string;
+  low: string;
+  close: string;
+  volume: string;
+  adjusted_close?: string;
+  ['adjusted close']?: string;
+}
 interface AlphaSearchResults {
   bestMatches: AlphaSearchResult[];
 }
 
 @Injectable()
-export class DataService {
+export class AlphaVantageService implements SearchProvider {
   apiKey: string;
   constructor(private readonly configService: ConfigService) {
     this.apiKey = this.configService.get<string>('APIKEY') || 'demo';
   }
 
+  getIdentifier(): string {
+    return 'AV';
+  }
+
+  getExchange(): string {
+    return 'Alphavantage';
+  }
+
+  async search(query: string): Promise<SearchResultDto[]> {
+    const url = this.buildSearchEndpoint(query);
+    const response = await axios.get<AlphaSearchResults>(url);
+    if (response.status !== 200) {
+      return [];
+    }
+    const { bestMatches } = response.data;
+    if (!bestMatches) {
+      return [];
+    }
+
+    return bestMatches.map((m: AlphaSearchResult) => {
+      return {
+        identifier: this.getIdentifier(),
+        exchange: this.getExchange(),
+        symbol: m['1. symbol'],
+        name: m['2. name'],
+        type: m['3. type'],
+        region: m['4. region'],
+      };
+    });
+  }
+
+  buildSearchEndpoint(query: string) {
+    return `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${query}&apikey=${this.apiKey}`;
+  }
+
   async getCandles(getCandlesDto: GetCandlesDto): Promise<GetCandlesResultDto> {
-    const { symbol, interval, to } = getCandlesDto;
+    const { symbol, interval, end } = getCandlesDto;
     const emptyResponse = {
       symbol: symbol,
       interval: interval,
@@ -60,9 +94,9 @@ export class DataService {
     const csvData = await this.parseCsvData(response.data);
 
     let candles = this.mapAlphaCandles(csvData, interval);
-    if (to && to.time) {
+    if (end && end.time) {
       candles = candles.filter((c) => {
-        return c.time < to.time;
+        return c.time <= end.time;
       });
     }
 
@@ -93,12 +127,12 @@ export class DataService {
   }
 
   buildCandlesEndpoint(getCandlesDto: GetCandlesDto) {
-    const { symbol, interval, to } = getCandlesDto;
+    const { symbol, interval, end } = getCandlesDto;
     const isIntraday = Number(interval) > 0;
 
     if (isIntraday) {
-      const month = to
-        ? moment(new Date(to.time * 1000))
+      const month = end
+        ? moment(new Date(end.time * 1000))
             .subtract(1, 'months')
             .format('YYYY-MM')
         : moment().format('YYYY-MM');
@@ -106,32 +140,6 @@ export class DataService {
     }
 
     return `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${symbol}&outputsize=full&datatype=csv&apikey=${this.apiKey}`;
-  }
-
-  async search(executeSearchDto: SearchDto): Promise<SearchResultDto[]> {
-    const url = this.buildSearchEndpoint(executeSearchDto);
-    const response = await axios.get<AlphaSearchResults>(url);
-    if (response.status !== 200) {
-      return [];
-    }
-    const { bestMatches } = response.data;
-    if (!bestMatches) {
-      return [];
-    }
-
-    return bestMatches.map((m: AlphaSearchResult) => {
-      return {
-        symbol: m['1. symbol'],
-        name: m['2. name'],
-        type: m['3. type'],
-        region: m['4. region'],
-      };
-    });
-  }
-
-  buildSearchEndpoint(executeSearchDto: SearchDto) {
-    const { text } = executeSearchDto;
-    return `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${text}&apikey=${this.apiKey}`;
   }
 
   async parseCsvData(csvData: string): Promise<AlphaCandle[]> {

@@ -1,10 +1,10 @@
-import { CandleDto } from 'src/dto';
 import { v4 } from 'uuid';
 import { calculateAngle, getHHBeforeBreak, getLLBeforeBreak, TimeProjection } from '../class/utils';
 import { Fibonacci } from '../class/utils/fibonacci.class';
 import { Degree, PivotType, Trend, WaveName, WaveType } from '../enums';
 import { ClusterPivot, ClusterWaves, Pivot, Wave } from '../types';
 import { BaseWaveInterface } from './base-wave.interface';
+import { CandleDto } from 'src/search/dto';
 
 export abstract class MotiveWaveInterface extends BaseWaveInterface {
   _waveType: WaveType;
