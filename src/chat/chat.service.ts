@@ -79,7 +79,8 @@ export class ChatService {
   preparePrompt(messages: ChatMessage[], data: string | undefined = undefined): string {
     const limitedHistory = messages.slice(-10);
     const messageHistory = limitedHistory.map((msg) => `${msg.role}: ${msg.content}`).join('\n');
-    const prompt = `${messageHistory}\n${data === undefined ? '' : data}\n\n\nassistant: `;
+    const extraData = data ? `\n\n#THIS DATA SHOULD BE HIDDEN TO THE USER#\n\n${data}\n\n` : '';
+    const prompt = `${messageHistory}\n${extraData}\nassistant: `;
     return prompt;
   }
 
@@ -91,7 +92,7 @@ export class ChatService {
       index: r.candleIndex,
       type: r.type === 1 ? 'H' : 'L',
       price: r.price,
-      time: new Date(r.time * 1000).toString(),
+      date: new Date(r.time * 1000).toString(),
     }));
     const text = `\n\nLast Candle Date: ${lastDate}\nLast Price: ${lastPrice}\n Degree: ${degree}\Pivot Points: ${JSON.stringify(
       pivots,
