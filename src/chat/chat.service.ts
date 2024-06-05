@@ -14,6 +14,13 @@ const inputAnalyst = {
   top_p: 0.95,
   max_tokens: 512,
   temperature: 0.7,
+  /*   system_prompt: `
+  I am Trading Lounge AI, specializing in Elliott Wave Analysis.
+  I will provide Elliott Wave Analysis when Pivot Points and Degree are provided.
+  I can provide information about live data once I have the Pivot Points.
+  I will use all of the Pivot Points to performance my analysis and will include special focus on the last waves.
+  Pivot points will have information about the time, price, pivot type and index from where they were extracted.
+  `, */
   system_prompt: `
   I am Trading Lounge AI, specializing in Elliott Wave Analysis.
   I will provide Elliott Wave Analysis when Pivot Points and Degree are provided.
@@ -69,10 +76,10 @@ export class ChatService {
     });
   }
 
-  preparePrompt(messages: ChatMessage[]): string {
+  preparePrompt(messages: ChatMessage[], data: string | undefined = undefined): string {
     const limitedHistory = messages.slice(-10);
     const messageHistory = limitedHistory.map((msg) => `${msg.role}: ${msg.content}`).join('\n');
-    const prompt = `${messageHistory}\nassistant: `;
+    const prompt = `${messageHistory}\n${data === undefined ? '' : data}\n\n\nassistant: `;
     return prompt;
   }
 
@@ -97,10 +104,12 @@ export class ChatService {
 
     if (ticker2Load) {
       console.log('Found Ticker', ticker2Load);
-      const candlesResult = await this.searchService.candles({
-        symbol: ticker2Load,
-        interval: 'D',
-      });
+      const candlesResult = await this.searchService
+        .candles({
+          symbol: ticker2Load,
+          interval: 'D',
+        })
+        .catch();
       console.log('Candles Result Ticker', candlesResult?.candles.length);
       if (candlesResult) {
         const {
@@ -147,10 +156,10 @@ export class ChatService {
   async getInferenceStream(dto: ChatRequestDto): Promise<Observable<ServerSentEvent>> {
     const chartDataPrompt = await this.getChartDataPrompt(dto.messages);
 
-    const prompt = this.preparePrompt(dto.messages);
+    const prompt = this.preparePrompt(dto.messages, chartDataPrompt || undefined);
     const input = {
       ...inputAnalyst,
-      prompt: prompt + chartDataPrompt,
+      prompt: prompt,
     };
 
     const stream = this.inferenceModel(input);
