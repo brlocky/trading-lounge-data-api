@@ -7,5 +7,6 @@ import { ChartService } from './services/chart.service';
 @Module({
   controllers: [ElliottWavesController],
   providers: [ElliottWavesService, CandleService, ChartService],
+  exports: [ElliottWavesService],
 })
 export class ElliottWavesModule {}

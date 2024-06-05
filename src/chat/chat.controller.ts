@@ -3,9 +3,9 @@ import { Cache } from 'cache-manager';
 import { Body, Controller, Inject, Param, Post, Res, Sse } from '@nestjs/common';
 import { Response } from 'express';
 import { EMPTY, map, Observable } from 'rxjs';
-import { ChatRequestDto } from 'src/dto/chat.dto';
-import { ChatService } from 'src/services/chat.service';
+import { ChatRequestDto } from 'src/chat/dto/chat.dto';
 import { v4 } from 'uuid';
+import { ChatService } from './chat.service';
 
 @Controller('chat')
 export class ChatController {
@@ -50,8 +50,8 @@ export class ChatController {
     const storedQuery = await this.cacheManager.get<ChatRequestDto>(chatId);
 
     if (!storedQuery) return EMPTY;
-
-    return this.service.getInferenceStream(storedQuery).pipe(
+    const inference = await this.service.getInferenceStream(storedQuery);
+    return inference.pipe(
       map((event) => {
         return new MessageEvent('message', {
           data: JSON.stringify(event),

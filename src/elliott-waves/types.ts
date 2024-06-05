@@ -21,6 +21,15 @@ export class ClusterWaves {
 
 export type PivotStatus = 'CONFIRMED' | 'WAITING' | 'PROJECTED';
 
+export interface CandlesInfo {
+  degree: {
+    title: string;
+    value: number;
+  };
+  pivots: Pivot[];
+  retracements: Pivot[];
+}
+
 export class Pivot {
   constructor(id: string, candleIndex: number, type: PivotType, price: number, time: number) {
     this.id = id;

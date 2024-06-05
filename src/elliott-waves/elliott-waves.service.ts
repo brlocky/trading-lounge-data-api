@@ -7,7 +7,7 @@ import { MotiveExtendedWave1 } from './class/wave/motive/motive-extended-wave-1.
 import { MotiveExtendedWave3 } from './class/wave/motive/motive-extended-wave-3.class';
 import { CandleService } from './services/candle.service';
 import { ChartService } from './services/chart.service';
-import { ClusterWaves, Pivot } from './types';
+import { ClusterWaves, Pivot, CandlesInfo } from './types';
 import { Degree, degreeToString, waveTypeToString } from './enums';
 import { MotiveWaveInterface } from './interfaces/motive-wave.interface';
 import { CandleDto } from 'src/search/dto';
@@ -16,6 +16,11 @@ interface IGetWaveCounts {
   degree: number;
   logScale: boolean;
   subCounts: number;
+  definition: number;
+  candles: CandleDto[];
+}
+
+interface IGetCandlesInfo {
   definition: number;
   candles: CandleDto[];
 }
@@ -36,16 +41,18 @@ export class ElliottWavesService {
   ) {}
 
   getWaveCounts({ candles, degree, logScale, definition }: IGetWaveCounts): ClusterWaves[] {
-    const pivots = this.candleService.getZigZag(candles);
-    const pivotslogScale = this.candleService.generateRetracements(pivots, definition);
-
-    const degree2Use = degree === 0 ? new WaveDegreeCalculator(candles).calculateWaveDegree() : degree;
+    const {
+      pivots,
+      retracements,
+      degree: { value: candlesDegree },
+    } = this.getPivotsInfo({ candles, definition });
+    const degree2Use = degree === 0 ? candlesDegree : degree;
     console.log('Degree in use', degreeToString(degree2Use));
 
     this.chartService.createCandlestickChart(candles, pivots, 'z-wave-count.png', false);
-    this.chartService.createCandlestickChart(candles, pivotslogScale, 'z-scale-wave-count.png', true);
+    this.chartService.createCandlestickChart(candles, retracements, 'z-scale-wave-count.png', true);
 
-    const motivePatterns = this.getWave1Patterns(candles, pivotslogScale, degree2Use, logScale);
+    const motivePatterns = this.getWave1Patterns(candles, retracements, degree2Use, logScale);
 
     const waveClusters: ClusterWaves[] = [];
     for (const pattern of motivePatterns) {
@@ -89,6 +96,24 @@ export class ElliottWavesService {
       : waveClusters;
 
     return filteredCluster;
+  }
+
+  getPivotsInfo({ candles, definition }: IGetCandlesInfo): CandlesInfo {
+    const pivots = this.candleService.getZigZag(candles);
+    const retracements = this.candleService.generateRetracements(pivots, definition);
+
+    const degreeEnum = new WaveDegreeCalculator(candles).calculateWaveDegree();
+    const degree = degreeToString(degreeEnum);
+    console.log('getPivotsInfo Degree  in use', degree);
+
+    return {
+      degree: {
+        title: degree,
+        value: degreeEnum,
+      },
+      pivots,
+      retracements,
+    };
   }
 
   private getWave1Patterns(candles: CandleDto[], pivots: Pivot[], degree: Degree, logScale: boolean): MotiveWaveInterface[] {
