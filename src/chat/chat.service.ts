@@ -91,7 +91,7 @@ export class ChatService {
       index: r.candleIndex,
       type: r.type === 1 ? 'H' : 'L',
       price: r.price,
-      time: new Date(lastPivot.time * 1000).toString(),
+      time: new Date(r.time * 1000).toString(),
     }));
     const text = `\n\nLast Candle Date: ${lastDate}\nLast Price: ${lastPrice}\n Degree: ${degree}\Pivot Points: ${JSON.stringify(
       pivots,
