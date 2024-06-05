@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import moment from 'moment';
 import Replicate, { ServerSentEvent } from 'replicate';
 import { Observable } from 'rxjs';
 import { ChatMessage, ChatRequestDto } from 'src/chat/dto/chat.dto';
@@ -23,13 +24,13 @@ const inputAnalyst = {
   `, */
   system_prompt: `
   I am Trading Lounge AI, specializing in Elliott Wave Analysis.
-  I will provide Elliott Wave Analysis when Pivot Points and Degree are provided.
-  I can provide information about live data once I have the Pivot Points.
-  I will use all of the Pivot Points to performance my analysis and will include special focus on the last waves.
-  Pivot points will have information about the time, price, pivot type and index from where they were extracted.
+  I will provide Elliott Wave Analysis with provided information.
+  I will use all of the Pivot Points to performance my analysis and will include special focus on the last dates and prices.
+  Pivot points will have information about the date, price, pivot type.
+  You should include last price and dates.
   `,
   length_penalty: 1,
-  max_new_tokens: 512,
+  max_new_tokens: 2048,
   stop_sequences: '<|end_of_text|>,<|eot_id|>',
   prompt_template:
     '<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n{system_prompt}<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n{prompt}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n',
@@ -46,10 +47,12 @@ const inputTickerDetector = {
   temperature: 0.7,
   system_prompt: `You are a robot specialized in finding any financial market tickers.
 Your only task is to identify 1 ticker in the following text. 
- Your response will be json {"ticker": $TICKER1}
-For stocks you should prepend "NASDAQ:$TICKER"
-For indices you should prepend "INDEX:$TICKER"
-For crypto you should prepend "BINANCE:$TICKER"`,
+Sometimes the user will specify the exact ticker already with the correct prepend.
+Ticker are always simple don't use special characters, however they always have the format EXCHANGE:TICKER.
+For stocks you should prepend "NASDAQ:TICKER".
+For indices you should prepend "INDEX:TICKER".
+For crypto you should prepend "BINANCE:TICKER".
+Your response will only be json {"ticker": TICKER}.`,
   length_penalty: 1,
   max_new_tokens: 512,
   stop_sequences: '<|end_of_text|>,<|eot_id|>',
@@ -62,7 +65,7 @@ For crypto you should prepend "BINANCE:$TICKER"`,
 @Injectable()
 export class ChatService {
   aiClient: Replicate;
-  model: `${string}/${string}` = 'meta/meta-llama-3-8b-instruct';
+  model: `${string}/${string}` = 'meta/meta-llama-3-70b-instruct';
 
   constructor(
     private readonly configService: ConfigService,
@@ -85,15 +88,15 @@ export class ChatService {
   }
 
   prepareCandleData(degree: string, retracements: Pivot[]): string {
-    const lastPivot = retracements[retracements.length - 1];
-    const lastPrice = lastPivot ? lastPivot.price : 0;
-    const lastDate = lastPivot ? new Date(lastPivot.time * 1000).toString() : null;
     const pivots = retracements.map((r) => ({
       index: r.candleIndex,
       type: r.type === 1 ? 'H' : 'L',
       price: r.price,
-      date: new Date(r.time * 1000).toString(),
+      date: moment(new Date(r.time * 1000)).toString(),
     }));
+    const lastPivot = retracements[retracements.length - 1];
+    const lastPrice = lastPivot ? lastPivot.price : 0;
+    const lastDate = lastPivot ? moment(new Date(lastPivot.time * 1000)).toString() : null;
     const text = `\n\nLast Candle Date: ${lastDate}\nLast Price: ${lastPrice}\n Degree: ${degree}\Pivot Points: ${JSON.stringify(
       pivots,
     )}\n\n\n`;
@@ -118,7 +121,7 @@ export class ChatService {
           retracements,
         } = this.elliottWaveService.getPivotsInfo({
           candles: candlesResult.candles,
-          definition: 50,
+          definition: 20,
         });
 
         console.log('degree', degree);
