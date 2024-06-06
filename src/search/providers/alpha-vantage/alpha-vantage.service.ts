@@ -87,6 +87,41 @@ interface CompanyOverview {
   ExDividendDate: string;
 }
 
+interface CompanySentimentNews {
+  items: string;
+  sentiment_score_definition: string;
+  relevance_score_definition: string;
+  feed: Feed[];
+}
+
+interface Feed {
+  title: string;
+  url: string;
+  time_published: string;
+  authors: string[];
+  summary: string;
+  banner_image: null | string;
+  source: string;
+  category_within_source: string;
+  source_domain: string;
+  topics: Topic[];
+  overall_sentiment_score: number;
+  overall_sentiment_label: string;
+  ticker_sentiment: Tickersentiment[];
+}
+
+interface Tickersentiment {
+  ticker: string;
+  relevance_score: string;
+  ticker_sentiment_score: string;
+  ticker_sentiment_label: string;
+}
+
+interface Topic {
+  topic: string;
+  relevance_score: string;
+}
+
 @Injectable()
 export class AlphaVantageService implements SearchProvider {
   apiKey: string;
@@ -113,9 +148,6 @@ export class AlphaVantageService implements SearchProvider {
       return [];
     }
 
-    const promises = bestMatches.map((m: AlphaSearchResult) => this.getCompanyOverview(m['1. symbol']));
-    const getAllResultsCompanyInformation = await Promise.all(promises);
-
     return bestMatches.map((m: AlphaSearchResult) => {
       return {
         identifier: this.getIdentifier(),
@@ -131,6 +163,15 @@ export class AlphaVantageService implements SearchProvider {
   async getCompanyOverview(symbol: string): Promise<CompanyOverview | null> {
     const url = `https://www.alphavantage.co/query?function=OVERVIEW&symbol=${symbol}&apikey=${this.apiKey}`;
     const response = await axios.get<CompanyOverview>(url);
+    if (response.status !== 200) {
+      return null;
+    }
+    return response.data;
+  }
+
+  async CompanySentimentNews(symbol: string): Promise<CompanySentimentNews | null> {
+    const url = `https://www.alphavantage.co/query?function=NEWS_SENTIMENT&symbol=${symbol}&apikey=${this.apiKey}`;
+    const response = await axios.get<CompanySentimentNews>(url);
     if (response.status !== 200) {
       return null;
     }

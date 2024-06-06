@@ -15,19 +15,33 @@ const inputAnalyst = {
   top_p: 0.95,
   max_tokens: 512,
   temperature: 0.7,
-  /*   system_prompt: `
+  system_prompt: `
   I am Trading Lounge AI, specializing in Elliott Wave Analysis.
-  I will provide Elliott Wave Analysis when Pivot Points and Degree are provided.
-  I can provide information about live data once I have the Pivot Points.
-  I will use all of the Pivot Points to performance my analysis and will include special focus on the last waves.
-  Pivot points will have information about the time, price, pivot type and index from where they were extracted.
-  `, */
+  I don't have access to market data or any prices in general.
+  `,
+
+  length_penalty: 1,
+  max_new_tokens: 2048,
+  stop_sequences: '<|end_of_text|>,<|eot_id|>',
+  prompt_template:
+    '<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n{system_prompt}<|eot_id|><|start_header_id|>user<|end_header_id|>\n\n{prompt}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n',
+  presence_penalty: 0,
+  log_performance_metrics: false,
+};
+
+const inputWaveAnalyst = {
+  prompt: 'Hello',
+  messages: [],
+  top_k: 0,
+  top_p: 0.95,
+  max_tokens: 512,
+  temperature: 0.7,
   system_prompt: `
   I am Trading Lounge AI, specializing in Elliott Wave Analysis.
   I will provide Elliott Wave Analysis with provided information.
-  I will use all of the Pivot Points to performance my analysis and will include special focus on the last dates and prices.
-  Pivot points will have information about the date, price, pivot type.
-  You should include last price and dates.
+  Pivot points will have information about the date, price, pivot type.\n
+  I will use all of the Pivot Points to performance my analysis and will include special focus on the last dates and prices.\n
+  I will include ticker and relevant information.\n
   `,
   length_penalty: 1,
   max_new_tokens: 2048,
@@ -45,13 +59,13 @@ const inputTickerDetector = {
   top_p: 0.95,
   max_tokens: 512,
   temperature: 0.7,
-  system_prompt: `You are a robot specialized in finding any financial market tickers.
-Your only task is to identify 1 ticker in the following text. 
+  system_prompt: `You are a robot specialized in finding any financial market tickers and main exchange.
+Your only task is to identify 1 exchange:ticker from the provided text.
 Sometimes the user will specify the exact ticker already with the correct prepend.
 Ticker are always simple don't use special characters, however they always have the format EXCHANGE:TICKER.
-For stocks you should prepend "NASDAQ:TICKER".
-For indices you should prepend "INDEX:TICKER".
-For crypto you should prepend "BINANCE:TICKER".
+Stocks and indices use one of the following exchanges: XETR, NYSE, NASDAQ, LSE, TSE, SSE, HKEX, Euronext, SZSE, TSX, BSE, NSE, ASX, INDEX
+Crypto use BINANCE
+The format should be like so "EXCHANGE:TICKER".
 Your response will only be json {"ticker": TICKER}.`,
   length_penalty: 1,
   max_new_tokens: 512,
@@ -87,7 +101,7 @@ export class ChatService {
     return prompt;
   }
 
-  prepareCandleData(degree: string, retracements: Pivot[]): string {
+  prepareCandleData(ticker: string, degree: string, retracements: Pivot[]): string {
     const pivots = retracements.map((r) => ({
       index: r.candleIndex,
       type: r.type === 1 ? 'H' : 'L',
@@ -97,7 +111,7 @@ export class ChatService {
     const lastPivot = retracements[retracements.length - 1];
     const lastPrice = lastPivot ? lastPivot.price : 0;
     const lastDate = lastPivot ? moment(new Date(lastPivot.time * 1000)).toString() : null;
-    const text = `\n\nLast Candle Date: ${lastDate}\nLast Price: ${lastPrice}\n Degree: ${degree}\Pivot Points: ${JSON.stringify(
+    const text = `\n\nDetected Ticker: ${ticker}\n\nLast Candle Date: ${lastDate}\nLast Price: ${lastPrice}\n Degree: ${degree}\Pivot Points: ${JSON.stringify(
       pivots,
     )}\n\n\n`;
     return text;
@@ -116,7 +130,7 @@ export class ChatService {
         })
         .catch();
       console.log('Candles Result Ticker', candlesResult?.candles.length);
-      if (candlesResult) {
+      if (candlesResult?.candles.length) {
         const {
           degree: { title: degree },
           retracements,
@@ -128,7 +142,7 @@ export class ChatService {
         console.log('degree', degree);
         console.log('retracements', retracements.length);
 
-        return this.prepareCandleData(degree, retracements);
+        return this.prepareCandleData(ticker2Load, degree, retracements);
       }
     }
 
@@ -161,9 +175,15 @@ export class ChatService {
   async getInferenceStream(dto: ChatRequestDto): Promise<Observable<ServerSentEvent>> {
     const chartDataPrompt = await this.getChartDataPrompt(dto.messages);
 
-    const prompt = this.preparePrompt(dto.messages, chartDataPrompt || undefined);
+    const analyst = chartDataPrompt
+      ? {
+          ...inputWaveAnalyst,
+          system_prompt: inputWaveAnalyst.system_prompt + chartDataPrompt,
+        }
+      : inputAnalyst;
+    const prompt = this.preparePrompt(dto.messages);
     const input = {
-      ...inputAnalyst,
+      ...analyst,
       prompt: prompt,
     };
 
