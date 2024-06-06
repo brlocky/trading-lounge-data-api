@@ -33,6 +33,60 @@ interface AlphaSearchResults {
   bestMatches: AlphaSearchResult[];
 }
 
+interface CompanyOverview {
+  Symbol: string;
+  AssetType: string;
+  Name: string;
+  Description: string;
+  CIK: string;
+  Exchange: string;
+  Currency: string;
+  Country: string;
+  Sector: string;
+  Industry: string;
+  Address: string;
+  FiscalYearEnd: string;
+  LatestQuarter: string;
+  MarketCapitalization: string;
+  EBITDA: string;
+  PERatio: string;
+  PEGRatio: string;
+  BookValue: string;
+  DividendPerShare: string;
+  DividendYield: string;
+  EPS: string;
+  RevenuePerShareTTM: string;
+  ProfitMargin: string;
+  OperatingMarginTTM: string;
+  ReturnOnAssetsTTM: string;
+  ReturnOnEquityTTM: string;
+  RevenueTTM: string;
+  GrossProfitTTM: string;
+  DilutedEPSTTM: string;
+  QuarterlyEarningsGrowthYOY: string;
+  QuarterlyRevenueGrowthYOY: string;
+  AnalystTargetPrice: string;
+  AnalystRatingStrongBuy: string;
+  AnalystRatingBuy: string;
+  AnalystRatingHold: string;
+  AnalystRatingSell: string;
+  AnalystRatingStrongSell: string;
+  TrailingPE: string;
+  ForwardPE: string;
+  PriceToSalesRatioTTM: string;
+  PriceToBookRatio: string;
+  EVToRevenue: string;
+  EVToEBITDA: string;
+  Beta: string;
+  '52WeekHigh': string;
+  '52WeekLow': string;
+  '50DayMovingAverage': string;
+  '200DayMovingAverage': string;
+  SharesOutstanding: string;
+  DividendDate: string;
+  ExDividendDate: string;
+}
+
 @Injectable()
 export class AlphaVantageService implements SearchProvider {
   apiKey: string;
@@ -49,7 +103,7 @@ export class AlphaVantageService implements SearchProvider {
   }
 
   async search(query: string): Promise<SearchResultDto[]> {
-    const url = this.buildSearchEndpoint(query);
+    const url = `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${query}&apikey=${this.apiKey}`;
     const response = await axios.get<AlphaSearchResults>(url);
     if (response.status !== 200) {
       return [];
@@ -58,6 +112,9 @@ export class AlphaVantageService implements SearchProvider {
     if (!bestMatches) {
       return [];
     }
+
+    const promises = bestMatches.map((m: AlphaSearchResult) => this.getCompanyOverview(m['1. symbol']));
+    const getAllResultsCompanyInformation = await Promise.all(promises);
 
     return bestMatches.map((m: AlphaSearchResult) => {
       return {
@@ -71,8 +128,13 @@ export class AlphaVantageService implements SearchProvider {
     });
   }
 
-  buildSearchEndpoint(query: string) {
-    return `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${query}&apikey=${this.apiKey}`;
+  async getCompanyOverview(symbol: string): Promise<CompanyOverview | null> {
+    const url = `https://www.alphavantage.co/query?function=OVERVIEW&symbol=${symbol}&apikey=${this.apiKey}`;
+    const response = await axios.get<CompanyOverview>(url);
+    if (response.status !== 200) {
+      return null;
+    }
+    return response.data;
   }
 
   async getCandles(getCandlesDto: GetCandlesDto): Promise<GetCandlesResultDto> {

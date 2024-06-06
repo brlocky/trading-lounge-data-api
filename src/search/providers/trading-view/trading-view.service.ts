@@ -36,7 +36,7 @@ export class TradingViewService implements SearchProvider {
 
     try {
       const [exchange, symbol] = request.symbol.split(':');
-      const url = this.buildCandlesEndpoint(symbol, exchange, interval, limit;
+      const url = this.buildCandlesEndpoint(symbol, exchange, interval, limit);
       const response = await axios.get<ICandle[]>(url);
       if (response.status !== 200) {
         return result;
