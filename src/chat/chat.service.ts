@@ -112,6 +112,7 @@ export class ChatService {
         .candles({
           symbol: ticker2Load,
           interval: 'D',
+          limit: 5000,
         })
         .catch();
       console.log('Candles Result Ticker', candlesResult?.candles.length);

@@ -31,6 +31,8 @@ export class GetCandlesDto {
   @ApiProperty()
   interval: string;
   @ApiProperty()
+  limit?: number;
+  @ApiProperty()
   start?: CandlePointer;
   @ApiProperty()
   end?: CandlePointer;
