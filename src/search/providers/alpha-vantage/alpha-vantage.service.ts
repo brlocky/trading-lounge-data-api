@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import moment from 'moment';
-import { SearchResultDto, GetCandlesDto, GetCandlesResultDto, CandleDto } from 'src/search/dto';
+import { SearchResultDto, GetCandlesDto, GetCandlesResultDto, CandleDto, GetQuoteDto, GetQuoteResultDto } from 'src/search/dto';
 import { SearchProvider } from 'src/search/search-provider.interface';
 import { Readable } from 'stream';
 import * as fastCsv from 'fast-csv';
@@ -127,6 +127,10 @@ export class AlphaVantageService implements SearchProvider {
   apiKey: string;
   constructor(private readonly configService: ConfigService) {
     this.apiKey = this.configService.get<string>('APIKEY') || 'demo';
+  }
+
+  getQuote(): Promise<GetQuoteResultDto> {
+    throw new Error('Method not implemented.');
   }
 
   getIdentifier(): string {

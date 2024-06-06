@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
-import { GetCandlesDto, GetCandlesResultDto } from 'src/search/dto';
+import { GetCandlesDto, GetCandlesResultDto, GetQuoteDto, GetQuoteResultDto, QuoteResult } from 'src/search/dto';
 import { SearchResultDto } from 'src/search/dto/search-result.dto';
 import { SearchProvider } from 'src/search/search-provider.interface';
 
@@ -70,5 +70,30 @@ export class TradingViewService implements SearchProvider {
 
   getExchange(): string {
     return 'TradingView';
+  }
+
+  async getQuote(request: GetQuoteDto): Promise<GetQuoteResultDto> {
+    const { symbols } = request;
+
+    const promises = symbols.map((s) => this.getCandles({ symbol: s, interval: 'D', limit: 1 }));
+    const candleResult = await Promise.all(promises);
+
+    const quotes = candleResult
+      .map((candleResult, i) => {
+        const { candles } = candleResult;
+        if (!candles.length) return null;
+        const candle = candles[0];
+        const symbol = symbols[i];
+        return {
+          symbol,
+          price: candle.close,
+          date: candle.time,
+        };
+      })
+      .filter((r) => r) as QuoteResult[];
+
+    return {
+      quotes,
+    };
   }
 }

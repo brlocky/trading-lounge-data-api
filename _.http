@@ -84,3 +84,14 @@ content-type: application/json
 }
 
 ### 
+
+
+Post {{host}}/quotes
+content-type: application/json
+
+{
+    "symbols": [
+        "INDEX:SPX",
+        "NASDAQ:AAPL",
+        ]
+}

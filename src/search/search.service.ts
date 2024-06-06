@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { SearchProvider } from './search-provider.interface';
-import { GetCandlesDto, GetCandlesResultDto, SearchResultDto } from './dto';
+import { GetCandlesDto, GetCandlesResultDto, GetQuoteDto, GetQuoteResultDto, SearchResultDto } from './dto';
 
 @Injectable()
 export class SearchService {
@@ -28,5 +28,10 @@ export class SearchService {
 
     if (!dataProvider) return null;
     return dataProvider.getCandles(request);
+  }
+
+  async quotes(request: GetQuoteDto): Promise<GetQuoteResultDto> {
+    const dataProvider = this.searchProviders.find((s) => s.getIdentifier() === 'TV')!;
+    return dataProvider.getQuote(request);
   }
 }
