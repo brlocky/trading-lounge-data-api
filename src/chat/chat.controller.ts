@@ -1,7 +1,6 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Body, Controller, Inject, Param, Post, Sse } from '@nestjs/common';
 import { Cache } from 'cache-manager';
-import { Body, Controller, Inject, Param, Post, Res, Sse } from '@nestjs/common';
-import { Response } from 'express';
 import { EMPTY, map, Observable } from 'rxjs';
 import { ChatRequestDto } from 'src/chat/dto/chat.dto';
 import { v4 } from 'uuid';
@@ -13,25 +12,6 @@ export class ChatController {
     private readonly service: ChatService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
-
-  // Not working in google cloud
-  @Post('/message')
-  async chatMessage(@Body() chatDto: ChatRequestDto, @Res() res: Response): Promise<void> {
-    const stream = this.service.inferenceModel(chatDto);
-
-    res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Transfer-Encoding', 'chunked');
-
-    for await (const event of stream) {
-      if (event.event === 'done') {
-        res.end();
-      } else {
-        res.write(event.data);
-      }
-    }
-
-    res.end();
-  }
 
   /*
    * Start Chat

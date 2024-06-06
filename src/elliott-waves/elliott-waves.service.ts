@@ -104,7 +104,6 @@ export class ElliottWavesService {
 
     const degreeEnum = new WaveDegreeCalculator(candles).calculateWaveDegree();
     const degree = degreeToString(degreeEnum);
-    console.log('getPivotsInfo Degree  in use', degree);
 
     return {
       degree: {
