@@ -83,9 +83,8 @@ export class TradingViewService implements SearchProvider {
         const { candles } = candleResult;
         if (!candles.length) return null;
         const candle = candles[0];
-        const symbol = symbols[i];
         return {
-          symbol,
+          symbol: symbols[i],
           price: candle.close,
           date: candle.time,
         };
