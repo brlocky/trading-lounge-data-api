@@ -24,19 +24,26 @@ export class TradingViewService implements SearchProvider {
     return [];
   }
 
-  async getCandles(request: GetCandlesDto): Promise<GetCandlesResultDto | null> {
+  async getCandles(request: GetCandlesDto): Promise<GetCandlesResultDto> {
+    const { interval } = request;
+    const result = {
+      symbol: request.symbol,
+      interval,
+      candles: [],
+      prevCandle: null,
+      nextCandle: null,
+    };
+
     try {
-      const { interval } = request;
       const [exchange, symbol] = request.symbol.split(':');
       const url = this.buildCandlesEndpoint(symbol, exchange, interval);
       const response = await axios.get<ICandle[]>(url);
       if (response.status !== 200) {
-        return null;
+        return result;
       }
 
       return {
-        symbol: request.symbol,
-        interval,
+        ...result,
         candles: response.data.map((c) => ({
           open: c.open,
           high: c.high,
@@ -45,14 +52,12 @@ export class TradingViewService implements SearchProvider {
           volume: c.volume,
           time: new Date(c.datetime).getTime() / 1000,
         })),
-        prevCandle: null,
-        nextCandle: null,
       };
     } catch (e) {
       console.error('Fail to get candles', request.symbol);
     }
 
-    return null;
+    return result;
   }
 
   buildCandlesEndpoint(symbol: string, exchange: string, interval: string) {
