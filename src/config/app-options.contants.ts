@@ -11,9 +11,11 @@ export const RedisOptions: CacheModuleAsyncOptions = {
         host: configService.get<string>('REDISHOST'),
         port: parseInt(configService.get<string>('REDISPORT')!),
       },
+      ttl: 60, // Default TTL in seconds (1 minute)
     });
     return {
       store: () => store,
+      ttl: 60, // Default TTL in seconds (1 minute)
     };
   },
   inject: [ConfigService],

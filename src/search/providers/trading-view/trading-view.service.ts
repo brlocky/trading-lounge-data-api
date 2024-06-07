@@ -4,6 +4,10 @@ import axios from 'axios';
 import { GetCandlesDto, GetCandlesResultDto, GetQuoteDto, GetQuoteResultDto, QuoteResult } from 'src/search/dto';
 import { SearchResultDto } from 'src/search/dto/search-result.dto';
 import { SearchProvider } from 'src/search/search-provider.interface';
+import countries from 'i18n-iso-countries';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+countries.registerLocale(require('i18n-iso-countries/langs/en.json'));
 
 interface ICandle {
   open: number;
@@ -13,6 +17,15 @@ interface ICandle {
   volume: number;
   datetime: string;
 }
+
+interface ISearchResult {
+  symbol: string;
+  description: string;
+  type: string;
+  exchange: string;
+  country: string;
+}
+
 @Injectable()
 export class TradingViewService implements SearchProvider {
   apiEndpoint: string;
@@ -20,7 +33,31 @@ export class TradingViewService implements SearchProvider {
     this.apiEndpoint = this.configService.get<string>('API_TV_DATA')!;
   }
 
-  async search(): Promise<SearchResultDto[]> {
+  convertToCountryName(country: string): string {
+    const c = countries.getName(country, 'en') || country;
+    return c;
+  }
+
+  async search(query: string): Promise<SearchResultDto[]> {
+    try {
+      const url = `${this.apiEndpoint}/search`;
+      const response = await axios.post<{ symbols: ISearchResult[] }>(url, { query });
+      if (response.status === 200) {
+        return response.data.symbols.slice(0, 20).map((r) => {
+          return {
+            identifier: this.getIdentifier(),
+            exchange: r.exchange,
+            symbol: r.symbol.replace(/<[^>]*>/g, ''),
+            name: r.description.replace(/<[^>]*>/g, ''),
+            type: r.type.toUpperCase(),
+            region: this.convertToCountryName(r.country) || '-',
+          };
+        }) as SearchResultDto[];
+      }
+    } catch (e) {
+      console.error('Fail search', query);
+    }
+
     return [];
   }
 
@@ -62,10 +99,6 @@ export class TradingViewService implements SearchProvider {
 
   getIdentifier(): string {
     return 'TV';
-  }
-
-  getExchange(): string {
-    return 'TradingView';
   }
 
   async getQuote(request: GetQuoteDto): Promise<GetQuoteResultDto> {

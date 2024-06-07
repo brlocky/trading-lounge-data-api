@@ -13,24 +13,17 @@ export class SearchService {
   async search(query: string): Promise<SearchResultDto[]> {
     const searchPromises = this.searchProviders.map((provider) => provider.search(query));
     const results = await Promise.all(searchPromises);
-
     return results.flat();
   }
 
   async candles(request: GetCandlesDto): Promise<GetCandlesResultDto | null> {
-    let dataProvider: SearchProvider | undefined = undefined;
-    const symbolCheck = request.symbol.split(':');
-    if (symbolCheck.length === 2) {
-      dataProvider = this.searchProviders.find((s) => s.getIdentifier() === 'TV');
-    } else {
-      dataProvider = this.searchProviders.find((s) => s.getIdentifier() === 'AV');
-    }
-
-    if (!dataProvider) return null;
+    // TODO add search provider identifier to request
+    const dataProvider = this.searchProviders.find((s) => s.getIdentifier() === 'TV')!;
     return dataProvider.getCandles(request);
   }
 
   async quotes(request: GetQuoteDto): Promise<GetQuoteResultDto> {
+    // TODO add search provider identifier to request
     const dataProvider = this.searchProviders.find((s) => s.getIdentifier() === 'TV')!;
     return dataProvider.getQuote(request);
   }

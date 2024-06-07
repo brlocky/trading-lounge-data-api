@@ -37,29 +37,7 @@ content-type: application/json
 }
 
 
-### 
 
-
-
-
-Get {{host}}/search?query=nvda
- 
-###
-
-
-
-Get {{host}}/search?query=aapl
- 
-###
-
-
-Get {{host}}/search?query=spx
- 
-###
-
-
-Get {{host}}/search?query=spy
- 
 ###
 
 
@@ -75,14 +53,10 @@ content-type: application/json
 ### 
 
 
-Post {{host}}/candles
+Get {{host}}/candles?symbol=INDEX:SPX&interval=1h
 content-type: application/json
 
-{
-    "symbol": "INDEX:SPX",
-    "interval": "1h"
-}
-
+ 
 ### 
 
 
@@ -93,5 +67,34 @@ content-type: application/json
     "symbols": [
         "INDEX:SPX",
         "NASDAQ:AAPL",
+        "NASDAQ:TSLA",
+        "INDEX:NDX",
+        "ASX:BHP",
+        "ASX:CBA"
         ]
 }
+
+
+
+### 
+
+
+Post https://trading-view-data-byd5tqbtwa-uc.a.run.app/search
+content-type: application/json
+
+{
+    "query": "aapl"
+}
+
+### 
+
+
+
+
+GET {{host}}/search?query=nvda
+content-type: application/json
+
+###
+
+GET {{host}}/search?query=aapl
+content-type: application/json
