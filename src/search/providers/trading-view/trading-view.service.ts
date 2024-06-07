@@ -36,8 +36,8 @@ export class TradingViewService implements SearchProvider {
 
     try {
       const [exchange, symbol] = request.symbol.split(':');
-      const url = this.buildCandlesEndpoint(symbol, exchange, interval, limit);
-      const response = await axios.get<ICandle[]>(url);
+      const url = `${this.apiEndpoint}/get_data`;
+      const response = await axios.post<ICandle[]>(url, { symbol, exchange, interval, limit });
       if (response.status !== 200) {
         return result;
       }
@@ -58,10 +58,6 @@ export class TradingViewService implements SearchProvider {
     }
 
     return result;
-  }
-
-  buildCandlesEndpoint(symbol: string, exchange: string, interval: string, limit: number) {
-    return `${this.apiEndpoint}/get_data?symbol=${symbol}&exchange=${exchange}&interval=${interval}&limit=${limit}`;
   }
 
   getIdentifier(): string {
