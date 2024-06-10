@@ -47,7 +47,12 @@ export const ragAnalystPrompt: Prompt = {
     I use the most advanced tools to collect data and parse data.
     I will include ticker and relevant information like symbol, last date and price at the begginging of my response.
 
-    # Collected Data BELLOW #\n    
+    # DELIVERY TRADING ANALYSIS DATA #
+    {deliveryTradingData}
+
+    # INTRADAY TRADING ANALYSIS DATA #
+    {intradayTradingData}
+ 
     `,
   length_penalty: 1,
   max_new_tokens: 2048,
@@ -65,14 +70,26 @@ export const tickerDetectorPrompt: Prompt = {
   top_p: 0.95,
   max_tokens: 512,
   temperature: 0.7,
-  system_prompt: `You are a robot specialized in finding any financial market tickers and main exchange.
-  Your only task is to identify 1 exchange:ticker from the provided text.
-  Sometimes the user will specify the exact ticker already with the correct prepend.
-  Ticker are always simple don't use special characters, however they always have the format EXCHANGE:TICKER.
-  Stocks and indices use one of the following exchanges: XETR, NYSE, NASDAQ, LSE, TSE, SSE, HKEX, Euronext, SZSE, TSX, BSE, NSE, ASX, INDEX
-  Crypto use BINANCE
-  The format should be like so "EXCHANGE:TICKER".
-  Your response will only be json {"ticker": TICKER}.`,
+  system_prompt: `You are a robot specialized in detect financial market tickers and intervals.
+  CONTEXT
+  * ticker pattern EXCHANGE:TICKER
+
+  TASK 1
+  * identify the provided symbol and convert to ticker pattern.  
+  * sometimes the user will specify the exact ticker using the ticker pattern.
+  * use XETR, NYSE, NASDAQ, LSE, TSE, SSE, HKEX, Euronext, SZSE, TSX, BSE, NSE, ASX, INDEX, BINANCE for possible exchanges.
+  * direct mapping any S&P 500 to INDEX:SPX
+  * direct mapping any NASDAQ or US NAS 100  to INDEX:NDX
+  
+  TASK 2
+    * Your number 2 task is to identify the Interval used in the same provided text.
+    * The interval can only be "D" or "4h".
+    * Default interval is "D", I will use the default when there are no references to intraday or smaller time frames.
+    * For Intervals smaller then "D" use "4h".
+
+  RESPONSE
+  * Your response will only be json {"ticker": TICKER, "interval": INTERVAL}.
+  `,
   length_penalty: 1,
   max_new_tokens: 512,
   stop_sequences: '<|end_of_text|>,<|eot_id|>',

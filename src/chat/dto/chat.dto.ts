@@ -11,3 +11,8 @@ export class ChatMessage {
   role: string;
   content: string;
 }
+
+export interface AITickerInfo {
+  ticker: `${string}:${string}`;
+  interval: 'D' | '4h';
+}

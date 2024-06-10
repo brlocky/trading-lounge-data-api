@@ -2,7 +2,7 @@
 import { Injectable } from '@nestjs/common';
 import { ServerSentEvent } from 'replicate';
 import { Observable } from 'rxjs';
-import { ChatMessage, ChatRequestDto } from 'src/chat/dto/chat.dto';
+import { ChatMessage, ChatRequestDto, AITickerInfo } from 'src/chat/dto/chat.dto';
 import { AIService } from './ai/ai.service';
 import { PromptService } from './prompt/prompt.service';
 import { Prompt } from './prompt/prompts';
@@ -14,13 +14,14 @@ export class ChatService {
     private readonly aiService: AIService,
   ) {}
 
-  private async getTicker(messages: ChatMessage[]): Promise<`${string}:${string}` | null> {
+  private async getTickerInfo(messages: ChatMessage[]): Promise<AITickerInfo | null> {
     const tickerPrompt = this.promptService.getTickerPrompt(messages);
 
     try {
       const modelResponse = await this.aiService.runModel(tickerPrompt);
       const tickerTest = JSON.parse((modelResponse as string[]).join(''));
-      return tickerTest.ticker as `${string}:${string}`;
+      console.log('ChatService - Got ticker info', tickerTest);
+      return tickerTest;
     } catch (e) {
       console.error('Error on ticker identification', e);
     }
@@ -29,7 +30,7 @@ export class ChatService {
   }
 
   private async getPrompt(messages: ChatMessage[]): Promise<Prompt> {
-    const ticker = await this.getTicker(messages);
+    const ticker = await this.getTickerInfo(messages);
     if (ticker) {
       const prompt = await this.promptService.getRagPrompt(messages, ticker);
       if (prompt) return prompt;

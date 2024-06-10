@@ -1,6 +1,5 @@
-// src/prompt/prompt.service.ts
 import { Injectable } from '@nestjs/common';
-import { ChatMessage } from 'src/chat/dto/chat.dto';
+import { AITickerInfo, ChatMessage } from 'src/chat/dto/chat.dto';
 import { chatAnalystPrompt, Prompt, ragAnalystPrompt, tickerDetectorPrompt } from './prompts';
 import { RAGService } from './rag.service';
 
@@ -15,7 +14,7 @@ export class PromptService {
   }
 
   getTickerPrompt(messages: ChatMessage[]): Prompt {
-    const prompt = this.getPrompt(messages, 1);
+    const prompt = this.getPrompt(messages, 5);
     return { ...tickerDetectorPrompt, prompt };
   }
 
@@ -24,13 +23,17 @@ export class PromptService {
     return { ...chatAnalystPrompt, prompt };
   }
 
-  async getRagPrompt(messages: ChatMessage[], symbol: string): Promise<Prompt | null> {
+  async getRagPrompt(messages: ChatMessage[], tickerInfo: AITickerInfo): Promise<Prompt | null> {
     const prompt = this.getPrompt(messages, 5);
 
-    const ragData = await this.ragService.loadRagData(symbol);
-    if (!ragData) return null;
+    const ragData = await this.ragService.loadRagData(tickerInfo);
+    if (!ragData || !ragData.length) return null;
 
-    const systemPrompt = ragAnalystPrompt.system_prompt + JSON.stringify(ragData);
+    const [deliveryTradingData, intradayTradingData] = ragData;
+
+    const systemPrompt = ragAnalystPrompt.system_prompt
+      .replace('{deliveryTradingData}', JSON.stringify(deliveryTradingData))
+      .replace('{intradayTradingData}', intradayTradingData ? JSON.stringify(intradayTradingData) : 'none');
 
     return { ...ragAnalystPrompt, prompt, system_prompt: systemPrompt };
   }
