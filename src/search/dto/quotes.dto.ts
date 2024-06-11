@@ -13,6 +13,14 @@ export class QuoteResult {
   price: number;
   @ApiProperty()
   date: number;
+  @ApiProperty()
+  open: number;
+  @ApiProperty()
+  high: number;
+  @ApiProperty()
+  low: number;
+  @ApiProperty()
+  close: number;
 }
 
 export class GetQuoteResultDto {

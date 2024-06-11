@@ -116,6 +116,10 @@ export class TradingViewService implements SearchProvider {
           symbol: symbols[i],
           price: candle.close,
           date: candle.time,
+          open: candle.open,
+          high: candle.high,
+          low: candle.low,
+          close: candle.close,
         };
       })
       .filter((r) => r) as QuoteResult[];
