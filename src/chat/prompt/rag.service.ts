@@ -75,10 +75,7 @@ export class RAGService {
     const {
       degree: { title: degree },
       retracements,
-    } = this.elliottWavesService.getPivotsInfo({
-      candles: candlesResult.candles,
-      definition,
-    });
+    } = this.elliottWavesService.getPivotsInfo(candlesResult.candles, definition);
 
     return {
       degree,
