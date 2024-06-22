@@ -15,7 +15,7 @@ interface ICandle {
   low: number;
   close: number;
   volume: number;
-  datetime: string;
+  datetime: number;
 }
 
 interface ISearchResult {
@@ -62,8 +62,8 @@ export class TradingViewService implements SearchProvider {
   }
 
   async getCandles(request: GetCandlesDto): Promise<GetCandlesResultDto> {
-    const { interval, limit = 1000 } = request;
-    const result = {
+    const { interval, from, to, limit } = request;
+    const result: GetCandlesResultDto = {
       symbol: request.symbol,
       interval,
       candles: [],
@@ -74,21 +74,27 @@ export class TradingViewService implements SearchProvider {
     try {
       const [exchange, symbol] = request.symbol.split(':');
       const url = `${this.apiEndpoint}/get_data`;
-      const response = await axios.post<ICandle[]>(url, { symbol, exchange, interval, limit });
+      const response = await axios.post<ICandle[]>(url, { symbol, exchange, interval, from, to, limit });
       if (response.status !== 200) {
         return result;
       }
 
+      const candles = response.data.map((c) => ({
+        open: c.open,
+        high: c.high,
+        low: c.low,
+        close: c.close,
+        volume: c.volume,
+        time: new Date(c.datetime).getTime() / 1000,
+      }));
+
+      if (candles.length >= 1000) {
+        result.prevCandle = candles[0].time;
+      }
+
       return {
         ...result,
-        candles: response.data.map((c) => ({
-          open: c.open,
-          high: c.high,
-          low: c.low,
-          close: c.close,
-          volume: c.volume,
-          time: new Date(c.datetime).getTime() / 1000,
-        })),
+        candles,
       };
     } catch (e) {
       console.error('Fail to get candles', request.symbol);

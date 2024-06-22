@@ -183,7 +183,7 @@ export class AlphaVantageService implements SearchProvider {
   }
 
   async getCandles(getCandlesDto: GetCandlesDto): Promise<GetCandlesResultDto> {
-    const { symbol, interval, end } = getCandlesDto;
+    const { symbol, interval } = getCandlesDto;
     const emptyResponse = {
       symbol: symbol,
       interval: interval,
@@ -201,28 +201,14 @@ export class AlphaVantageService implements SearchProvider {
     const csvData = await this.parseCsvData(response.data);
 
     let candles = this.mapAlphaCandles(csvData, interval);
-    if (end && end.time) {
+    /*  if (end && end.time) {
       candles = candles.filter((c) => {
         return c.time <= end.time;
       });
-    }
+    } */
 
-    const prevCandle = candles[0]
-      ? {
-          symbol: symbol,
-          interval: interval,
-          time: candles[0].time,
-        }
-      : null;
-
-    const nextCandle =
-      candles.length > 1
-        ? {
-            symbol: symbol,
-            interval: interval,
-            time: candles[candles.length - 1].time,
-          }
-        : null;
+    const prevCandle = candles[0] ? candles[0].time : null;
+    const nextCandle = candles.length > 1 ? candles[candles.length - 1].time : null;
 
     return {
       ...emptyResponse,
@@ -233,16 +219,16 @@ export class AlphaVantageService implements SearchProvider {
   }
 
   buildCandlesEndpoint(getCandlesDto: GetCandlesDto) {
-    const { symbol, interval, end } = getCandlesDto;
+    const { symbol, interval } = getCandlesDto;
     const isIntraday = !['M', 'W', 'D'].includes(interval);
     if (isIntraday) {
       const alphavanteInterval = this.convertInterval(interval);
-      const month = end
+      /*  const month = end
         ? moment(new Date(end.time * 1000))
             .subtract(1, 'months')
             .format('YYYY-MM')
-        : undefined;
-
+        : undefined; */
+      const month = undefined;
       return `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${symbol}&datatype=csv&interval=${alphavanteInterval}&outputsize=full&apikey=${this.apiKey}&month=${month}`;
     }
 

@@ -33,9 +33,9 @@ export class GetCandlesDto {
   @ApiProperty()
   limit?: number;
   @ApiProperty()
-  start?: CandlePointer;
+  from?: number;
   @ApiProperty()
-  end?: CandlePointer;
+  to?: number;
 }
 
 export class GetCandlesResultDto {
@@ -46,7 +46,7 @@ export class GetCandlesResultDto {
   @ApiProperty()
   candles: CandleDto[];
   @ApiProperty()
-  prevCandle: CandlePointer | null;
+  prevCandle: number | null;
   @ApiProperty()
-  nextCandle: CandlePointer | null;
+  nextCandle: number | null;
 }
