@@ -8,6 +8,7 @@ import { ElliottWavesModule } from './elliott-waves/elliott-waves.module';
 import { TradingViewService } from './search/providers';
 import { SearchModule } from './search/search.module';
 import { CustomCacheInterceptor } from './custom-cache-interceptor';
+import { AIModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { CustomCacheInterceptor } from './custom-cache-interceptor';
     SearchModule.register([TradingViewService]),
     ElliottWavesModule,
     ChatModule,
+    AIModule,
   ],
   providers: [
     {

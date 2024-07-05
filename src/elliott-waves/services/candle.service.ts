@@ -143,7 +143,7 @@ export class CandleService {
     return newPivots;
   }
 
-  analyzeWaveRetracements(pivots: Pivot[], threshold: number = 20): WaveRetracement[] {
+  protected analyzeWaveRetracements(pivots: Pivot[], threshold: number = 20): WaveRetracement[] {
     const trend = getTrend(pivots);
 
     const retracements: WaveRetracement[] = [];
@@ -179,19 +179,19 @@ export class CandleService {
     return retracements;
   }
 
-  private createPivot(candle: CandleDto, index: number, type: PivotType): Pivot {
+  protected createPivot(candle: CandleDto, index: number, type: PivotType): Pivot {
     return new Pivot(v4(), index, type, type === PivotType.HIGH ? candle.high : candle.low, candle.time);
   }
 
-  private isRedCandle(candle: CandleDto): boolean {
+  protected isRedCandle(candle: CandleDto): boolean {
     return candle.close < candle.open;
   }
 
-  private isGreenCandle(candle: CandleDto): boolean {
+  protected isGreenCandle(candle: CandleDto): boolean {
     return candle.close > candle.open;
   }
 
-  private isNeutral(candle: CandleDto): boolean {
+  protected isNeutral(candle: CandleDto): boolean {
     return candle.close === candle.open;
   }
 }

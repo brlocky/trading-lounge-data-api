@@ -1,12 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { WaveType, Degree, PivotType, WaveName } from './enums';
+import { v4 } from 'uuid';
 
 export class ClusterWaves {
-  constructor(id: string, waves: Wave[], waveType: WaveType, degree: Degree) {
-    this.id = id;
+  constructor(waves: Wave[] = [], waveType: WaveType = WaveType.UNKNOWN, degree: Degree = Degree.SUPERMILLENNIUM) {
+    this.id = v4();
     this.degree = degree;
     this.waveType = waveType;
     this.waves = waves;
+  }
+
+  public addWave(wave: Wave): void {
+    this.waves.push(wave);
   }
 
   @ApiProperty()
@@ -83,8 +88,8 @@ export interface PivotSearchResult {
 }
 
 export class Wave {
-  constructor(id: string, wave: WaveName, degree: Degree, pStart: Pivot | ClusterPivot, pEnd: Pivot | ClusterPivot) {
-    this.id = id;
+  constructor(wave: WaveName, degree: Degree, pStart: Pivot | ClusterPivot, pEnd: Pivot | ClusterPivot) {
+    this.id = v4();
     this.wave = wave;
     this.degree = degree;
     this.pStart = this.ensureClusterPivot(pStart);

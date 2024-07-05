@@ -70,7 +70,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
 
     completedClusters.forEach((waves) => {
       if (this.wave3IsNotTheShortest(waves, this.fibonacci.isLogScale())) {
-        waveClusters.push(new ClusterWaves(v4(), waves, this.waveType, this._degree));
+        waveClusters.push(new ClusterWaves(waves, this.waveType, this._degree));
       } else {
         console.log('found wave 3 shortest', this.waveType, this._degree);
       }
@@ -145,7 +145,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
 
       // Create Wave and add to currentWaves list
       // Curent waves list is used to gather all waves in the current Pivot 1 context
-      const wave1 = new Wave(v4(), WaveName._1, this._degree, p0, p1);
+      const wave1 = new Wave(WaveName._1, this._degree, p0, p1);
 
       let wave2Waves = this.findWaves2([[wave1]]);
 
@@ -203,7 +203,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
       const projectedPrice = med;
       const { mediumTime } = TimeProjection.calculateWave3Time(p0, p2);
       const p3 = this.buildClusterPivot(lastWave.pStart.type, projectedPrice, mediumTime);
-      lastWave = new Wave(v4(), WaveName._3, lastWave.degree, lastWave.pEnd, new ClusterPivot(p3, 'PROJECTED'));
+      lastWave = new Wave( WaveName._3, lastWave.degree, lastWave.pEnd, new ClusterPivot(p3, 'PROJECTED'));
       newWaves.push(lastWave);
     }
 
@@ -216,7 +216,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
       const { mediumTime } = TimeProjection.calculateWave4Time(p1, pEnd);
 
       const p4 = this.buildClusterPivot(lastWave.pStart.type, projectedPrice, mediumTime);
-      lastWave = new Wave(v4(), WaveName._4, lastWave.degree, lastWave.pEnd, new ClusterPivot(p4, 'PROJECTED'));
+      lastWave = new Wave( WaveName._4, lastWave.degree, lastWave.pEnd, new ClusterPivot(p4, 'PROJECTED'));
       newWaves.push(lastWave);
     }
 
@@ -234,7 +234,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
       const projectedPrice = med;
       const { mediumTime } = TimeProjection.calculateWave5Time(p2, pEnd);
       const p5 = this.buildClusterPivot(lastWave.pStart.type, projectedPrice, mediumTime);
-      lastWave = new Wave(v4(), WaveName._5, lastWave.degree, lastWave.pEnd, new ClusterPivot(p5, 'PROJECTED'));
+      lastWave = new Wave( WaveName._5, lastWave.degree, lastWave.pEnd, new ClusterPivot(p5, 'PROJECTED'));
       newWaves.push(lastWave);
     }
 
@@ -298,7 +298,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
         pEndConnetion.confirmPivot();
       }
 
-      const wave2 = new Wave(v4(), WaveName._2, degree, pEndConnetion, new ClusterPivot(pivot, 'WAITING'));
+      const wave2 = new Wave(WaveName._2, degree, pEndConnetion, new ClusterPivot(pivot, 'WAITING'));
       currentWaves.push(wave2);
 
       outputCluster.push(currentWaves);
@@ -332,7 +332,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
         const newWaveCluster = [...wavesCluster];
         const pEndConnetion = newWaveCluster[1].pEnd;
         pEndConnetion.confirmPivot();
-        const wave3 = new Wave(v4(), WaveName._3, wave2.degree, pEndConnetion, new ClusterPivot(p3, 'WAITING'));
+        const wave3 = new Wave( WaveName._3, wave2.degree, pEndConnetion, new ClusterPivot(p3, 'WAITING'));
         newWaveCluster.push(wave3);
         outputClusterOpen.push(newWaveCluster);
       }
@@ -366,7 +366,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
         const newWaveCluster = [...wavesCluster];
         const pEndConnetion = newWaveCluster[2].pEnd;
         pEndConnetion.confirmPivot();
-        const wave4 = new Wave(v4(), WaveName._4, wave3.degree, pEndConnetion, new ClusterPivot(p4, 'WAITING'));
+        const wave4 = new Wave( WaveName._4, wave3.degree, pEndConnetion, new ClusterPivot(p4, 'WAITING'));
         newWaveCluster.push(wave4);
         outputClusterOpen.push(newWaveCluster);
       }
@@ -410,7 +410,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
         const pEndConnetion = newWaveCluster[3].pEnd;
         pEndConnetion.confirmPivot();
         const pivotStatus = this.useTargetPivot() ? 'CONFIRMED' : 'WAITING';
-        const wave5 = new Wave(v4(), WaveName._5, wave4.degree, pEndConnetion, new ClusterPivot(p5, pivotStatus));
+        const wave5 = new Wave(WaveName._5, wave4.degree, pEndConnetion, new ClusterPivot(p5, pivotStatus));
         newWaveCluster.push(wave5);
         outputClusterOpen.push(newWaveCluster);
       }

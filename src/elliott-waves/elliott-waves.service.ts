@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CandleDto } from 'src/search/dto';
 import { CandlesInfo, ClusterWaves, Pivot } from './types';
 import { CandleService, WaveCalculationService } from './services';
-import { WaveDegreeCalculator } from './class/utils/wave-degree.class';
+import { WaveDegreeCalculator } from './class/utils';
 import { degreeToString } from './enums';
 
 @Injectable()
@@ -12,7 +12,7 @@ export class ElliottWavesService {
     private waveCalculationService: WaveCalculationService,
   ) {}
 
-  getWaveCounts(candles: CandleDto[], degree: number, logScale: boolean, definition: number): ClusterWaves[] {
+  getWaveCounts(candles: CandleDto[], degree: number, logScale: boolean, definition: number): Promise<ClusterWaves[]> {
     return this.waveCalculationService.getWaveCounts(candles, degree, logScale, definition);
   }
 
@@ -24,7 +24,7 @@ export class ElliottWavesService {
     const pivots = this.candleService.getZigZag(candles);
     const retracements = this.candleService.generateRetracements(pivots, definition);
 
-    const degreeEnum = new WaveDegreeCalculator(candles).calculateWaveDegree();
+    const degreeEnum = WaveDegreeCalculator.calculateWaveDegree(candles);
     const degree = degreeToString(degreeEnum);
 
     return {

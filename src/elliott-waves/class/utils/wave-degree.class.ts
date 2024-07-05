@@ -22,23 +22,25 @@ export class WaveDegreeCalculator {
     { name: Degree.SUBMINUETTE, minCandles: 0, maxCandles: 1 / 24 },
   ];
 
-  private candles: CandleTime[];
-
-  constructor(candles: CandleTime[]) {
-    this.candles = candles;
+  public static calculateWaveDegree(candles: CandleTime[]): Degree {
+    const totalDays = this.getNumberOfDays(candles);
+    return this.getWaveDegree(totalDays);
   }
 
-  public calculateWaveDegree(): Degree {
-    const commonInterval = determineCommonInterval(this.candles);
+  public static getNumberOfDays(candles: CandleTime[]): Degree {
+    const commonInterval = determineCommonInterval(candles);
 
     if (commonInterval === 0) {
       throw new Error('Could not identify Degree.');
     }
 
-    const totalDays = this.candles.length * commonInterval;
+    return candles.length * commonInterval;
+  }
+
+  public static getWaveDegree(days: number): Degree {
     const degrees = WaveDegreeCalculator.waveDegrees.reverse();
     for (const degree of degrees) {
-      if (totalDays >= degree.minCandles && totalDays <= degree.maxCandles) {
+      if (days >= degree.minCandles && days <= degree.maxCandles) {
         return degree.name;
       }
     }

@@ -2,7 +2,6 @@ import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { GetCandlesDto, GetCandlesResultDto, GetQuoteDto, GetQuoteResultDto } from './dto';
 import { SearchResultDto } from './dto/search-result.dto';
 import { SearchService } from './search.service';
-import { NoCache } from 'src/decorators/no-cache.decorator';
 
 @Controller()
 export class SearchController {

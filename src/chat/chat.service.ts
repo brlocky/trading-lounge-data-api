@@ -3,9 +3,9 @@ import { Injectable } from '@nestjs/common';
 import { ServerSentEvent } from 'replicate';
 import { Observable } from 'rxjs';
 import { ChatMessage, ChatRequestDto, AITickerInfo } from 'src/chat/dto/chat.dto';
-import { AIService } from './ai/ai.service';
 import { PromptService } from './prompt/prompt.service';
 import { Prompt } from './prompt/prompts';
+import { AIService } from 'src/ai/ai.service';
 
 @Injectable()
 export class ChatService {

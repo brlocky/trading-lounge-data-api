@@ -10,9 +10,9 @@ export class ElliottWavesController {
 
   @NoCache()
   @Post('wave-counts')
-  getWaveCounts(@Body() req: WaveCountClusterRequest): WaveCountClusterResponse {
+  async getWaveCounts(@Body() req: WaveCountClusterRequest): Promise<WaveCountClusterResponse> {
     const { candles, degree, logScale, definition } = req;
-    const waveCounts = this.service.getWaveCounts(candles, degree, logScale, definition);
+    const waveCounts = await this.service.getWaveCounts(candles, degree, logScale, definition);
     return {
       clusters: waveCounts.map((w) => WaveClusterResponseFactory.create(w)),
     };
