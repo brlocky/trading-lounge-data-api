@@ -11,10 +11,13 @@ export class MotiveExpandingDiagonal extends MotiveInterface {
     return true;
   }
 
-  public projectWave5WithWave1(): boolean {
-    return false;
+  public projectWave5WithWave3(): boolean {
+    return true;
   }
 
+  public projectWave5FromWave4(): boolean {
+    return false;
+  }
   public getWave2TimeConfig(): ScoreRange[] {
     return [
       { range: [23.6, 38.2], score: WaveScore.WORK },

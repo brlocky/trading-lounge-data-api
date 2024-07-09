@@ -11,8 +11,8 @@ export class MotiveContractingDiagonal extends MotiveInterface {
     return true;
   }
 
-  public projectWave5WithWave1(): boolean {
-    return false;
+  public projectWave5WithWave3(): boolean {
+    return true;
   }
 
   public getWave2TimeConfig(): ScoreRange[] {
@@ -31,8 +31,7 @@ export class MotiveContractingDiagonal extends MotiveInterface {
       { range: [23.6, 38.2], score: WaveScore.WORSTCASESCENARIO },
       { range: [38.2, 61.8], score: WaveScore.GOOD },
       { range: [61.8, 90], score: WaveScore.PERFECT },
-      { range: [90, 168.1], score: WaveScore.WORSTCASESCENARIO },
-      { range: [168.1, 200], score: WaveScore.INVALID },
+      { range: [90, 99.9], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 
@@ -52,9 +51,8 @@ export class MotiveContractingDiagonal extends MotiveInterface {
       { range: [0, 23.6], score: WaveScore.INVALID },
       { range: [23.6, 38.2], score: WaveScore.WORSTCASESCENARIO },
       { range: [38.2, 61.8], score: WaveScore.GOOD },
-      { range: [61.8, 90], score: WaveScore.PERFECT },
-      { range: [90, 168.1], score: WaveScore.WORSTCASESCENARIO },
-      { range: [168.1, 200], score: WaveScore.INVALID },
+      { range: [61.8, 78.6], score: WaveScore.PERFECT },
+      { range: [78.6, 99.9], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 

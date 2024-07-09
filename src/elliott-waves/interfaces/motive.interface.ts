@@ -1,10 +1,29 @@
+import { Fibonacci } from '../class/utils/fibonacci.class';
 import { WaveScore, WaveType } from '../enums';
-import { ScoreRange, WaveConfig } from '../types';
+import { Pivot, ScoreRange, Wave, WaveConfig } from '../types';
 
 export abstract class MotiveInterface {
   protected waveType: WaveType;
+  protected fibonacci: Fibonacci;
   constructor(waveType: WaveType) {
     this.waveType = waveType;
+    this.fibonacci = new Fibonacci();
+
+    if (!this.configCheck()) {
+      throw new Error(`Warning configuration Error on ${this.waveType}`);
+    }
+  }
+
+  configCheck() {
+    if (!this.projectWave5WithWave1() && !this.projectWave5WithWave3()) {
+      return false;
+    }
+
+    if (!this.projectWave5FromWave1 && !this.projectWave5FromWave4) {
+      return false;
+    }
+
+    return true;
   }
 
   protected abstract getWave2TimeConfig(): ScoreRange[];
@@ -21,11 +40,44 @@ export abstract class MotiveInterface {
   public abstract allowWave1Break(): boolean;
 
   public projectWave5WithWave1(): boolean {
-    return true;
+    return false;
+  }
+
+  public projectWave5WithWave3(): boolean {
+    return false;
+  }
+
+  public projectWave5FromWave1(): boolean {
+    return false;
+  }
+
+  public projectWave5FromWave4(): boolean {
+    return false;
   }
 
   public getWaveType(): WaveType {
     return this.waveType;
+  }
+
+  public getWave5PercentageProjection(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave, useLogScale: boolean): number {
+    let p1: Pivot | null = null;
+    let p2: Pivot | null = null;
+
+    if (this.projectWave5WithWave1() && this.projectWave5WithWave3()) {
+      p1 = wave1.pStart;
+      p2 = wave1.pEnd;
+    } else if (this.projectWave5WithWave1()) {
+      p1 = wave1.pStart;
+      p2 = wave1.pEnd;
+    } else {
+      p1 = wave3.pStart;
+      p2 = wave3.pEnd;
+    }
+
+    const projectFrom = this.projectWave5FromWave4() ? { p4: wave4.pEnd } : { p4: wave2.pEnd };
+
+    this.fibonacci.setLogScale(useLogScale);
+    return this.fibonacci.getProjectionPercentage(p1.price, p2.price, projectFrom.p4.price, wave5.pEnd.price);
   }
 
   public validateWave2Retracement(retracement: number): WaveScore {
@@ -40,8 +92,7 @@ export abstract class MotiveInterface {
     return this.getScore(retracement, this.getWave4RetracementConfig());
   }
 
-  public validateWave5Projection(projectionWave1: number, projectionWave3: number): WaveScore {
-    const projection = this.projectWave5WithWave1() ? projectionWave1 : projectionWave3;
+  public validateWave5Projection(projection: number): WaveScore {
     return this.getScore(projection, this.getWave5ProjectionConfig());
   }
 
@@ -62,7 +113,7 @@ export abstract class MotiveInterface {
   }
 
   protected getScore(value: number, config: ScoreRange[]): WaveScore {
-    const range = config.find((r) => value >= r.range[0] && value <= r.range[1]);
+    const range = config.find((r) => value >= r.range[0] && value < r.range[1]);
     return range ? range.score : WaveScore.INVALID;
   }
 
@@ -110,7 +161,8 @@ export abstract class MotiveInterface {
     return {
       waveType: this.waveType,
       allowWave4Break: this.allowWave1Break(),
-      projectWave5WithWave1: this.allowWave1Break(),
+      projectWave5WithWave1: this.projectWave5WithWave1(),
+      projectWave5FromWave4: this.projectWave5FromWave4(),
       wave2: {
         time: this.getWave2TimeConfig(),
         retracement: this.getWave2RetracementConfig(),
