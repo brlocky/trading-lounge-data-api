@@ -1,8 +1,6 @@
-import { MotiveWaveInterface } from '../interfaces/motive-wave.interface';
-import { Pivot, ClusterWaves } from '../types';
-import { Fibonacci } from '../class/utils/fibonacci.class';
 import { Degree, WaveType } from '../enums';
-import { CandleDto } from 'src/search/dto';
+import { MotiveWaveInterface } from '../interfaces/motive-wave.interface';
+import { ClusterWaves } from '../types';
 
 class ConcreteMotiveWave extends MotiveWaveInterface {
   find(): ClusterWaves[] {
@@ -28,21 +26,10 @@ class ConcreteMotiveWave extends MotiveWaveInterface {
 }
 
 describe('MotiveWaveInterface', () => {
-  let candles: CandleDto[];
-  let pivots: Pivot[];
-  const fibonacci: Fibonacci = new Fibonacci();
   let motiveWave: MotiveWaveInterface;
 
   beforeEach(() => {
-    candles = [
-      // Mock candle data
-      { open: 1, high: 2, low: 0.5, close: 1.5, volume: 1000 },
-      { open: 1.5, high: 3, low: 1, close: 2, volume: 1000 },
-      { open: 2, high: 4, low: 1.5, close: 3.5, volume: 1000 },
-      // Add more candles as needed
-    ] as CandleDto[];
-
-    motiveWave = new ConcreteMotiveWave(candles, pivots, fibonacci, Degree.PRIMARY, WaveType.MOTIVE);
+    motiveWave = new ConcreteMotiveWave(Degree.PRIMARY, WaveType.MOTIVE);
   });
 
   it('should initialize with correct wave type and degree', () => {

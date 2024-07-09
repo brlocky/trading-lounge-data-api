@@ -1,6 +1,6 @@
 import { degreeToString, waveTypeToString, waveNameToString } from '../enums';
 import { ClusterWaves, Wave } from '../types';
-import { WaveClusterResponse, WaveResponse, PivotResponse, EnumStruct } from './elliott-waves.dto';
+import { WaveClusterResponse, WaveResponse, PivotResponse, EnumStruct } from './response.dto';
 
 export class WaveClusterResponseFactory {
   static create(cluster: ClusterWaves): WaveClusterResponse {
@@ -19,6 +19,7 @@ export class WaveClusterResponseFactory {
       this.mapEnumToStruct(degreeToString(wave.degree), wave.degree),
       new PivotResponse(wave.pStart, wave.degree),
       new PivotResponse(wave.pEnd, wave.degree),
+      wave.children ? wave.children.map((child) => this.createWaveResponse(child)) : [],
     );
   }
 

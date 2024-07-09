@@ -8,6 +8,14 @@ export class Fibonacci {
   }
 
   /**
+   * Update usage of logarithmic scale.
+   * @returns {void}
+   */
+  setLogScale(logScale: boolean): void {
+    this.useLogScale = logScale;
+  }
+
+  /**
    * Returns whether logarithmic scale is used.
    * @returns {boolean} True if log scale is used, false otherwise.
    */

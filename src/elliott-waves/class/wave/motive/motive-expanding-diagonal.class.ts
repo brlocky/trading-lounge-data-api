@@ -1,17 +1,10 @@
-import { MotiveWaveInterface } from 'src/elliott-waves/interfaces/motive-wave.interface';
-import { ClusterWaves, Pivot } from 'src/elliott-waves/types';
-import { Fibonacci } from '../../utils/fibonacci.class';
 import { Degree, WaveType } from 'src/elliott-waves/enums';
-import { CandleDto } from 'src/search/dto';
+import { MotiveWaveInterface } from 'src/elliott-waves/interfaces/motive-wave.interface';
+import { Pivot } from 'src/elliott-waves/types';
 
 export class MotiveExpandingDiagonal extends MotiveWaveInterface {
-  constructor(candles: CandleDto[], pivots: Pivot[], fibs: Fibonacci, degree: Degree) {
-    super(candles, pivots, fibs, degree, WaveType.MOTIVE_EXPANDING_DIAGONAL);
-  }
-
-  // Find and validate correction
-  find(): ClusterWaves[] {
-    return this.getImpulseWaves();
+  constructor(degree: Degree) {
+    super(degree, WaveType.MOTIVE_EXPANDING_DIAGONAL);
   }
 
   allowWave4BreakWave1Support(): boolean {

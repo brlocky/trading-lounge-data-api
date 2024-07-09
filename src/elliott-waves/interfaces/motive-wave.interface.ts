@@ -1,23 +1,18 @@
-import { v4 } from 'uuid';
+import { CandleDto } from 'src/search/dto';
 import { calculateAngle, getHHBeforeBreak, getLLBeforeBreak, TimeProjection } from '../class/utils';
-import { Fibonacci } from '../class/utils/fibonacci.class';
 import { Degree, PivotType, Trend, WaveName, WaveType } from '../enums';
 import { ClusterPivot, ClusterWaves, Pivot, Wave } from '../types';
 import { BaseWaveInterface } from './base-wave.interface';
-import { CandleDto } from 'src/search/dto';
 
 export abstract class MotiveWaveInterface extends BaseWaveInterface {
   _waveType: WaveType;
   _degree: Degree;
 
-  constructor(candles: CandleDto[], pivots: Pivot[], fibonacci: Fibonacci, degree: Degree, waveType: WaveType) {
-    super(candles, pivots, fibonacci);
+  constructor(degree: Degree, waveType: WaveType) {
+    super();
     this._waveType = waveType;
     this._degree = degree;
   }
-
-  // Retracement and Projection Levels
-  abstract find(): ClusterWaves[];
 
   abstract getWave2RetracementPercentages(): [number, number, number];
   abstract getWave3ProjectionPercentages(): [number, number, number];
@@ -57,7 +52,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
     return this._waveType;
   }
 
-  protected getImpulseWaves(): ClusterWaves[] {
+  public getImpulseWaves(): ClusterWaves[] {
     const impulseWaves: Wave[][] = this.getInitialImpulses(this.candles, this.pivots);
 
     const incompleteClusters = impulseWaves.filter((c) => c.length !== 5);
@@ -78,44 +73,6 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
 
     return waveClusters;
   }
-
-  /*   validateWaves(waves: Wave[], useLogScale: boolean): boolean {
-    if (waves.length !== 5) return false;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [w1, w2, w3, w4, w5] = waves;
-
-    const calculateRange = (start: number, end: number): number => {
-      return useLogScale ? Math.abs(Math.log(end) - Math.log(start)) : Math.abs(end - start);
-    };
-
-    const rangeW1 = calculateRange(w1.pStart.price, w1.pEnd.price);
-    const rangeW3 = calculateRange(w3.pStart.price, w3.pEnd.price);
-    const rangeW5 = calculateRange(w5.pStart.price, w5.pEnd.price);
-
-    // Wave 3 cannot be the shortest
-    if (rangeW3 < rangeW1 && rangeW3 < rangeW5) {
-      return false;
-    }
-
-    const extendedWave = this.getExtendedWave();
-    if (!extendedWave) {
-      return true;
-    }
-
-    if (extendedWave === WaveName._1 && rangeW1 > rangeW5 && rangeW1 > rangeW3) {
-      return true;
-    }
-
-    if (extendedWave === WaveName._3 && rangeW3 > rangeW5 && rangeW3 > rangeW1) {
-      return true;
-    }
-
-    if (extendedWave === WaveName._5 && rangeW5 > rangeW1 && rangeW5 > rangeW3) {
-      return true;
-    }
-
-    return false;
-  } */
 
   protected getInitialImpulses(candles: CandleDto[], pivots: Pivot[]): Wave[][] {
     const p0 = pivots[0];
@@ -203,7 +160,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
       const projectedPrice = med;
       const { mediumTime } = TimeProjection.calculateWave3Time(p0, p2);
       const p3 = this.buildClusterPivot(lastWave.pStart.type, projectedPrice, mediumTime);
-      lastWave = new Wave( WaveName._3, lastWave.degree, lastWave.pEnd, new ClusterPivot(p3, 'PROJECTED'));
+      lastWave = new Wave(WaveName._3, lastWave.degree, lastWave.pEnd, new ClusterPivot(p3, 'PROJECTED'));
       newWaves.push(lastWave);
     }
 
@@ -216,7 +173,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
       const { mediumTime } = TimeProjection.calculateWave4Time(p1, pEnd);
 
       const p4 = this.buildClusterPivot(lastWave.pStart.type, projectedPrice, mediumTime);
-      lastWave = new Wave( WaveName._4, lastWave.degree, lastWave.pEnd, new ClusterPivot(p4, 'PROJECTED'));
+      lastWave = new Wave(WaveName._4, lastWave.degree, lastWave.pEnd, new ClusterPivot(p4, 'PROJECTED'));
       newWaves.push(lastWave);
     }
 
@@ -234,7 +191,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
       const projectedPrice = med;
       const { mediumTime } = TimeProjection.calculateWave5Time(p2, pEnd);
       const p5 = this.buildClusterPivot(lastWave.pStart.type, projectedPrice, mediumTime);
-      lastWave = new Wave( WaveName._5, lastWave.degree, lastWave.pEnd, new ClusterPivot(p5, 'PROJECTED'));
+      lastWave = new Wave(WaveName._5, lastWave.degree, lastWave.pEnd, new ClusterPivot(p5, 'PROJECTED'));
       newWaves.push(lastWave);
     }
 
@@ -242,7 +199,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
   }
 
   private buildClusterPivot(type: PivotType, price: number, time: number) {
-    const pivot = new Pivot(v4(), -1, type, price, time);
+    const pivot = new Pivot(-1, type, price, time);
     return new ClusterPivot(pivot, 'PROJECTED');
   }
 
@@ -332,7 +289,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
         const newWaveCluster = [...wavesCluster];
         const pEndConnetion = newWaveCluster[1].pEnd;
         pEndConnetion.confirmPivot();
-        const wave3 = new Wave( WaveName._3, wave2.degree, pEndConnetion, new ClusterPivot(p3, 'WAITING'));
+        const wave3 = new Wave(WaveName._3, wave2.degree, pEndConnetion, new ClusterPivot(p3, 'WAITING'));
         newWaveCluster.push(wave3);
         outputClusterOpen.push(newWaveCluster);
       }
@@ -366,7 +323,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
         const newWaveCluster = [...wavesCluster];
         const pEndConnetion = newWaveCluster[2].pEnd;
         pEndConnetion.confirmPivot();
-        const wave4 = new Wave( WaveName._4, wave3.degree, pEndConnetion, new ClusterPivot(p4, 'WAITING'));
+        const wave4 = new Wave(WaveName._4, wave3.degree, pEndConnetion, new ClusterPivot(p4, 'WAITING'));
         newWaveCluster.push(wave4);
         outputClusterOpen.push(newWaveCluster);
       }
@@ -652,9 +609,24 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
     return percentage >= min && percentage <= max;
   }
 
-  checkTimeToComplete(startPivot: Pivot, endPivot: Pivot, fromPivot: Pivot): boolean {
-    const remainingCandles = this.getRemainingCandlesAfter(fromPivot);
-    const consumedCandles = endPivot.candleIndex - startPivot.candleIndex;
-    return remainingCandles > consumedCandles;
+  wave3IsNotTheShortest2(waves: Wave[], useLogScale: boolean): boolean {
+    if (waves.length !== 5) return true;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [w1, w2, w3, w4, w5] = waves;
+
+    const calculateRange = (start: number, end: number): number => {
+      return useLogScale ? Math.abs(Math.log(end) - Math.log(start)) : Math.abs(end - start);
+    };
+
+    const rangeW1 = calculateRange(w1.pStart.price, w1.pEnd.price);
+    const rangeW3 = calculateRange(w3.pStart.price, w3.pEnd.price);
+    const rangeW5 = calculateRange(w5.pStart.price, w5.pEnd.price);
+
+    // Wave 3 cannot be the shortest
+    if (rangeW3 < rangeW1 && rangeW3 < rangeW5) {
+      return false;
+    }
+
+    return true;
   }
 }

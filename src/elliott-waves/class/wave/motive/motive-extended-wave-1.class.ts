@@ -1,12 +1,10 @@
-import { MotiveWaveInterface } from 'src/elliott-waves/interfaces/motive-wave.interface';
-import { ClusterWaves, Pivot } from 'src/elliott-waves/types';
-import { Fibonacci } from '../../utils/fibonacci.class';
 import { Degree, WaveName, WaveType } from 'src/elliott-waves/enums';
-import { CandleDto } from 'src/search/dto';
+import { MotiveWaveInterface } from 'src/elliott-waves/interfaces/motive-wave.interface';
+import { ClusterWaves } from 'src/elliott-waves/types';
 
 export class MotiveExtendedWave1 extends MotiveWaveInterface {
-  constructor(candles: CandleDto[], pivots: Pivot[], fibs: Fibonacci, degree: Degree) {
-    super(candles, pivots, fibs, degree, WaveType.MOTIVE_EXTENDED_1);
+  constructor(degree: Degree) {
+    super(degree, WaveType.MOTIVE_EXTENDED_1);
   }
 
   // Find and validate correction

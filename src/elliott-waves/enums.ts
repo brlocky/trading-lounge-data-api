@@ -150,3 +150,11 @@ export function increaseDegree(degree: Degree): Degree {
   }
   return degree;
 }
+
+export enum WaveScore {
+  'INVALID' = 0,
+  'WORSTCASESCENARIO' = 1,
+  'WORK' = 2,
+  'GOOD' = 3,
+  'PERFECT' = 4,
+}

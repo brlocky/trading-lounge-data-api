@@ -1,44 +1,51 @@
 import { Injectable, PreconditionFailedException } from '@nestjs/common';
 import { Pivot, PivotSearchResult } from '../types';
-import { v4 } from 'uuid';
-import { getHHBeforeBreak, getLLBeforeBreak, getTrend } from '../class/utils/pivot.utils';
+import { getLLBeforeBreak, getTrend } from '../class/utils/pivot.utils';
 import { PivotType, Trend } from '../enums';
 import { Fibonacci } from '../class/utils/fibonacci.class';
 import { CandleDto } from 'src/search/dto';
+
+// Interface to represent a wave retracement
 interface WaveRetracement {
   p1: Pivot;
   p2: Pivot;
   retracement: number;
 }
+
 @Injectable()
 export class CandleService {
+  // Method to calculate ZigZag pivots from an array of candles
   getZigZag(candles: CandleDto[]): Pivot[] {
     if (candles.length < 2) {
       throw new PreconditionFailedException(`${this.constructor.name}:getZigZag: The candles array must have at least 2 elements.`);
     }
 
-    // All pivots will be marked as being a possibility
+    // Initialize arrays to mark potential pivot highs and lows
     const pivotHigh = new Array(candles.length).fill(1);
     const pivotLow = new Array(candles.length).fill(1);
 
-    // Find candles Trend Direction
+    // Determine the overall trend
     const trend = getTrend(candles);
 
+    // Set the first pivot based on the trend
     if (trend === Trend.UP) {
       pivotHigh[0] = 0;
     } else {
       pivotLow[0] = 0;
     }
 
+    // Iterate through candles to identify potential pivots
     for (let i = 1; i < candles.length - 1; i++) {
       const prevCandle = candles[i - 1];
       const currCandle = candles[i];
 
+      // Check for doji candles (open = close = high = low)
       if (currCandle.open === currCandle.low && currCandle.open === currCandle.high && currCandle.open === currCandle.close) {
         pivotHigh[i] = 0;
         pivotLow[i] = 0;
       }
 
+      // Check for gaps between candles
       if (currCandle.low >= prevCandle.high) {
         pivotLow[i] = 0;
         pivotHigh[i - 1] = 0;
@@ -49,6 +56,7 @@ export class CandleService {
         pivotLow[i - 1] = 0;
       }
 
+      // Check for potential pivot highs and lows based on candle patterns
       if (pivotHigh[i - 1] && !pivotLow[i - 1] && prevCandle.high > currCandle.high && this.isRedCandle(currCandle)) {
         pivotHigh[i] = 0;
       }
@@ -57,6 +65,7 @@ export class CandleService {
         pivotLow[i] = 0;
       }
 
+      // Additional checks for pivot high/low based on candle patterns
       if (i > 1 && this.isGreenCandle(prevCandle) && this.isRedCandle(currCandle) && candles[i - 1].high < currCandle.high) {
         pivotHigh[i - 1] = 0;
       }
@@ -65,6 +74,7 @@ export class CandleService {
         pivotLow[i - 1] = 0;
       }
 
+      // Check for potential pivot changes based on candle patterns and previous pivots
       if (
         this.isGreenCandle(prevCandle) &&
         pivotLow[i - 1] &&
@@ -86,14 +96,16 @@ export class CandleService {
       }
     }
 
+    // Create pivot objects based on the identified pivot points
     const pivots = [];
     for (let i = 0; i < candles.length; i++) {
       const candle = candles[i];
       if (pivotHigh[i] && pivotLow[i]) {
-        // we need to create 2 pivots for a spike
+        // Create two pivots for a spike
         const p1 = this.createPivot(candle, i, PivotType.HIGH);
         const p2 = this.createPivot(candle, i, PivotType.LOW);
 
+        // Determine the order of pivots based on candle type and trend
         if (this.isNeutral(candle)) {
           if (trend === Trend.UP) {
             pivots.push(p1);
@@ -119,44 +131,44 @@ export class CandleService {
     return pivots;
   }
 
-  generateRetracements(pivots: Pivot[], minWaves: number): Pivot[] {
-    const detailDecrement = 3;
+  // Method to get wave pivot retracements based on a minimum number of waves
+  getWavePivotRetracementsByNumberOfWaves(pivots: Pivot[], minWaves: number): Pivot[] {
+    const detailDecrement = 5;
+    const minDetail = 0;
     let detail = 90;
-    const minDetail = 1;
     let waveRetracements: WaveRetracement[] = [];
 
-    while (detail > minDetail && (waveRetracements.length === 0 || waveRetracements.length < minWaves)) {
+    // Adjust the detail level until the desired number of waves is found
+    while (detail >= minDetail && (waveRetracements.length === 0 || waveRetracements.length < minWaves)) {
       waveRetracements = this.analyzeWaveRetracements(pivots, detail);
       detail -= detailDecrement;
     }
 
-    const trend = getTrend(pivots);
-    const looking4PivotType: PivotType = trend === Trend.UP ? PivotType.HIGH : PivotType.LOW;
-    const pStart = pivots[0];
-    const lastOptions = pivots.filter((p) => p.type === looking4PivotType);
-    const pEnd = lastOptions[lastOptions.length - 1];
-
-    const newPivots = waveRetracements.flatMap((w) => [w.p1, w.p2]);
-    !newPivots.find((p) => p.id == pStart.id) && newPivots.unshift(pStart);
-    !newPivots.find((p) => p.id === pEnd.id) && newPivots.push(pEnd);
-
-    return newPivots;
+    return waveRetracements.flatMap((w) => [w.p1, w.p2]);
   }
 
-  protected analyzeWaveRetracements(pivots: Pivot[], threshold: number = 20): WaveRetracement[] {
-    const trend = getTrend(pivots);
+  // Method to get wave pivot retracements based on a specific retracement percentage
+  getWavePivotRetracementsByRetracement(pivots: Pivot[], retracement: number): Pivot[] {
+    const waveRetracements: WaveRetracement[] = this.analyzeWaveRetracements(pivots, retracement);
+    return waveRetracements.flatMap((w) => [w.p1, w.p2]);
+  }
 
+  // Protected method to analyze wave retracements
+  protected analyzeWaveRetracements(pivots: Pivot[], threshold: number): WaveRetracement[] {
     const retracements: WaveRetracement[] = [];
     const fibonacci = new Fibonacci();
     let index = 0;
+
+    let lastMax = -Infinity;
+    // Iterate through pivots to find retracements
     while (index < pivots.length) {
       const pivot = pivots[index];
       let pivotSearchResult: PivotSearchResult;
 
-      if (trend === Trend.UP && pivot.isHigh()) {
+      // Search for the next pivot based on the trend
+      if (pivot.isHigh() && pivot.price >= lastMax && index + 1 < pivots.length) {
+        lastMax = pivot.price;
         pivotSearchResult = getLLBeforeBreak(pivots.slice(index + 1), pivot);
-      } else if (trend === Trend.DOWN && pivot.isLow()) {
-        pivotSearchResult = getHHBeforeBreak(pivots.slice(index + 1), pivot);
       } else {
         index += 1;
         continue;
@@ -169,8 +181,9 @@ export class CandleService {
         continue;
       }
 
+      // Calculate retracement and add to the list if it exceeds the threshold
       const retracementValue = fibonacci.calculatePercentageDecrease(pivot.price, nextPivot.price);
-      if (retracementValue > threshold) {
+      if (retracementValue >= threshold) {
         retracements.push({ p1: pivot, p2: nextPivot, retracement: retracementValue });
       }
       index = pivots.indexOf(nextPivot) + 1;
@@ -179,10 +192,12 @@ export class CandleService {
     return retracements;
   }
 
+  // Helper method to create a Pivot object
   protected createPivot(candle: CandleDto, index: number, type: PivotType): Pivot {
-    return new Pivot(v4(), index, type, type === PivotType.HIGH ? candle.high : candle.low, candle.time);
+    return new Pivot(index, type, type === PivotType.HIGH ? candle.high : candle.low, candle.time);
   }
 
+  // Helper methods to determine candle types
   protected isRedCandle(candle: CandleDto): boolean {
     return candle.close < candle.open;
   }

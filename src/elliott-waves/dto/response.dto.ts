@@ -1,43 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { CandleDto } from 'src/search/dto';
 import { Degree } from '../enums';
-import { ClusterPivot, Pivot } from '../types';
-
-export class BaseRequest {
-  @ApiProperty()
-  symbol: string;
-
-  @ApiProperty()
-  interval: 'M' | 'W' | 'D';
-
-  @ApiProperty()
-  degree: number;
-
-  @ApiProperty()
-  logScale: boolean;
-}
-
-export class WaveCountClusterRequest extends BaseRequest {
-  @ApiProperty()
-  candles: CandleDto[];
-
-  @ApiProperty()
-  subCounts: number;
-
-  @ApiProperty()
-  definition: number;
-}
-
-export class SubWaveCountClusterRequest extends BaseRequest {
-  @ApiProperty()
-  candles: CandleDto[];
-
-  @ApiProperty()
-  startPivot: Pivot;
-
-  @ApiProperty()
-  endPivot: Pivot;
-}
+import { Pivot, ClusterPivot } from '../types';
 
 export class EnumStruct {
   @ApiProperty()
@@ -113,12 +76,16 @@ export class WaveResponse {
   @ApiProperty()
   pEnd: PivotResponse;
 
-  constructor(id: string, wave: EnumStruct, degree: EnumStruct, pStart: PivotResponse, pEnd: PivotResponse) {
+  @ApiProperty()
+  children: WaveResponse[];
+
+  constructor(id: string, wave: EnumStruct, degree: EnumStruct, pStart: PivotResponse, pEnd: PivotResponse, children: WaveResponse[]) {
     this.id = id;
     this.wave = wave;
     this.degree = degree;
     this.pStart = pStart;
     this.pEnd = pEnd;
+    this.children = children;
   }
 }
 

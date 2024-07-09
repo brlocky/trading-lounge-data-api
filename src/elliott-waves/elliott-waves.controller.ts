@@ -1,14 +1,13 @@
-import { Body, Controller, Post } from '@nestjs/common';
-import { NoCache } from 'src/decorators/no-cache.decorator';
-import { SubWaveCountClusterRequest, WaveCountClusterRequest, WaveCountClusterResponse } from './dto/elliott-waves.dto';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { WaveClusterResponseFactory } from './dto/wave-cluster-response.factory';
 import { ElliottWavesService } from './elliott-waves.service';
+import { SubWaveCountClusterRequest, WaveCountClusterRequest, WaveCountClusterResponse, WaveInfoRequest } from './dto';
+import { WaveInfo, WavesConfig } from './types';
 
 @Controller('elliott-waves')
 export class ElliottWavesController {
   constructor(private readonly service: ElliottWavesService) {}
 
-  @NoCache()
   @Post('wave-counts')
   async getWaveCounts(@Body() req: WaveCountClusterRequest): Promise<WaveCountClusterResponse> {
     const { candles, degree, logScale, definition } = req;
@@ -18,13 +17,23 @@ export class ElliottWavesController {
     };
   }
 
-  @NoCache()
   @Post('sub-wave-counts')
-  getSubWaveCounts(@Body() req: SubWaveCountClusterRequest): WaveCountClusterResponse {
+  async getSubWaveCounts(@Body() req: SubWaveCountClusterRequest): Promise<WaveCountClusterResponse> {
     const { candles, degree, startPivot, endPivot, logScale } = req;
-    const waveCounts = this.service.getSubWaveCounts(candles, degree, startPivot, endPivot, logScale);
+    const waveCounts = await this.service.getSubWaveCounts(candles, degree, startPivot, endPivot, logScale);
     return {
       clusters: waveCounts.map((w) => WaveClusterResponseFactory.create(w)),
     };
+  }
+
+  @Post('wave-info')
+  async getWaveInfo(@Body() req: WaveInfoRequest): Promise<WaveInfo[]> {
+    const { pivots, logScale } = req;
+    return this.service.getWaveInfo(pivots, logScale);
+  }
+
+  @Get('waves-config')
+  async getWavesConfig(): Promise<WavesConfig> {
+    return this.service.getWavesConfig();
   }
 }

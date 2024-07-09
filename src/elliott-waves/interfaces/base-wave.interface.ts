@@ -11,7 +11,7 @@ export abstract class BaseWaveInterface {
   protected fibonacci: Fibonacci;
   protected targetPivot: Pivot | null;
 
-  constructor(candles: CandleDto[], pivots: Pivot[], fibonacci: Fibonacci) {
+  public load(candles: CandleDto[], pivots: Pivot[], fibonacci: Fibonacci) {
     this.candles = candles;
     this.pivots = pivots;
     this.fibonacci = fibonacci;

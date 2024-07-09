@@ -1,6 +1,6 @@
 import { PreconditionFailedException } from '@nestjs/common';
-import { PivotType, Trend } from 'src/elliott-waves/enums';
-import { Pivot, PivotSearchResult } from 'src/elliott-waves/types';
+import { Degree, PivotType, Trend, WaveName } from 'src/elliott-waves/enums';
+import { Pivot, PivotSearchResult, Wave } from 'src/elliott-waves/types';
 import { CandleDto } from 'src/search/dto';
 
 /**
@@ -97,4 +97,22 @@ export const calculateAngle = (pivot1: { price: number; time: number }, pivot2: 
   const angleInDegrees = angleInRadians * (180 / Math.PI);
 
   return Math.abs(angleInDegrees);
+};
+
+export const convertPivotsToWaves = (pivots: Pivot[]): Wave[] => {
+  let waveName = WaveName._1;
+  const waves: Wave[] = [];
+  if (pivots.length !== 6) {
+    throw new Error('Pivots array must have an even number of elements');
+  }
+
+  for (let i = 0; i < pivots.length - 1; i++) {
+    const p1 = pivots[i];
+    const p2 = pivots[i + 1];
+    const wave = new Wave(waveName, Degree.SUPERMILLENNIUM, p1, p2);
+    waves.push(wave);
+    waveName++;
+  }
+
+  return waves;
 };

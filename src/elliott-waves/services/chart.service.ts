@@ -5,7 +5,7 @@ import { CandleDto } from 'src/search/dto';
 
 @Injectable()
 export class ChartService {
-  async createCandlestickChart(candles: CandleDto[], pivots: Pivot[], outputFilename: string, useLogScale: boolean) {
+  async createCandlestickChart(candles: CandleDto[], pivots: Pivot[], outputFilename: string, useLogScale = true) {
     const chart = new QuickChart();
 
     const markerData = pivots.map((pivot) => ({
@@ -96,7 +96,7 @@ export class ChartService {
 
     try {
       await chart.toFile(outputFilename);
-      console.log(`Candlestick chart saved as ${outputFilename}`);
+      //console.log(`Candlestick chart saved as ${outputFilename}`);
     } catch (error) {
       console.error('Error creating candlestick chart:');
     }
