@@ -44,6 +44,8 @@ export interface WaveConfig {
   waveType: WaveType;
   allowWave4Break: boolean;
   projectWave5WithWave1: boolean;
+  projectWave5WithWave3: boolean;
+  projectWave5FromWave1: boolean;
   projectWave5FromWave4: boolean;
   wave2: WaveConfigResult;
   wave3: WaveConfigResult;

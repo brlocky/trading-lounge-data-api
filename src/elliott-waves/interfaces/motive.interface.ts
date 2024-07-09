@@ -162,6 +162,8 @@ export abstract class MotiveInterface {
       waveType: this.waveType,
       allowWave4Break: this.allowWave1Break(),
       projectWave5WithWave1: this.projectWave5WithWave1(),
+      projectWave5WithWave3: this.projectWave5WithWave3(),
+      projectWave5FromWave1: this.projectWave5FromWave1(),
       projectWave5FromWave4: this.projectWave5FromWave4(),
       wave2: {
         time: this.getWave2TimeConfig(),
