@@ -1,28 +1,34 @@
 import { WaveScore, WaveType } from '../enums';
 import { MotiveInterface } from '../interfaces/motive.interface';
-import { ScoreRange } from '../types';
+import { ScoreRange, Wave } from '../types';
 
 export class MotiveExtended3 extends MotiveInterface {
   constructor() {
     super(WaveType.MOTIVE_EXTENDED_3);
   }
 
-  public allowWave1Break(): boolean {
+  public allowWave4Overlap(): boolean {
     return false;
   }
 
-  public projectWave5WithWave1(): boolean {
-    return true;
+  calculateWave5Projection(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave, useLogScale: boolean): number {
+    this.fibonacci.setLogScale(useLogScale);
+    return this.fibonacci.getProjectionPercentage(wave3.pStart.price, wave3.pEnd.price, wave4.pEnd.price, wave5.pEnd.price);
   }
 
-  public projectWave5FromWave4(): boolean {
+  public validateWaveStructure(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave, useLogScale: boolean): boolean {
+    // Wave 3 is bigger
+    const wave3isBigger = wave3.length(useLogScale) >= wave1.length(useLogScale) && wave3.length(useLogScale) >= wave5.length(useLogScale);
+    if (!wave3isBigger) return false;
+
     return true;
   }
 
   public getWave2TimeConfig(): ScoreRange[] {
     return [
-      { range: [0, 23.6], score: WaveScore.INVALID },
-      { range: [23.6, 38.2], score: WaveScore.WORK },
+      { range: [1, 5], score: WaveScore.WORSTCASESCENARIO },
+      { range: [5, 10], score: WaveScore.WORK },
+      { range: [10, 38.2], score: WaveScore.GOOD },
       { range: [38.2, 300], score: WaveScore.PERFECT },
       { range: [300, 400], score: WaveScore.WORK },
       { range: [400, 600], score: WaveScore.WORSTCASESCENARIO },
@@ -31,12 +37,11 @@ export class MotiveExtended3 extends MotiveInterface {
 
   public getWave3TimeConfig(): ScoreRange[] {
     return [
-      { range: [0, 23.6], score: WaveScore.INVALID },
       { range: [23.6, 38.2], score: WaveScore.WORSTCASESCENARIO },
       { range: [38.2, 68.1], score: WaveScore.WORK },
       { range: [68.1, 100], score: WaveScore.WORK },
-      { range: [100, 168.1], score: WaveScore.PERFECT },
-      { range: [168.1, 250], score: WaveScore.GOOD },
+      { range: [100, 161.8], score: WaveScore.PERFECT },
+      { range: [161.8, 250], score: WaveScore.GOOD },
       { range: [250, 350], score: WaveScore.WORK },
       { range: [350, 800], score: WaveScore.WORSTCASESCENARIO },
       { range: [800, 1000], score: WaveScore.INVALID },
@@ -45,8 +50,8 @@ export class MotiveExtended3 extends MotiveInterface {
 
   public getWave4TimeConfig(): ScoreRange[] {
     return [
-      { range: [23.6, 38.2], score: WaveScore.WORSTCASESCENARIO },
-      { range: [38.2, 100], score: WaveScore.WORK },
+      { range: [23.6, 38.2], score: WaveScore.INVALID },
+      { range: [38.2, 100], score: WaveScore.INVALID },
       { range: [100, 125], score: WaveScore.GOOD },
       { range: [125, 250], score: WaveScore.PERFECT },
       { range: [250, 300], score: WaveScore.GOOD },
@@ -60,8 +65,8 @@ export class MotiveExtended3 extends MotiveInterface {
       { range: [0, 23.6], score: WaveScore.INVALID },
       { range: [23.6, 38.2], score: WaveScore.WORSTCASESCENARIO },
       { range: [38.2, 61.8], score: WaveScore.WORK },
-      { range: [61.8, 168.1], score: WaveScore.PERFECT },
-      { range: [168.1, 200], score: WaveScore.WORK },
+      { range: [61.8, 161.8], score: WaveScore.PERFECT },
+      { range: [161.8, 200], score: WaveScore.WORK },
       { range: [200, 300], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
@@ -94,7 +99,6 @@ export class MotiveExtended3 extends MotiveInterface {
 
   public getWave4RetracementConfig(): ScoreRange[] {
     return [
-      { range: [7.1, 14.2], score: WaveScore.WORSTCASESCENARIO },
       { range: [14.2, 18.9], score: WaveScore.WORSTCASESCENARIO },
       { range: [18.9, 23.6], score: WaveScore.WORK },
       { range: [23.6, 30.9], score: WaveScore.GOOD },
@@ -113,7 +117,8 @@ export class MotiveExtended3 extends MotiveInterface {
       { range: [60, 78.6], score: WaveScore.PERFECT },
       { range: [78.6, 88.6], score: WaveScore.GOOD },
       { range: [88.6, 138.2], score: WaveScore.WORK },
-      { range: [138.2, 168.1], score: WaveScore.WORSTCASESCENARIO },
+      { range: [138.2, 261.8], score: WaveScore.WORK },
+      { range: [261.8, 461.8], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 }

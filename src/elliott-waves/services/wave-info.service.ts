@@ -36,29 +36,12 @@ export class WaveInfoService {
   }
 
   getWaveInformation(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave | null = null, useLogScale = true): WaveInfo[] {
-    const getWaveRetracement = (wave1: Wave, wave2: Wave): number => {
-      const p1 = wave1.pStart.price;
-      const p2 = wave1.pEnd.price;
-      const p3 = wave2.pEnd.price;
-      this.fibonacci.setLogScale(useLogScale);
-      return this.fibonacci.getRetracementPercentage(p1, p2, p3);
-    };
-
-    const getWave3Projection = (wave1: Wave, wave2: Wave, wave3: Wave): number => {
-      const p1 = wave1.pStart.price;
-      const p2 = wave1.pEnd.price;
-      const p3 = wave2.pEnd.price;
-      const p4 = wave3.pEnd.price;
-      this.fibonacci.setLogScale(useLogScale);
-      return this.fibonacci.getProjectionPercentage(p1, p2, p3, p4);
-    };
-
     const getWavesTimePercentage = (waveA: Wave, waveB: Wave): number => {
       const time1 = waveA.pEnd.time - waveA.pStart.time;
       const time2 = waveB.pEnd.time - waveB.pStart.time;
       if (time1 == 0 || time2 === 0) {
         console.log('Get time retracement, missing candles to validate time diff');
-        return 100;
+        return 0;
       }
       return (time2 / time1) * 100;
     };
@@ -71,25 +54,25 @@ export class WaveInfoService {
 
     const wavesInfo: WaveInfo[] = [];
     for (const p of this.patterns) {
-      const validWave = p.allowWave1Break() ? true : !isWave1Broken(wave1, wave4);
+      const validWave = p.allowWave4Overlap() ? true : !isWave1Broken(wave1, wave4);
 
       if (!validWave) {
         continue;
       }
 
-      const retracementWave2 = getWaveRetracement(wave1, wave2);
+      const retracementWave2 = p.calculateWave2Retracement(wave1, wave2, useLogScale);
       const wave2Validation = p.validateWave2Retracement(retracementWave2);
 
-      const projectionWave3 = getWave3Projection(wave1, wave2, wave3);
+      const projectionWave3 = p.calculateWave3Projection(wave1, wave2, wave3, useLogScale);
       const wave3Validation = p.validateWave3Projection(projectionWave3);
 
-      const retracementWave4 = getWaveRetracement(wave3, wave4);
+      const retracementWave4 = p.calculateWave4Retracement(wave3, wave4, useLogScale);
       const wave4Validation = p.validateWave4Retracement(retracementWave4);
 
       let projectionWave5 = 0;
       let wave5Validation = WaveScore.INVALID;
       if (wave5) {
-        projectionWave5 = p.getWave5PercentageProjection(wave1, wave2, wave3, wave4, wave5, useLogScale);
+        projectionWave5 = p.calculateWave5Projection(wave1, wave2, wave3, wave4, wave5, useLogScale);
         wave5Validation = p.validateWave5Projection(projectionWave5);
       }
 
@@ -105,7 +88,7 @@ export class WaveInfoService {
       let projectionTimeWave5: number | null = 0;
       let wave5TimeValidation = WaveScore.INVALID;
       if (wave5) {
-        projectionTimeWave5 = getWavesTimePercentage(wave1, wave5);
+        projectionTimeWave5 = getWavesTimePercentage(wave3, wave5);
         wave5TimeValidation = p.validateWave5Time(projectionTimeWave5);
       }
 
@@ -117,6 +100,7 @@ export class WaveInfoService {
       const timeScore = wave5
         ? (wave2TimeValidation + wave3TimeValidation + wave4TimeValidation + wave5TimeValidation) / 4
         : (wave2TimeValidation + wave3TimeValidation + wave4TimeValidation) / 3;
+
       // Determine validity
       const isWaveValid =
         wave2Validation !== WaveScore.INVALID &&
@@ -130,15 +114,18 @@ export class WaveInfoService {
         wave4TimeValidation !== WaveScore.INVALID &&
         (!wave5 || wave5TimeValidation !== WaveScore.INVALID);
 
+      const isStructureValid = wave5 ? p.validateWaveStructure(wave1, wave2, wave3, wave4, wave5, useLogScale) : false;
       const waveInfo: WaveInfo = {
         waveType: p.getWaveType(),
         score: {
           wave: waveScore,
           time: timeScore,
+          structure: isStructureValid ? WaveScore.PERFECT : WaveScore.INVALID,
         },
         isValid: {
           wave: isWaveValid,
           time: isTimeValid,
+          structure: isStructureValid,
         },
         wave2: {
           time: {

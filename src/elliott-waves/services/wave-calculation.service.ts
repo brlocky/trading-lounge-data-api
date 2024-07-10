@@ -24,31 +24,12 @@ export class WaveCalculationService {
   }
 
   async getWaveCounts(candles: CandleDto[], degree: number, logScale: boolean, definition: number): Promise<ClusterWaves[]> {
-    const {
-      pivots,
-      retracements,
-      degree: { value: candlesDegree },
-    } = this.getPivotsInfo(candles, definition);
+    const { pivots } = this.getPivotsInfo(candles, definition);
 
-    const degree2Use = degree === 0 ? candlesDegree : degree;
-
-    const majorClusters = this.clusterService.findMajorStructure(pivots, candles, definition);
-
-    return majorClusters;
-
-    /*     const motivePatterns = this.getImpulsePatterns(candles, retracements, degree2Use, logScale);
-
-    const waveClusters: ClusterWaves[] = [];
-    for (const pattern of motivePatterns) {
-      const clusters = pattern.find();
-      if (!clusters.length) continue;
-      waveClusters.push(...clusters);
-    }
-
-    return waveClusters; */
+    return this.clusterService.findMajorStructure(pivots, candles, definition, logScale);
   }
 
-  /*   async getSubWaveCounts(
+  async getSubWaveCounts(
     candles: CandleDto[],
     degree: number,
     startPivot: Pivot,
@@ -57,7 +38,7 @@ export class WaveCalculationService {
   ): Promise<ClusterWaves[]> {
     const pivots = this.candleService.getZigZag(candles);
 
-    const clusters = await this.clusterService.findMajorStructure(pivots, candles, 3);
+    const clusters = await this.clusterService.findMajorStructure(pivots, candles, 3, logScale);
     const isTargetInsidePivots = !!pivots.find(
       (p) => endPivot && p.time === endPivot.time && p.price === endPivot.price && p.type === endPivot.type,
     );
@@ -73,9 +54,9 @@ export class WaveCalculationService {
       : clusters;
 
     return filteredCluster;
-  } */
+  }
 
-  getSubWaveCounts(candles: CandleDto[], degree: number, startPivot: Pivot, endPivot: Pivot, logScale: boolean): Promise<ClusterWaves[]> {
+  getSubWaveCounts2(candles: CandleDto[], degree: number, startPivot: Pivot, endPivot: Pivot, logScale: boolean): Promise<ClusterWaves[]> {
     const pivots = this.candleService.getZigZag(candles);
 
     const motivePatterns = this.getImpulsePatterns(degree - 1);

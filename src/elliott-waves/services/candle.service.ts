@@ -166,7 +166,7 @@ export class CandleService {
       let pivotSearchResult: PivotSearchResult;
 
       // Search for the next pivot based on the trend
-      if (pivot.isHigh() && pivot.price >= lastMax && index + 1 < pivots.length) {
+      if (pivot.isHigh() && pivot.price > lastMax && index + 1 < pivots.length) {
         lastMax = pivot.price;
         pivotSearchResult = getLLBeforeBreak(pivots.slice(index + 1), pivot);
       } else {
@@ -183,6 +183,7 @@ export class CandleService {
 
       // Calculate retracement and add to the list if it exceeds the threshold
       const retracementValue = fibonacci.calculatePercentageDecrease(pivot.price, nextPivot.price);
+      retracementValue > 90 && console.log(retracementValue);
       if (retracementValue >= threshold) {
         retracements.push({ p1: pivot, p2: nextPivot, retracement: retracementValue });
       }

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { WaveType, Degree, PivotType, WaveName, WaveScore } from './enums';
+import { WaveType, Degree, PivotType, WaveName, WaveScore, Trend } from './enums';
 import { v4 } from 'uuid';
 
 export interface ScoreRange {
@@ -23,10 +23,12 @@ export interface WaveInfo {
   score: {
     wave: number;
     time: number;
+    structure: number;
   };
   isValid: {
     wave: boolean;
     time: boolean;
+    structure: boolean;
   };
   wave2: WaveInfoResult;
   wave3: WaveInfoResult;
@@ -43,10 +45,6 @@ export interface WaveConfigResult {
 export interface WaveConfig {
   waveType: WaveType;
   allowWave4Break: boolean;
-  projectWave5WithWave1: boolean;
-  projectWave5WithWave3: boolean;
-  projectWave5FromWave1: boolean;
-  projectWave5FromWave4: boolean;
   wave2: WaveConfigResult;
   wave3: WaveConfigResult;
   wave4: WaveConfigResult;
@@ -196,6 +194,10 @@ export class Wave {
 
   public duration(): number {
     return this.pEnd.time - this.pStart.time;
+  }
+
+  public trend(): Trend {
+    return this.pEnd.price > this.pStart.price ? Trend.UP : Trend.DOWN;
   }
 
   private ensureClusterPivot(pivot: Pivot | ClusterPivot): ClusterPivot {

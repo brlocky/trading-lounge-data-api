@@ -1,17 +1,26 @@
 import { WaveScore, WaveType } from '../enums';
 import { MotiveInterface } from '../interfaces/motive.interface';
-import { ScoreRange } from '../types';
+import { ScoreRange, Wave } from '../types';
 
 export class MotiveContractingDiagonal extends MotiveInterface {
   constructor() {
     super(WaveType.MOTIVE_CONTRACTING_DIAGONAL);
   }
 
-  public allowWave1Break(): boolean {
+  public allowWave4Overlap(): boolean {
     return true;
   }
 
-  public projectWave5WithWave3(): boolean {
+  public calculateWave5Projection(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave, useLogScale: boolean): number {
+    this.fibonacci.setLogScale(useLogScale);
+    return this.fibonacci.getProjectionPercentage(wave3.pStart.price, wave3.pEnd.price, wave4.pEnd.price, wave5.pEnd.price);
+  }
+
+  public validateWaveStructure(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave, useLogScale: boolean): boolean {
+    // Wave 3 is bigger than wave5
+    const wave3IsBiggerThanWave5 = wave3.length(useLogScale) > wave5.length(useLogScale);
+    if (!wave3IsBiggerThanWave5) return false;
+
     return true;
   }
 
@@ -21,7 +30,7 @@ export class MotiveContractingDiagonal extends MotiveInterface {
       { range: [23.6, 38.2], score: WaveScore.WORSTCASESCENARIO },
       { range: [38.2, 61.8], score: WaveScore.GOOD },
       { range: [61.8, 99], score: WaveScore.PERFECT },
-      { range: [99, 168.1], score: WaveScore.WORSTCASESCENARIO },
+      { range: [99, 161.8], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 
@@ -41,8 +50,8 @@ export class MotiveContractingDiagonal extends MotiveInterface {
       { range: [23.6, 38.2], score: WaveScore.WORSTCASESCENARIO },
       { range: [38.2, 61.8], score: WaveScore.GOOD },
       { range: [61.8, 90], score: WaveScore.PERFECT },
-      { range: [90, 168.1], score: WaveScore.WORSTCASESCENARIO },
-      { range: [168.1, 200], score: WaveScore.INVALID },
+      { range: [90, 161.8], score: WaveScore.WORSTCASESCENARIO },
+      { range: [161.8, 200], score: WaveScore.INVALID },
     ];
   }
 
@@ -58,11 +67,6 @@ export class MotiveContractingDiagonal extends MotiveInterface {
 
   public getWave2RetracementConfig(): ScoreRange[] {
     return [
-      { range: [0, 7.1], score: WaveScore.INVALID },
-      { range: [7.1, 14.2], score: WaveScore.INVALID },
-      { range: [14.2, 18.9], score: WaveScore.INVALID },
-      { range: [18.9, 23.6], score: WaveScore.INVALID },
-      { range: [23.6, 30.9], score: WaveScore.INVALID },
       { range: [30.9, 38.2], score: WaveScore.WORSTCASESCENARIO },
       { range: [38.2, 44.1], score: WaveScore.WORK },
       { range: [44.1, 50], score: WaveScore.WORK },
@@ -70,10 +74,8 @@ export class MotiveContractingDiagonal extends MotiveInterface {
       { range: [55.9, 61.8], score: WaveScore.PERFECT },
       { range: [61.8, 70.2], score: WaveScore.PERFECT },
       { range: [70.2, 78.6], score: WaveScore.GOOD },
-      { range: [78.6, 83.6], score: WaveScore.WORK },
-      { range: [83.6, 88.6], score: WaveScore.WORSTCASESCENARIO },
-      { range: [88.6, 94.3], score: WaveScore.WORSTCASESCENARIO },
-      { range: [94.3, 100], score: WaveScore.INVALID },
+      { range: [78.6, 88.6], score: WaveScore.WORK },
+      { range: [88.6, 100], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 

@@ -1,6 +1,6 @@
 import { Fibonacci } from '../class/utils/fibonacci.class';
 import { WaveScore, WaveType } from '../enums';
-import { Pivot, ScoreRange, Wave, WaveConfig } from '../types';
+import { ScoreRange, Wave, WaveConfig } from '../types';
 
 export abstract class MotiveInterface {
   protected waveType: WaveType;
@@ -8,24 +8,9 @@ export abstract class MotiveInterface {
   constructor(waveType: WaveType) {
     this.waveType = waveType;
     this.fibonacci = new Fibonacci();
-
-    if (!this.configCheck()) {
-      throw new Error(`Warning configuration Error on ${this.waveType}`);
-    }
   }
 
-  configCheck() {
-    if (!this.projectWave5WithWave1() && !this.projectWave5WithWave3()) {
-      return false;
-    }
-
-    if (!this.projectWave5FromWave1 && !this.projectWave5FromWave4) {
-      return false;
-    }
-
-    return true;
-  }
-
+  // Configuration methods
   protected abstract getWave2TimeConfig(): ScoreRange[];
   protected abstract getWave3TimeConfig(): ScoreRange[];
   protected abstract getWave4TimeConfig(): ScoreRange[];
@@ -36,48 +21,28 @@ export abstract class MotiveInterface {
   protected abstract getWave4RetracementConfig(): ScoreRange[];
   protected abstract getWave4RetracementConfig(): ScoreRange[];
   protected abstract getWave5ProjectionConfig(): ScoreRange[];
+  public abstract allowWave4Overlap(): boolean;
 
-  public abstract allowWave1Break(): boolean;
-
-  public projectWave5WithWave1(): boolean {
-    return false;
-  }
-
-  public projectWave5WithWave3(): boolean {
-    return false;
-  }
-
-  public projectWave5FromWave1(): boolean {
-    return false;
-  }
-
-  public projectWave5FromWave4(): boolean {
-    return false;
-  }
+  public abstract calculateWave5Projection(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave, useLogScale: boolean): number;
+  public abstract validateWaveStructure(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave, useLogScale: boolean): boolean;
 
   public getWaveType(): WaveType {
     return this.waveType;
   }
 
-  public getWave5PercentageProjection(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave, useLogScale: boolean): number {
-    let p1: Pivot | null = null;
-    let p2: Pivot | null = null;
-
-    if (this.projectWave5WithWave1() && this.projectWave5WithWave3()) {
-      p1 = wave1.pStart;
-      p2 = wave1.pEnd;
-    } else if (this.projectWave5WithWave1()) {
-      p1 = wave1.pStart;
-      p2 = wave1.pEnd;
-    } else {
-      p1 = wave3.pStart;
-      p2 = wave3.pEnd;
-    }
-
-    const projectFrom = this.projectWave5FromWave4() ? { p4: wave4.pEnd } : { p4: wave2.pEnd };
-
+  public calculateWave2Retracement(wave1: Wave, wave2: Wave, useLogScale: boolean): number {
     this.fibonacci.setLogScale(useLogScale);
-    return this.fibonacci.getProjectionPercentage(p1.price, p2.price, projectFrom.p4.price, wave5.pEnd.price);
+    return this.fibonacci.getRetracementPercentage(wave1.pStart.price, wave1.pEnd.price, wave2.pEnd.price);
+  }
+
+  public calculateWave3Projection(wave1: Wave, wave2: Wave, wave3: Wave, useLogScale: boolean): number {
+    this.fibonacci.setLogScale(useLogScale);
+    return this.fibonacci.getProjectionPercentage(wave1.pStart.price, wave1.pEnd.price, wave2.pEnd.price, wave3.pEnd.price);
+  }
+
+  public calculateWave4Retracement(wave3: Wave, wave4: Wave, useLogScale: boolean): number {
+    this.fibonacci.setLogScale(useLogScale);
+    return this.fibonacci.getRetracementPercentage(wave3.pStart.price, wave3.pEnd.price, wave4.pEnd.price);
   }
 
   public validateWave2Retracement(retracement: number): WaveScore {
@@ -147,10 +112,12 @@ export abstract class MotiveInterface {
 
   public getDefaultTimeRange(): ScoreRange[] {
     return [
+      { range: [0, 5], score: WaveScore.INVALID },
+      { range: [5, 38.2], score: WaveScore.INVALID },
       { range: [38.2, 61.8], score: WaveScore.INVALID },
       { range: [61.8, 100], score: WaveScore.INVALID },
-      { range: [100, 168.1], score: WaveScore.INVALID },
-      { range: [168.1, 200], score: WaveScore.INVALID },
+      { range: [100, 161.8], score: WaveScore.INVALID },
+      { range: [161.8, 200], score: WaveScore.INVALID },
       { range: [200, 300], score: WaveScore.INVALID },
       { range: [300, 500], score: WaveScore.INVALID },
       { range: [500, 600], score: WaveScore.INVALID },
@@ -160,11 +127,7 @@ export abstract class MotiveInterface {
   public getWaveConfig(): WaveConfig {
     return {
       waveType: this.waveType,
-      allowWave4Break: this.allowWave1Break(),
-      projectWave5WithWave1: this.projectWave5WithWave1(),
-      projectWave5WithWave3: this.projectWave5WithWave3(),
-      projectWave5FromWave1: this.projectWave5FromWave1(),
-      projectWave5FromWave4: this.projectWave5FromWave4(),
+      allowWave4Break: this.allowWave4Overlap(),
       wave2: {
         time: this.getWave2TimeConfig(),
         retracement: this.getWave2RetracementConfig(),
