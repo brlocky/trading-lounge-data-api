@@ -67,7 +67,10 @@ export class WaveInfoService {
       const wave3Validation = p.validateWave3Projection(projectionWave3);
 
       const retracementWave4 = p.calculateWave4Retracement(wave3, wave4, useLogScale);
-      const wave4Validation = p.validateWave4Retracement(retracementWave4);
+
+      // Wave 4 Alternation to wave 1
+      const wave4Validation =
+        retracementWave2 <= 50 ? p.validateWave4DeepRetracement(retracementWave4) : p.validateWave4Retracement(retracementWave4);
 
       let projectionWave5 = 0;
       let wave5Validation = WaveScore.INVALID;
@@ -83,7 +86,8 @@ export class WaveInfoService {
       const wave3TimeValidation = p.validateWave3Time(projectionTimeWave3);
 
       const projectionTimeWave4 = getWavesTimePercentage(wave2, wave4);
-      const wave4TimeValidation = p.validateWave4Time(projectionTimeWave4);
+      const wave4TimeValidation =
+        projectionTimeWave2 > 100 ? p.validateWave4DeepTime(projectionTimeWave4) : p.validateWave4Time(projectionTimeWave4);
 
       let projectionTimeWave5: number | null = 0;
       let wave5TimeValidation = WaveScore.INVALID;

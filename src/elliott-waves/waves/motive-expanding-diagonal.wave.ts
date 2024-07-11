@@ -66,7 +66,7 @@ export class MotiveExpandingDiagonal extends MotiveInterface {
 
   public getWave5TimeConfig(): ScoreRange[] {
     return [
-      { range: [38.2, 88.6], score: WaveScore.WORSTCASESCENARIO },
+      { range: [14.2, 88.6], score: WaveScore.WORSTCASESCENARIO },
       { range: [88.6, 100], score: WaveScore.WORK },
       { range: [100, 161.8], score: WaveScore.PERFECT },
       { range: [161.8, 200], score: WaveScore.WORK },

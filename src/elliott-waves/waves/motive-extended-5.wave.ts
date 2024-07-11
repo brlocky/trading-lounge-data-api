@@ -24,7 +24,7 @@ export class MotiveExtended5 extends MotiveInterface {
     if (!wave5isBigger) return false;
 
     // Wave 3 is not the sortest
-    const wave3IsNotTheShortest = wave3.length(useLogScale) >= wave5.length(useLogScale);
+    const wave3IsNotTheShortest = wave3.length(useLogScale) >= wave1.length(useLogScale);
     if (!wave3IsNotTheShortest) return false;
 
     return true;
@@ -65,6 +65,16 @@ export class MotiveExtended5 extends MotiveInterface {
     ];
   }
 
+  public getWave4LongTimeConfig(): ScoreRange[] {
+    return [
+      { range: [0, 14.2], score: WaveScore.INVALID },
+      { range: [14.2, 38.2], score: WaveScore.GOOD },
+      { range: [38.2, 61.8], score: WaveScore.PERFECT },
+      { range: [61.8, 88.8], score: WaveScore.WORK },
+      { range: [88.8, 138.2], score: WaveScore.WORSTCASESCENARIO },
+    ];
+  }
+
   public getWave5TimeConfig(): ScoreRange[] {
     return [
       { range: [0, 23.6], score: WaveScore.INVALID },
@@ -78,22 +88,19 @@ export class MotiveExtended5 extends MotiveInterface {
 
   public getWave2RetracementConfig(): ScoreRange[] {
     return [
-      { range: [0, 14.2], score: WaveScore.INVALID },
       { range: [14.2, 23.6], score: WaveScore.WORSTCASESCENARIO },
       { range: [23.6, 50], score: WaveScore.WORK },
       { range: [50, 60], score: WaveScore.GOOD },
       { range: [60, 64], score: WaveScore.PERFECT },
-      { range: [64, 78.6], score: WaveScore.GOOD },
-      { range: [78.6, 88.6], score: WaveScore.WORK },
-      { range: [88.6, 100], score: WaveScore.WORSTCASESCENARIO },
+      { range: [64, 78.6], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 
   public getWave3ProjectionConfig(): ScoreRange[] {
     return [
       { range: [101, 138.2], score: WaveScore.PERFECT },
-      { range: [138.2, 140], score: WaveScore.WORK },
-      { range: [140, 161.8], score: WaveScore.WORSTCASESCENARIO },
+      { range: [138.2, 161.8], score: WaveScore.GOOD },
+      { range: [161.8, 261.8], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 
@@ -109,10 +116,20 @@ export class MotiveExtended5 extends MotiveInterface {
     ];
   }
 
+  public getWave4DeepRetracementConfig(): ScoreRange[] {
+    return [
+      { range: [14.2, 23.6], score: WaveScore.WORSTCASESCENARIO },
+      { range: [23.6, 50], score: WaveScore.WORK },
+      { range: [50, 60], score: WaveScore.PERFECT },
+      { range: [60, 64], score: WaveScore.GOOD },
+      { range: [64, 78.6], score: WaveScore.WORSTCASESCENARIO },
+    ];
+  }
+
   public getWave5ProjectionConfig(): ScoreRange[] {
     return [
-      { range: [90, 100], score: WaveScore.WORSTCASESCENARIO },
-      { range: [100, 161.8], score: WaveScore.PERFECT },
+      { range: [61.8, 78.6], score: WaveScore.WORSTCASESCENARIO },
+      { range: [78.6, 161.8], score: WaveScore.PERFECT },
       { range: [161.8, 261.8], score: WaveScore.GOOD },
       { range: [261.8, 361.8], score: WaveScore.WORK },
       { range: [361.8, 668.1], score: WaveScore.WORSTCASESCENARIO },

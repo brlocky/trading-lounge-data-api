@@ -60,6 +60,16 @@ export class MotiveExtended3 extends MotiveInterface {
     ];
   }
 
+  public getWave4LongTimeConfig(): ScoreRange[] {
+    return [
+      { range: [0, 14.2], score: WaveScore.INVALID },
+      { range: [14.2, 38.2], score: WaveScore.GOOD },
+      { range: [38.2, 61.8], score: WaveScore.PERFECT },
+      { range: [61.8, 88.8], score: WaveScore.WORK },
+      { range: [88.8, 138.2], score: WaveScore.WORSTCASESCENARIO },
+    ];
+  }
+
   public getWave5TimeConfig(): ScoreRange[] {
     return [
       { range: [0, 23.6], score: WaveScore.INVALID },
@@ -107,6 +117,16 @@ export class MotiveExtended3 extends MotiveInterface {
       { range: [44.1, 50], score: WaveScore.WORK },
       { range: [50, 61.8], score: WaveScore.WORSTCASESCENARIO },
       { range: [61.8, 88.6], score: WaveScore.WORSTCASESCENARIO }, // need to add alternation
+    ];
+  }
+
+  public getWave4DeepRetracementConfig(): ScoreRange[] {
+    return [
+      { range: [14.2, 23.6], score: WaveScore.WORSTCASESCENARIO },
+      { range: [23.6, 50], score: WaveScore.WORK },
+      { range: [50, 60], score: WaveScore.PERFECT },
+      { range: [60, 64], score: WaveScore.GOOD },
+      { range: [64, 78.6], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 

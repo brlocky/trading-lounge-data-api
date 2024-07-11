@@ -15,10 +15,8 @@ export abstract class MotiveInterface {
   protected abstract getWave3TimeConfig(): ScoreRange[];
   protected abstract getWave4TimeConfig(): ScoreRange[];
   protected abstract getWave5TimeConfig(): ScoreRange[];
-
   protected abstract getWave2RetracementConfig(): ScoreRange[];
   protected abstract getWave3ProjectionConfig(): ScoreRange[];
-  protected abstract getWave4RetracementConfig(): ScoreRange[];
   protected abstract getWave4RetracementConfig(): ScoreRange[];
   protected abstract getWave5ProjectionConfig(): ScoreRange[];
   public abstract allowWave4Overlap(): boolean;
@@ -28,6 +26,14 @@ export abstract class MotiveInterface {
 
   public getWaveType(): WaveType {
     return this.waveType;
+  }
+
+  public getWave4DeepRetracementConfig(): ScoreRange[] {
+    return this.getWave4RetracementConfig();
+  }
+
+  public getWave4LongTimeConfig(): ScoreRange[] {
+    return this.getWave4TimeConfig();
   }
 
   public calculateWave2Retracement(wave1: Wave, wave2: Wave, useLogScale: boolean): number {
@@ -57,6 +63,10 @@ export abstract class MotiveInterface {
     return this.getScore(retracement, this.getWave4RetracementConfig());
   }
 
+  public validateWave4DeepRetracement(retracement: number): WaveScore {
+    return this.getScore(retracement, this.getWave4DeepRetracementConfig());
+  }
+
   public validateWave5Projection(projection: number): WaveScore {
     return this.getScore(projection, this.getWave5ProjectionConfig());
   }
@@ -71,6 +81,10 @@ export abstract class MotiveInterface {
 
   public validateWave4Time(retracement: number): WaveScore {
     return this.getScore(retracement, this.getWave4TimeConfig());
+  }
+
+  public validateWave4DeepTime(retracement: number): WaveScore {
+    return this.getScore(retracement, this.getWave4LongTimeConfig());
   }
 
   public validateWave5Time(retracement: number): WaveScore {
@@ -96,17 +110,13 @@ export abstract class MotiveInterface {
 
   public getDefaultProjectionRange(): ScoreRange[] {
     return [
-      { range: [30.9, 38.2], score: WaveScore.INVALID },
-      { range: [38.2, 50], score: WaveScore.INVALID },
       { range: [50, 61.8], score: WaveScore.INVALID },
       { range: [61.8, 78.6], score: WaveScore.INVALID },
       { range: [78.6, 88.6], score: WaveScore.INVALID },
       { range: [88.6, 123], score: WaveScore.INVALID },
       { range: [123.6, 138.2], score: WaveScore.INVALID },
       { range: [138.2, 161.8], score: WaveScore.INVALID },
-      { range: [200, 261.8], score: WaveScore.INVALID },
-      { range: [300, 361.8], score: WaveScore.INVALID },
-      { range: [400, 461.8], score: WaveScore.INVALID },
+      { range: [161.8, 261.8], score: WaveScore.INVALID },
     ];
   }
 
@@ -116,11 +126,8 @@ export abstract class MotiveInterface {
       { range: [5, 38.2], score: WaveScore.INVALID },
       { range: [38.2, 61.8], score: WaveScore.INVALID },
       { range: [61.8, 100], score: WaveScore.INVALID },
-      { range: [100, 161.8], score: WaveScore.INVALID },
-      { range: [161.8, 200], score: WaveScore.INVALID },
+      { range: [100, 200], score: WaveScore.INVALID },
       { range: [200, 300], score: WaveScore.INVALID },
-      { range: [300, 500], score: WaveScore.INVALID },
-      { range: [500, 600], score: WaveScore.INVALID },
     ];
   }
 
@@ -139,6 +146,7 @@ export abstract class MotiveInterface {
       wave4: {
         time: this.getWave4TimeConfig(),
         retracement: this.getWave4RetracementConfig(),
+        deepRetracement: this.getWave4DeepRetracementConfig(),
       },
       wave5: {
         time: this.getWave5TimeConfig(),

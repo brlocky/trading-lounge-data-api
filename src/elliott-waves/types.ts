@@ -40,6 +40,7 @@ export interface WaveConfigResult {
   time?: ScoreRange[];
   retracement?: ScoreRange[];
   projection?: ScoreRange[];
+  deepRetracement?: ScoreRange[];
 }
 
 export interface WaveConfig {
