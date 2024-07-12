@@ -1,6 +1,6 @@
 import { Degree, WaveType } from 'src/elliott-waves/enums';
 import { MotiveWaveInterface } from 'src/elliott-waves/interfaces/motive-wave.interface';
-import { Pivot } from 'src/elliott-waves/types';
+import { Pivot } from '../../pivot.class';
 
 export class MotiveContractingDiagonal extends MotiveWaveInterface {
   constructor(degree: Degree) {

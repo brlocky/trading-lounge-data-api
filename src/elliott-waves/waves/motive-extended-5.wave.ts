@@ -1,6 +1,7 @@
+import { Wave } from '../class';
 import { WaveScore, WaveType } from '../enums';
 import { MotiveInterface } from '../interfaces/motive.interface';
-import { ScoreRange, Wave } from '../types';
+import { ScoreRange } from '../types';
 
 export class MotiveExtended5 extends MotiveInterface {
   constructor() {

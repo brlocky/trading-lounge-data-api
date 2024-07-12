@@ -2,7 +2,7 @@ import { CandleDto } from 'src/search/dto';
 import { Fibonacci } from '../class/utils/fibonacci.class';
 import { getTrend } from '../class/utils/pivot.utils';
 import { Trend } from '../enums';
-import { Pivot } from '../types';
+import { Pivot } from '../class';
 
 export abstract class BaseWaveInterface {
   protected candles: CandleDto[] = [];

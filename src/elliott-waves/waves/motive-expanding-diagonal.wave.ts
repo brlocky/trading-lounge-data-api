@@ -1,6 +1,7 @@
+import { Wave } from '../class';
 import { WaveScore, WaveType } from '../enums';
 import { MotiveInterface } from '../interfaces/motive.interface';
-import { ScoreRange, Wave } from '../types';
+import { ScoreRange } from '../types';
 
 export class MotiveExpandingDiagonal extends MotiveInterface {
   constructor() {
@@ -80,7 +81,7 @@ export class MotiveExpandingDiagonal extends MotiveInterface {
       { range: [44.1, 50], score: WaveScore.WORK },
       { range: [50, 88.6], score: WaveScore.PERFECT },
       { range: [88.6, 90], score: WaveScore.WORK },
-      { range: [90, 100], score: WaveScore.WORSTCASESCENARIO },
+      { range: [90, 99], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 

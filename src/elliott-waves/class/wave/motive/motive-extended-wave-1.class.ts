@@ -1,6 +1,6 @@
 import { Degree, WaveName, WaveType } from 'src/elliott-waves/enums';
 import { MotiveWaveInterface } from 'src/elliott-waves/interfaces/motive-wave.interface';
-import { ClusterWaves } from 'src/elliott-waves/types';
+import { ClusterWaves } from '../../cluster-wave.class';
 
 export class MotiveExtendedWave1 extends MotiveWaveInterface {
   constructor(degree: Degree) {

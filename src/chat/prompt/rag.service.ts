@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import moment from 'moment';
 import { ElliottWavesService } from 'src/elliott-waves/elliott-waves.service';
-import { Pivot } from 'src/elliott-waves/types';
 import { SearchService } from 'src/search/search.service';
 import { AITickerInfo } from '../dto';
+import { Pivot } from 'src/elliott-waves/class';
 
 interface RagPivot {
   index: number;

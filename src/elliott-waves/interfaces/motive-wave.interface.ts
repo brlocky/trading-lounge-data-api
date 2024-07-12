@@ -1,8 +1,8 @@
 import { CandleDto } from 'src/search/dto';
 import { calculateAngle, getHHBeforeBreak, getLLBeforeBreak, TimeProjection } from '../class/utils';
 import { Degree, PivotType, Trend, WaveName, WaveType } from '../enums';
-import { ClusterPivot, ClusterWaves, Pivot, Wave } from '../types';
 import { BaseWaveInterface } from './base-wave.interface';
+import { ClusterPivot, ClusterWaves, Pivot, Wave } from '../class';
 
 export abstract class MotiveWaveInterface extends BaseWaveInterface {
   _waveType: WaveType;
@@ -533,7 +533,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
         const testPivots = this.getPivotsAfter(p);
         // Check if we have a possible new wave 2
         const { pivot: testPivot, type } = this.trend === Trend.UP ? getLLBeforeBreak(testPivots, p) : getHHBeforeBreak(testPivots, p);
-        if (!testPivot || type === 'NOT-FOUND' || type === 'FOUND-NO-BREAK') {
+        if (!testPivot || type === 'NOT-FOUND-NO-BREAK' || type === 'FOUND-NO-BREAK') {
           results.push(p);
           continue;
         }

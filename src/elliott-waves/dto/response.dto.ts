@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Degree } from '../enums';
-import { Pivot, ClusterPivot } from '../types';
+import { Pivot, ClusterPivot } from '../class';
 
 export class EnumStruct {
   @ApiProperty()

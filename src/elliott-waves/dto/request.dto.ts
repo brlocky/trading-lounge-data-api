@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { CandleDto } from 'src/search/dto';
-import { Pivot } from '../types';
+import { Pivot } from '../class';
 
 export class BaseRequest {
   @ApiProperty()

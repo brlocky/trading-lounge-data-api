@@ -1,6 +1,7 @@
+import { Wave } from '../class';
 import { Fibonacci } from '../class/utils/fibonacci.class';
 import { WaveScore, WaveType } from '../enums';
-import { ScoreRange, Wave, WaveConfig } from '../types';
+import { ScoreRange, WaveConfig } from '../types';
 
 export abstract class MotiveInterface {
   protected waveType: WaveType;

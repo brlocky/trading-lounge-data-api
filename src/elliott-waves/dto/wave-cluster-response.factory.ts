@@ -1,5 +1,5 @@
+import { ClusterWaves, Wave } from '../class';
 import { degreeToString, waveTypeToString, waveNameToString } from '../enums';
-import { ClusterWaves, Wave } from '../types';
 import { WaveClusterResponse, WaveResponse, PivotResponse, EnumStruct } from './response.dto';
 
 export class WaveClusterResponseFactory {

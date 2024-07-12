@@ -6,10 +6,11 @@ import { Fibonacci } from '../class/utils/fibonacci.class';
 import { MotiveExtendedWave3 } from '../class/wave/motive/motive-extended-wave-3.class';
 import { Degree, degreeToString } from '../enums';
 import { MotiveWaveInterface } from '../interfaces/motive-wave.interface';
-import { CandlesInfo, ClusterWaves, Pivot } from '../types';
+import { CandlesInfo } from '../types';
 import { CandleService } from './candle.service';
 import { ChartService } from './chart.service';
 import { ClusterService } from './cluster.service';
+import { ClusterWaves, Pivot } from '../class';
 
 @Injectable()
 export class WaveCalculationService {
@@ -26,7 +27,7 @@ export class WaveCalculationService {
   async getWaveCounts(candles: CandleDto[], degree: number, logScale: boolean, definition: number): Promise<ClusterWaves[]> {
     const { pivots } = this.getPivotsInfo(candles, definition);
 
-    return this.clusterService.findMajorStructure(pivots, candles, definition, logScale);
+    return this.clusterService.findMajorStructure(pivots, candles, 2, definition, logScale);
   }
 
   async getSubWaveCounts(
@@ -38,7 +39,7 @@ export class WaveCalculationService {
   ): Promise<ClusterWaves[]> {
     const pivots = this.candleService.getZigZag(candles);
 
-    const clusters = await this.clusterService.findMajorStructure(pivots, candles, 3, logScale);
+    const clusters = await this.clusterService.findMajorStructure(pivots, candles, 3, 0, logScale);
     const isTargetInsidePivots = !!pivots.find(
       (p) => endPivot && p.time === endPivot.time && p.price === endPivot.price && p.type === endPivot.type,
     );

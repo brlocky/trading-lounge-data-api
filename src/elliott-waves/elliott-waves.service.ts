@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { CandleDto } from 'src/search/dto';
-import { CandlesInfo, ClusterWaves, Pivot, WaveInfo, WavesConfig } from './types';
+import { CandlesInfo, WaveInfo, WavesConfig } from './types';
 import { CandleService, WaveCalculationService, WaveInfoService } from './services';
 import { convertPivotsToWaves, WaveDegreeCalculator } from './class/utils';
 import { degreeToString } from './enums';
+import { ClusterWaves, Pivot } from './class';
 
 @Injectable()
 export class ElliottWavesService {

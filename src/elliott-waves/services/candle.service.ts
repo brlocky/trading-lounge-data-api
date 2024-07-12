@@ -1,9 +1,10 @@
 import { Injectable, PreconditionFailedException } from '@nestjs/common';
-import { Pivot, PivotSearchResult } from '../types';
+import { PivotTest } from '../types';
 import { getLLBeforeBreak, getTrend } from '../class/utils/pivot.utils';
 import { PivotType, Trend } from '../enums';
 import { Fibonacci } from '../class/utils/fibonacci.class';
 import { CandleDto } from 'src/search/dto';
+import { Pivot } from '../class';
 
 // Interface to represent a wave retracement
 interface WaveRetracement {
@@ -163,7 +164,7 @@ export class CandleService {
     // Iterate through pivots to find retracements
     while (index < pivots.length) {
       const pivot = pivots[index];
-      let pivotSearchResult: PivotSearchResult;
+      let pivotSearchResult: PivotTest;
 
       // Search for the next pivot based on the trend
       if (pivot.isHigh() && pivot.price > lastMax && index + 1 < pivots.length) {
@@ -174,9 +175,9 @@ export class CandleService {
         continue;
       }
 
-      const { pivot: nextPivot, type } = pivotSearchResult;
+      const { pivot: nextPivot } = pivotSearchResult;
 
-      if (type === 'NOT-FOUND' || !nextPivot) {
+      if (!nextPivot) {
         index += 1;
         continue;
       }

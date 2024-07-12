@@ -1,6 +1,6 @@
 import { Degree, WaveType } from '../enums';
 import { MotiveWaveInterface } from '../interfaces/motive-wave.interface';
-import { ClusterWaves } from '../types';
+import { ClusterWaves } from '../class';
 
 class ConcreteMotiveWave extends MotiveWaveInterface {
   find(): ClusterWaves[] {

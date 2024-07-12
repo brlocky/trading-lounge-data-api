@@ -2,8 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { Fibonacci } from '../class/utils/fibonacci.class';
 import { WaveScore } from '../enums';
 import { MotiveInterface } from '../interfaces/motive.interface';
-import { Wave, WaveInfo, WavesConfig } from '../types';
+import { WaveInfo, WavesConfig } from '../types';
 import { MotiveExtended1, MotiveExtended3, MotiveExtended5, MotiveContractingDiagonal, MotiveExpandingDiagonal } from '../waves';
+import { Wave } from '../class';
 
 @Injectable()
 export class WaveInfoService {
