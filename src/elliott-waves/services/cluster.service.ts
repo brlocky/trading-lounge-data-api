@@ -80,6 +80,7 @@ export class ClusterService {
         const testPivotRetracement = this.fibonacci.getRetracementPercentage(wave1.pStart.price, wave5.pEnd.price, newWave2Pivot.price);
 
         if (testPivotRetracement < 14.2) {
+          currentIncompletedCluster.unshift(c);
           continue;
         }
 
@@ -104,10 +105,10 @@ export class ClusterService {
 
   async findMajorStructure(pivots: Pivot[], candles: CandleDto[], definition = 3, loop = 0, useLogScale: boolean): Promise<ClusterWaves[]> {
     const patchedDefinition = definition > 10 ? 10 : definition;
-    let retracements = this.candleService.getWavePivotRetracementsByNumberOfWaves(pivots, patchedDefinition);
+    let retracements = this.candleService.getWavePivotRetracementsByNumberOfWaves(pivots.slice(0, 100), patchedDefinition);
 
     // using only 1st to increase performance
-    retracements = retracements.slice(0, 4);
+    retracements = retracements.slice(0, 2);
 
     const clusters: ClusterWaves[] = [];
     const pStart = pivots[0];
