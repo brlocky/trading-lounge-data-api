@@ -4,6 +4,9 @@ import { Pivot } from '../class';
 import { WaveDegree } from '../enums';
 import { Candle } from '../types';
 
+export type InputPivot = Pivot & {
+  degree: WaveDegree;
+};
 export class BaseRequest {
   @ApiProperty()
   symbol: string;
@@ -28,16 +31,13 @@ export class WaveCountClusterRequest extends BaseRequest {
 
 export class SubWaveCountClusterRequest extends BaseRequest {
   @ApiProperty()
-  degree: WaveDegree;
+  startPivot: InputPivot;
 
   @ApiProperty()
-  startPivot: Pivot;
-
-  @ApiProperty()
-  endPivot: Pivot;
+  endPivot: InputPivot;
 }
 
 export class WaveInfoRequest extends BaseRequest {
   @ApiProperty()
-  pivots: Pivot[];
+  pivots: InputPivot[];
 }

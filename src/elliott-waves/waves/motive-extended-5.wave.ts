@@ -21,7 +21,7 @@ export class MotiveExtended5 extends MotiveInterface {
 
   public calculateWave5ProjectionTime(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave, commonInterval: number): number {
     const wave1To3 = wave1.copy();
-    wave1To3.pEnd = wave5.pEnd;
+    wave1To3.pEnd = wave3.pEnd;
     return this.calculateTimeRetracement(wave1To3, wave5, commonInterval);
   }
 

@@ -67,9 +67,12 @@ export class WaveCalculationService {
     endPivot: Pivot,
     logScale: boolean,
   ): Promise<ClusterWaves[]> {
-    const pivots = this.candleService.getZigZag(candles);
+    const newDegree: WaveDegree = degree - 1;
+    if (newDegree < WaveDegree.MINISCULE) {
+      throw new Error('Cannot use degree lower than MINISCULE');
+    }
 
-    const motivePatterns = this.getImpulsePatterns(degree - 1);
+    const pivots = this.candleService.getZigZag(candles);
 
     const waveClusters = await this.clusterService.findMajorStructure(pivots, candles, 3, 0, logScale);
     const isTargetInsidePivots = !!pivots.find(
@@ -85,27 +88,10 @@ export class WaveCalculationService {
         })
       : waveClusters;
 
+    // Apply new Degree
+    filteredCluster.map((c) => c.changeDegree(newDegree));
+
     return new Promise((r) => r(filteredCluster));
-    /*     const waveClusters: ClusterWaves[] = [];
-    for (const pattern of motivePatterns) {
-      isTargetInsidePivots && pattern.setTargetPivot(endPivot);
-      pattern.load(candles, pivots, new Fibonacci(logScale));
-      const clusters = pattern.getImpulseWaves();
-      if (!clusters.length) continue;
-      waveClusters.push(...clusters);
-    }
-
-    const filteredCluster = isTargetInsidePivots
-      ? waveClusters.filter((w) => {
-          if (w.waves.length !== 5) return false;
-          const lastWave = w.waves[w.waves.length - 1];
-
-          if (lastWave.pEnd.price !== endPivot.price || lastWave.pEnd.time !== endPivot.time) return false;
-          return true;
-        })
-      : waveClusters;
-
-    return new Promise((r) => r(filteredCluster)); */
   }
 
   private getPivotsInfo(candles: Candle[], definition: number): CandlesInfo {

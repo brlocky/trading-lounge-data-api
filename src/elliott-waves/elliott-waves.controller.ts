@@ -26,7 +26,8 @@ export class ElliottWavesController {
 
   @Post('sub-wave-counts')
   async getSubWaveCounts(@Body() req: SubWaveCountClusterRequest): Promise<WaveCountClusterResponse> {
-    const { candles, degree, startPivot, endPivot, logScale } = req;
+    const { candles, startPivot, endPivot, logScale } = req;
+    const { degree } = startPivot;
     const waveCounts = await this.service.getSubWaveCounts(candles as Candle[], degree, startPivot, endPivot, logScale);
     return {
       clusters: waveCounts.map((w) => WaveClusterResponseFactory.create(w)),

@@ -19,6 +19,11 @@ export class ClusterWaves {
     waves.forEach((w) => this.waves.push(w));
   }
 
+  public changeDegree(newDegree: WaveDegree): void {
+    this.degree = newDegree;
+    this.waves.forEach((wave) => wave.changeDegree(newDegree));
+  }
+
   public duplicate(): ClusterWaves {
     return new ClusterWaves([...this.waves], this.waveType, this.degree);
   }

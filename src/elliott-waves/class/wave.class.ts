@@ -39,6 +39,10 @@ export class Wave {
     this.children = waves;
   }
 
+  public changeDegree(newDegree: WaveDegree): void {
+    this.degree = newDegree;
+  }
+
   public length(useLogScale: boolean): number {
     return useLogScale ? Math.abs(Math.log(this.pEnd.price) - Math.log(this.pStart.price)) : Math.abs(this.pEnd.price - this.pStart.price);
   }
