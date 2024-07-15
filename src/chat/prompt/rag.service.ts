@@ -4,6 +4,7 @@ import { ElliottWavesService } from 'src/elliott-waves/elliott-waves.service';
 import { SearchService } from 'src/search/search.service';
 import { AITickerInfo } from '../dto';
 import { Pivot } from 'src/elliott-waves/class';
+import { Candle } from 'src/elliott-waves/types';
 
 interface RagPivot {
   index: number;
@@ -75,7 +76,7 @@ export class RAGService {
     const {
       degree: { title: degree },
       retracements,
-    } = this.elliottWavesService.getCandlesInfo(candlesResult.candles, definition);
+    } = this.elliottWavesService.getCandlesInfo(candlesResult.candles as Candle[], definition);
 
     return {
       degree,

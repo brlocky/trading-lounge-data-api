@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { CandleDto } from 'src/search/dto';
-import { ClusterPivot, ClusterWaves, Pivot, Wave } from '../class';
-import { getLLBeforeBreak, WaveDegreeCalculator } from '../class/utils';
+import { ClusterPivot, ClusterWaves, ElliottWaveAnalyzer, Pivot, Wave } from '../class';
+import { getLLBeforeBreak, groupClustersByWaves, WaveDegreeCalculator } from '../class/utils';
 import { Fibonacci } from '../class/utils/fibonacci.class';
-import { Trend, WaveName, WaveType } from '../enums';
-import { PivotTest } from '../types';
+import { Trend, WaveDegree, WaveName, WaveType } from '../enums';
+import { Candle, PivotTest } from '../types';
 import { CandleService } from './candle.service';
 import { ChartService } from './chart.service';
 import { WaveInfoService } from './wave-info.service';
@@ -15,100 +14,19 @@ export class ClusterService {
 
   constructor(
     private candleService: CandleService,
-    private chartService: ChartService,
     private waveInfoService: WaveInfoService,
+    private chartService: ChartService,
   ) {
     this.fibonacci = new Fibonacci();
   }
 
-  async processClusterGroups(
-    clusters: ClusterWaves[],
-    candles: CandleDto[],
-    pivots: Pivot[],
-    loop: number = 0,
-    useLogScale: boolean,
-  ): Promise<{ completed: ClusterWaves[]; incompleted: ClusterWaves[] }> {
-    let currentCompletedCluster = clusters;
-    let currentIncompletedCluster: ClusterWaves[] = [];
-
-    for (let i = 0; i < loop; i++) {
-      const [completed, incompleted] = await this.continueImpulseWave(currentCompletedCluster, candles, pivots, useLogScale);
-      currentCompletedCluster = completed;
-      currentIncompletedCluster = [...incompleted, ...currentIncompletedCluster];
-
-      const nextLoopCluster: ClusterWaves[] = [];
-
-      /*      
-      const groupedClusters = groupClustersByWaves(completed, 4);
-    const perfectClusters = [];
-      for (const groupedCluster of groupedClusters) {
-        for (const c of groupedCluster) {
-          const [w1, w2, w3, w4, w5] = c.waves;
-          const infos = this.waveInfoService.getWaveInformation(w1, w2, w3, w4, w5, useLogScale);
-          for (const info of infos) {
-            const isPerfect = info.isValid.structure && info.isValid.wave && info.isValid.time;
-            const isValid = info.isValid.structure && info.isValid.wave;
-            const score = info.score.wave + info.score.time / 2;
-            console.log(score);
-            if (isPerfect) {
-              perfectClusters.push(c);
-            }
-          }
-        }
-      } */
-
-      for (const c of currentCompletedCluster) {
-        const [wave1, , , , wave5] = c.waves;
-        const wave2TestResult = this.wave2Test(c, pivots);
-        const { type, pivot: newWave2Pivot } = wave2TestResult;
-
-        if (type === 'NOT-FOUND-WITH-BREAK') {
-          continue;
-        }
-
-        if (type === 'NOT-FOUND-NO-BREAK') {
-          currentIncompletedCluster.unshift(c);
-          continue;
-        }
-
-        if (!newWave2Pivot) {
-          console.error('We should always get a pivot at this point');
-          continue;
-        }
-
-        this.fibonacci.setLogScale(useLogScale);
-        const testPivotRetracement = this.fibonacci.getRetracementPercentage(wave1.pStart.price, wave5.pEnd.price, newWave2Pivot.price);
-
-        if (testPivotRetracement < 14.2) {
-          currentIncompletedCluster.unshift(c);
-          continue;
-        }
-
-        const newWave2ClusterPivot = new ClusterPivot(newWave2Pivot, 'CONFIRMED');
-        const candlesToCalculateDegree = candles.filter((c) => c.time >= wave1.pStart.time && c.time <= wave5.pEnd.time);
-        const wave1NDays = WaveDegreeCalculator.getNumberOfDays(candlesToCalculateDegree);
-        const calculatedDegree = WaveDegreeCalculator.getWaveDegree(wave1NDays * 3);
-
-        const newWave1 = new Wave(WaveName._1, calculatedDegree, wave1.pStart, wave5.pEnd);
-        c.waves.forEach((w) => newWave1.addChidren(w));
-        const newWave2 = new Wave(WaveName._2, calculatedDegree, wave5.pEnd, newWave2ClusterPivot);
-        const newWaveCluster = new ClusterWaves([newWave1, newWave2], WaveType.MOTIVE, calculatedDegree);
-        nextLoopCluster.push(newWaveCluster);
-      }
-      currentCompletedCluster = nextLoopCluster;
-    }
-
-    const [finalCompleted, finalIncompleted] = await this.continueImpulseWave(currentCompletedCluster, candles, pivots, useLogScale);
-
-    return { completed: finalCompleted, incompleted: [...finalIncompleted, ...currentIncompletedCluster] };
-  }
-
-  async findMajorStructure(pivots: Pivot[], candles: CandleDto[], definition = 3, loop = 0, useLogScale: boolean): Promise<ClusterWaves[]> {
+  async findMajorStructure(pivots: Pivot[], candles: Candle[], definition = 3, loop = 0, useLogScale: boolean): Promise<ClusterWaves[]> {
     const patchedDefinition = definition > 10 ? 10 : definition;
-    let retracements = this.candleService.getWavePivotRetracementsByNumberOfWaves(pivots.slice(0, 100), patchedDefinition);
+    let retracements = this.candleService.getWavePivotRetracementsByNumberOfWaves(pivots.slice(0, 1000), patchedDefinition);
+    this.chartService.createCandlestickChart(candles, retracements, 'x_findMajorStructure.jpg');
 
     // using only 1st to increase performance
-    retracements = retracements.slice(0, 2);
+    retracements = retracements.slice(0, 6);
 
     const clusters: ClusterWaves[] = [];
     const pStart = pivots[0];
@@ -125,8 +43,7 @@ export class ClusterService {
       const [p1, p2] = pivots;
       // Calculate Wave degree using wave 1 time.
       const candlesToCalculateDegree = candles.filter((c) => c.time >= pStart.time && c.time <= p2.time);
-      const wave1NDays = WaveDegreeCalculator.getNumberOfDays(candlesToCalculateDegree);
-      const calculatedDegree = WaveDegreeCalculator.getWaveDegree(wave1NDays * 3);
+      const calculatedDegree = WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesToCalculateDegree, 'wave1');
 
       const wave1 = new Wave(WaveName._1, calculatedDegree, pStart, p1);
       const wave2 = new Wave(WaveName._2, calculatedDegree, p1, p2);
@@ -139,58 +56,117 @@ export class ClusterService {
     return [...completed, ...incompleted];
   }
 
-  /*   async findMajorStructure2(pivots: Pivot[], candles: CandleDto[], definition = 3, useLogScale: boolean): Promise<ClusterWaves[]> {
-    const retracements = this.candleService.getWavePivotRetracementsByNumberOfWaves(pivots, definition);
+  async findSubStructure(
+    candles: Candle[],
+    degree: WaveDegree,
+    startPivot: Pivot,
+    endPivot: Pivot,
+    useLogScale: boolean,
+  ): Promise<ClusterWaves[]> {
+    return [];
+    /*     const pivots = this.candleService.getZigZag(candles);
+    this.chartService.createCandlestickChart(candles, pivots, 'z_findsub.jpg');
 
-    const clusters: ClusterWaves[] = [];
-    const pStart = pivots[0];
+    const commonInteval = WaveDegreeCalculator.determineCommonInterval(candles);
 
-    const findLowerPivot = !!retracements.find((p) => p.price <= pStart.price);
-    if (findLowerPivot) {
-      return [];
+    const analyzer = new ElliottWaveAnalyzer(this.candleService, this.waveInfoService, this.chartService);
+    const waves = analyzer.analyzeCandles(candles);
+
+    console.log(waves);
+ */
+
+    /*   const cluster = new ClusterWaves([], WaveType.MOTIVE, degree);
+
+    this.chartService.createCandlestickChart(candles, pivots, 'z_findsub.jpg');
+
+    const trend = startPivot.price < endPivot.price ? Trend.UP : Trend.DOWN;
+
+    let lookingFor: WaveName | null = WaveName._1;
+    const workingWaves: Wave[] = [];
+
+    let pivotIndex = 1; //start at one because we ignore the initialpivot
+
+    while (pivotIndex + 1 < pivots.length) {
+      const p1 = pivots[pivotIndex];
+      const p2 = pivots[pivotIndex + 1];
+
+      if (!lookingFor) break;
+
+      const lastWave: Wave | undefined = workingWaves[workingWaves.length - 1];
+
+      switch (lookingFor) {
+        case WaveName._1:
+          const wave1 = new Wave(WaveName._1, degree, startPivot, p1);
+          const wave2 = new Wave(WaveName._2, degree, p1, p2);
+          workingWaves.push(wave1, wave2);
+          lookingFor = WaveName._3;
+          break;
+
+        case WaveName._3:
+          if (!lastWave) {
+            throw new Error('Could not find last Wave');
+          }
+          const wave3 = new Wave(WaveName._3, degree, lastWave.pEnd, p1);
+          const wave4 = new Wave(WaveName._4, degree, p1, p2);
+          workingWaves.push(wave3, wave4);
+          lookingFor = WaveName._5;
+          break;
+
+        case WaveName._5:
+          if (!lastWave) {
+            throw new Error('Could not find last Wave');
+          }
+          const wave5 = new Wave(WaveName._5, degree, lastWave.pEnd, p1);
+          workingWaves.push(wave5);
+          lookingFor = null;
+          cluster.addWaves(workingWaves);
+          break;
+      }
+
+      pivotIndex += 2;
     }
 
-    const tuplesRet1 = this.createPivotTuples(retracements);
+    return [cluster]; */
+  }
 
-    tuplesRet1.forEach((pivots) => {
-      const [p1, p2] = pivots;
-      // Calculate Wave degree using wave 1 time.
-      const candlesToCalculateDegree = candles.filter((c) => c.time >= pStart.time && c.time <= p2.time);
-      const wave1NDays = WaveDegreeCalculator.getNumberOfDays(candlesToCalculateDegree);
-      const calculatedDegree = WaveDegreeCalculator.getWaveDegree(wave1NDays * 3);
+  async processClusterGroups(
+    clusters: ClusterWaves[],
+    candles: Candle[],
+    pivots: Pivot[],
+    loop: number = 0,
+    useLogScale: boolean,
+  ): Promise<{ completed: ClusterWaves[]; incompleted: ClusterWaves[] }> {
+    let currentCompletedCluster = clusters;
+    let currentIncompletedCluster: ClusterWaves[] = [];
 
-      const wave1 = new Wave(WaveName._1, calculatedDegree, pStart, p1);
-      const wave2 = new Wave(WaveName._2, calculatedDegree, p1, p2);
-      const newWaveCluster = new ClusterWaves([wave1, wave2], WaveType.MOTIVE, calculatedDegree);
-      clusters.push(newWaveCluster);
-    });
+    const commonInterval = WaveDegreeCalculator.determineCommonInterval(candles);
 
-    const [completed, incompleted] = await this.continueImpulseWave(clusters, candles, pivots, useLogScale);
+    for (let i = 0; i < loop; i++) {
+      for (const cluster of currentCompletedCluster) {
+        const { completed, incompleted } = await this.completeWaveCluster(cluster, candles, pivots, useLogScale);
 
-    let currentCompletedCluster = [...completed];
-    let currentIncomletedCluster = [...incompleted];
+        // Search for perfect cluster amount grouped Wave 4
+        const groupedClusters = groupClustersByWaves(completed, 4);
 
-    const waitingTimeClusters = [];
+        const bestWave5Clusters = this.findBestClusters(groupedClusters, commonInterval);
 
-    for (let i = 0; i < 3; i++) {
-      const nextLoopCluster = [];
-      const groupedClusters = groupClustersByWaves(currentCompletedCluster, 4);
-      for (const groupedCluster of groupedClusters) {
-        for (const c of groupedCluster) {
+        currentCompletedCluster = bestWave5Clusters;
+        currentIncompletedCluster = [...incompleted, ...currentIncompletedCluster];
+
+        const nextLoopCluster: ClusterWaves[] = [];
+
+        for (const c of currentCompletedCluster) {
           const [wave1, , , , wave5] = c.waves;
-
           const wave2TestResult = this.wave2Test(c, pivots);
-
           const { type, pivot: newWave2Pivot } = wave2TestResult;
 
-          // Discard this cluster we went higer with no wave 2 on sight
           if (type === 'NOT-FOUND-WITH-BREAK') {
             continue;
           }
 
-          // Need to wait for lower
           if (type === 'NOT-FOUND-NO-BREAK') {
-            waitingTimeClusters.push(c);
+            currentIncompletedCluster.unshift(c);
+            continue;
           }
 
           if (!newWave2Pivot) {
@@ -198,13 +174,17 @@ export class ClusterService {
             continue;
           }
 
-          const newWave2ClusterPivot = new ClusterPivot(newWave2Pivot, 'CONFIRMED');
+          this.fibonacci.setLogScale(useLogScale);
+          const testPivotRetracement = this.fibonacci.getRetracementPercentage(wave1.pStart.price, wave5.pEnd.price, newWave2Pivot.price);
 
-          // Build new Wave 1/2 Cluster.
-          // Calculate Wave degree using wave 1 time.
+          if (testPivotRetracement < 14.2) {
+            currentIncompletedCluster.unshift(c);
+            continue;
+          }
+
+          const newWave2ClusterPivot = new ClusterPivot(newWave2Pivot, 'CONFIRMED');
           const candlesToCalculateDegree = candles.filter((c) => c.time >= wave1.pStart.time && c.time <= wave5.pEnd.time);
-          const wave1NDays = WaveDegreeCalculator.getNumberOfDays(candlesToCalculateDegree);
-          const calculatedDegree = WaveDegreeCalculator.getWaveDegree(wave1NDays * 3);
+          const calculatedDegree = WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesToCalculateDegree, 'wave1');
 
           const newWave1 = new Wave(WaveName._1, calculatedDegree, wave1.pStart, wave5.pEnd);
           c.waves.forEach((w) => newWave1.addChidren(w));
@@ -212,30 +192,44 @@ export class ClusterService {
           const newWaveCluster = new ClusterWaves([newWave1, newWave2], WaveType.MOTIVE, calculatedDegree);
           nextLoopCluster.push(newWaveCluster);
         }
-      }
 
-      const [completed2, incompleted2] = await this.continueImpulseWave(nextLoopCluster, candles, pivots, useLogScale);
-      currentCompletedCluster = [...completed2];
-      currentIncomletedCluster = [...currentIncomletedCluster, ...incompleted2];
+        currentCompletedCluster = nextLoopCluster;
+      }
     }
 
-    return [...currentCompletedCluster, ...waitingTimeClusters, ...currentIncomletedCluster];
+    let finalCompleted: ClusterWaves[] = [];
+    let finalIncompleted: ClusterWaves[] = [];
+
+    for (const cluster of currentCompletedCluster) {
+      const { completed, incompleted } = await this.completeWaveCluster(cluster, candles, pivots, useLogScale);
+
+      const groupedByWave4 = groupClustersByWaves(completed, 4);
+      const completedClean = this.findBestClusters(groupedByWave4, commonInterval);
+
+      finalCompleted = [...finalCompleted, ...completedClean];
+      finalIncompleted = [...incompleted, ...finalIncompleted];
+    }
+
+    // const [finalCompleted, finalIncompleted] = await this.continueImpulseWave(currentCompletedCluster, candles, pivots, useLogScale);
+
+    return { completed: finalCompleted, incompleted: [...finalIncompleted, ...currentIncompletedCluster] };
   }
- */
+
   wave2Test(cluster: ClusterWaves, pivots: Pivot[]): PivotTest {
     const [, , , , wave5] = cluster.waves;
     const availablePivots = this.getPivotsAfter(pivots, wave5.pEnd);
     return getLLBeforeBreak(availablePivots, wave5.pEnd);
   }
 
-  async continueImpulseWave(
+  /*   async continueImpulseWave(
     majorClusters: ClusterWaves[],
-    candles: CandleDto[],
+    candles: Candle[],
     pivots: Pivot[],
     useLogScale: boolean,
   ): Promise<[ClusterWaves[], ClusterWaves[]]> {
     const continuedClusters: ClusterWaves[] = [];
     const incompleteClusters: ClusterWaves[] = [];
+    const commonInterval = WaveDegreeCalculator.determineCommonInterval(candles);
 
     const testWaveBreak = (fromPivot: Pivot, toPivot: Pivot): boolean => {
       return !!candles.find((c) => c.time > fromPivot.time && c.low < fromPivot.price && c.time <= toPivot.time);
@@ -280,7 +274,7 @@ export class ClusterService {
         // Get wave 5 retracements
         const wave5Pivots = this.getWave5Pivots(candles, pivots, wave1, wave2, wave3, wave4);
         if (!wave5Pivots.length) {
-          if (!testPivotBreak(wave4.pEnd) && this.indentifyImpulse(wave1, wave2, wave3, wave4, null, useLogScale).length) {
+          if (!testPivotBreak(wave4.pEnd) && this.indentifyImpulse(wave1, wave2, wave3, wave4, null, useLogScale, commonInterval).length) {
             incompleteClusters.push(branchCluster);
           }
           continue;
@@ -294,7 +288,7 @@ export class ClusterService {
           wave5 = new Wave(WaveName._5, wave1.degree, wave4.pEnd, p5);
           finalCluster?.addWave(wave5);
 
-          const waveTypes = this.indentifyImpulse(wave1, wave2, wave3, wave4, wave5, useLogScale);
+          const waveTypes = this.indentifyImpulse(wave1, wave2, wave3, wave4, wave5, useLogScale, commonInterval);
 
           if (finalCluster && waveTypes.length) {
             continuedClusters.push(finalCluster);
@@ -302,7 +296,7 @@ export class ClusterService {
           }
         }
 
-        if (!atLeastOneWave5Found && this.indentifyImpulse(wave1, wave2, wave3, wave4, null, useLogScale).length) {
+        if (!atLeastOneWave5Found && this.indentifyImpulse(wave1, wave2, wave3, wave4, null, useLogScale, commonInterval).length) {
           if (!testPivotBreak(wave4.pEnd)) {
             incompleteClusters.push(branchCluster);
           }
@@ -311,10 +305,145 @@ export class ClusterService {
     }
 
     return [continuedClusters, incompleteClusters];
+  } */
+
+  async completeWaveCluster(
+    majorCluster: ClusterWaves,
+    candles: Candle[],
+    pivots: Pivot[],
+    useLogScale: boolean,
+  ): Promise<{ completed: ClusterWaves[]; incompleted: ClusterWaves[] }> {
+    const response: { completed: ClusterWaves[]; incompleted: ClusterWaves[] } = { completed: [], incompleted: [] };
+
+    const commonInterval = WaveDegreeCalculator.determineCommonInterval(candles);
+    const testWaveBreak = (fromPivot: Pivot, toPivot: Pivot): boolean => {
+      return !!candles.find((c) => c.time > fromPivot.time && c.low < fromPivot.price && c.time <= toPivot.time);
+    };
+
+    const testPivotBreak = (fromPivot: Pivot): boolean => {
+      return !!candles.slice(0, 300).find((c) => c.time > fromPivot.time && c.low < fromPivot.price);
+    };
+
+    const wave1 = majorCluster.waves[0];
+    const wave2 = majorCluster.waves[1];
+    let wave3: Wave | null = null;
+    let wave4: Wave | null = null;
+    let wave5: Wave | null = null;
+
+    if (testWaveBreak(wave1.pStart, wave1.pEnd)) return response;
+    if (testWaveBreak(wave1.pStart, wave2.pEnd)) return response;
+
+    // Get wave 3 retracements
+    const wave3Retracements = this.getWave3RetracementWaves(candles, pivots, wave1, wave2);
+    if (!wave3Retracements.length) {
+      if (!testPivotBreak(wave2.pEnd)) {
+        response.incompleted.push(majorCluster);
+        return response;
+      }
+    }
+
+    for (const [p3, p4] of wave3Retracements) {
+      if (p3.price < wave1.pEnd.price) continue;
+      if (p4.price <= wave2.pEnd.price) break;
+
+      if (testWaveBreak(wave2.pEnd, p3)) continue;
+      if (testWaveBreak(wave2.pEnd, p4)) continue;
+
+      const branchCluster: ClusterWaves | null = majorCluster.duplicate();
+      wave3 = new Wave(WaveName._3, wave1.degree, wave2.pEnd, p3);
+      branchCluster.addWave(wave3);
+      wave4 = new Wave(WaveName._4, wave1.degree, p3, p4);
+      branchCluster.addWave(wave4);
+
+      // Get wave 5 retracements
+      const wave5Pivots = this.getWave5Pivots(candles, pivots, wave1, wave2, wave3, wave4);
+      if (!wave5Pivots.length) {
+        if (!testPivotBreak(wave4.pEnd) && this.indentifyImpulse(wave1, wave2, wave3, wave4, null, useLogScale, commonInterval).length) {
+          response.incompleted.push(branchCluster);
+        }
+        continue;
+      }
+
+      let atLeastOneWave5Found = false;
+      for (const p5 of wave5Pivots) {
+        if (testWaveBreak(wave4.pEnd, p5)) continue;
+        const finalCluster = branchCluster?.duplicate();
+
+        wave5 = new Wave(WaveName._5, wave1.degree, wave4.pEnd, p5);
+        finalCluster?.addWave(wave5);
+
+        const waveTypes = this.indentifyImpulse(wave1, wave2, wave3, wave4, wave5, useLogScale, commonInterval);
+
+        if (finalCluster && waveTypes.length) {
+          response.completed.push(finalCluster);
+          atLeastOneWave5Found = true;
+        }
+      }
+
+      if (!atLeastOneWave5Found && this.indentifyImpulse(wave1, wave2, wave3, wave4, null, useLogScale, commonInterval).length) {
+        if (!testPivotBreak(wave4.pEnd)) {
+          response.incompleted.push(branchCluster);
+        }
+      }
+    }
+
+    return response;
   }
 
-  indentifyImpulse(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave | null = null, useLogScale: boolean): WaveType[] {
-    const waveInfos = this.waveInfoService.getWaveInformation(wave1, wave2, wave3, wave4, wave5, useLogScale);
+  findBestClusters(groupedClusters: ClusterWaves[][], commonInterval: number): ClusterWaves[] {
+    const finalClusters: ClusterWaves[] = [];
+
+    groupedClusters.forEach((clusterGroup) => {
+      if (clusterGroup.length <= 1) {
+        finalClusters.push(clusterGroup[0]);
+        return;
+      }
+
+      const bestClusters: ClusterWaves[] = [];
+      let lastBest: ClusterWaves | null = null;
+
+      for (let i = 0; i < clusterGroup.length; i++) {
+        const currentCluster = clusterGroup[i];
+        const currentWave5 = currentCluster.waves[4];
+
+        if (lastBest === null) {
+          lastBest = currentCluster;
+          continue;
+        }
+
+        const lastBestWave5 = lastBest.waves[4];
+
+        if (lastBestWave5.pEnd.time + 10 * commonInterval * 24 * 3600 >= currentWave5.pEnd.time) {
+          // Waves are close, update lastBest
+          lastBest = currentCluster;
+        } else {
+          // Waves are far apart, push lastBest and start new group
+          bestClusters.push(lastBest);
+          lastBest = currentCluster;
+        }
+      }
+
+      // Don't forget to push the last best cluster
+      if (lastBest) {
+        bestClusters.push(lastBest);
+      }
+
+      finalClusters.push(...bestClusters);
+    });
+
+    return finalClusters;
+  }
+
+  indentifyImpulse(
+    wave1: Wave,
+    wave2: Wave,
+    wave3: Wave,
+    wave4: Wave,
+    wave5: Wave | null = null,
+    useLogScale: boolean,
+    commonInterval: number,
+  ): WaveType[] {
+    const waveInfos = this.waveInfoService.getWaveInformation(wave1, wave2, wave3, wave4, wave5, useLogScale, commonInterval);
 
     const possiblePatterns = [];
     for (const waveInfo of waveInfos) {
@@ -334,7 +463,7 @@ export class ClusterService {
     return possiblePatterns;
   }
 
-  getWave3RetracementWaves(candles: CandleDto[], pivots: Pivot[], wave1: Wave, wave2: Wave): [Pivot, Pivot][] {
+  getWave3RetracementWaves(candles: Candle[], pivots: Pivot[], wave1: Wave, wave2: Wave): [Pivot, Pivot][] {
     const wave3ProjectedRange = this.getWave3ProjectionRange(wave1.pStart, wave1.pEnd, wave2.pEnd);
     const availablePivots = this.getPivotsAfter(pivots, wave2.pEnd);
     const wave3RetracementPivots = this.candleService.getWavePivotRetracementsByNumberOfWaves(availablePivots, 20);
@@ -352,7 +481,7 @@ export class ClusterService {
     return retracements;
   }
 
-  getWave5Pivots(candles: CandleDto[], pivots: Pivot[], wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave): Pivot[] {
+  getWave5Pivots(candles: Candle[], pivots: Pivot[], wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave): Pivot[] {
     const wave5ProjectedRange = this.getWave5ProjectionRange(wave1, wave2, wave3, wave4);
     const availablePivots = this.getPivotsAfter(pivots, wave4.pEnd);
 

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Degree } from '../enums';
+import { WaveDegree } from '../enums';
 import { Pivot, ClusterPivot } from '../class';
 
 export class EnumStruct {
@@ -42,7 +42,7 @@ export class PivotResponse {
   price: number;
 
   @ApiProperty()
-  degree: Degree;
+  degree: WaveDegree;
 
   @ApiProperty()
   time: number;
@@ -50,7 +50,7 @@ export class PivotResponse {
   @ApiProperty()
   status: string;
 
-  constructor(pivot: Pivot | ClusterPivot, degree: Degree) {
+  constructor(pivot: Pivot | ClusterPivot, degree: WaveDegree) {
     this.id = pivot.id;
     this.type = pivot.type;
     this.price = pivot.price;

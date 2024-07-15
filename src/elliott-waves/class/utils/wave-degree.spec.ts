@@ -1,4 +1,4 @@
-import { Degree } from 'src/elliott-waves/enums';
+import { WaveDegree } from 'src/elliott-waves/enums';
 import { WaveDegreeCalculator } from './wave-degree.class';
 
 // Helper function to generate candles with different time frames, including random gaps
@@ -41,9 +41,9 @@ describe('WaveDegreeCalculator', () => {
     const candlesM = generateCandles(60000, 'M');
     const candlesW = generateCandles(260000, 'W');
 
-    expect(WaveDegreeCalculator.calculateWaveDegree(candlesY)).toBe(Degree.SUPERMILLENNIUM);
-    expect(WaveDegreeCalculator.calculateWaveDegree(candlesM)).toBe(Degree.SUPERMILLENNIUM);
-    expect(WaveDegreeCalculator.calculateWaveDegree(candlesW)).toBe(Degree.SUPERMILLENNIUM);
+    expect(WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesY)).toBe(WaveDegree.SUPERMILLENNIUM);
+    expect(WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesM)).toBe(WaveDegree.SUPERMILLENNIUM);
+    expect(WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesW)).toBe(WaveDegree.SUPERMILLENNIUM);
   });
 
   test('calculates the correct wave degree for MILLENNIUM', () => {
@@ -51,9 +51,9 @@ describe('WaveDegreeCalculator', () => {
     const candlesM = generateCandles(12000, 'M');
     const candlesW = generateCandles(52000, 'W');
 
-    expect(WaveDegreeCalculator.calculateWaveDegree(candlesY)).toBe(Degree.MILLENNIUM);
-    expect(WaveDegreeCalculator.calculateWaveDegree(candlesM)).toBe(Degree.MILLENNIUM);
-    expect(WaveDegreeCalculator.calculateWaveDegree(candlesW)).toBe(Degree.MILLENNIUM);
+    expect(WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesY)).toBe(WaveDegree.MILLENNIUM);
+    expect(WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesM)).toBe(WaveDegree.MILLENNIUM);
+    expect(WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesW)).toBe(WaveDegree.MILLENNIUM);
   });
 
   test('calculates the correct wave degree for GRANDSUPERCYCLE', () => {
@@ -61,9 +61,9 @@ describe('WaveDegreeCalculator', () => {
     const candlesM = generateCandles(1200, 'M');
     const candlesW = generateCandles(5200, 'W');
 
-    expect(WaveDegreeCalculator.calculateWaveDegree(candlesY)).toBe(Degree.GRANDSUPERCYCLE);
-    expect(WaveDegreeCalculator.calculateWaveDegree(candlesM)).toBe(Degree.GRANDSUPERCYCLE);
-    expect(WaveDegreeCalculator.calculateWaveDegree(candlesW)).toBe(Degree.GRANDSUPERCYCLE);
+    expect(WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesY)).toBe(WaveDegree.GRANDSUPERCYCLE);
+    expect(WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesM)).toBe(WaveDegree.GRANDSUPERCYCLE);
+    expect(WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesW)).toBe(WaveDegree.GRANDSUPERCYCLE);
   });
 
   test('calculates the correct wave degree for SUPERCYCLE', () => {
@@ -71,9 +71,9 @@ describe('WaveDegreeCalculator', () => {
     const candlesM = generateCandles(168, 'M');
     const candlesW = generateCandles(728, 'W');
 
-    expect(WaveDegreeCalculator.calculateWaveDegree(candlesY)).toBe(Degree.SUPERCYCLE);
-    expect(WaveDegreeCalculator.calculateWaveDegree(candlesM)).toBe(Degree.SUPERCYCLE);
-    expect(WaveDegreeCalculator.calculateWaveDegree(candlesW)).toBe(Degree.SUPERCYCLE);
+    expect(WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesY)).toBe(WaveDegree.SUPERCYCLE);
+    expect(WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesM)).toBe(WaveDegree.SUPERCYCLE);
+    expect(WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesW)).toBe(WaveDegree.SUPERCYCLE);
   });
 
   test('calculates the correct wave degree for CYCLE', () => {
@@ -81,9 +81,9 @@ describe('WaveDegreeCalculator', () => {
     const candlesM = generateCandles(48, 'M');
     const candlesW = generateCandles(208, 'W');
 
-    expect(WaveDegreeCalculator.calculateWaveDegree(candlesY)).toBe(Degree.CYCLE);
-    expect(WaveDegreeCalculator.calculateWaveDegree(candlesM)).toBe(Degree.CYCLE);
-    expect(WaveDegreeCalculator.calculateWaveDegree(candlesW)).toBe(Degree.CYCLE);
+    expect(WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesY)).toBe(WaveDegree.CYCLE);
+    expect(WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesM)).toBe(WaveDegree.CYCLE);
+    expect(WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesW)).toBe(WaveDegree.CYCLE);
   });
 
   test('calculates the correct wave degree for PRIMARY', () => {
@@ -91,9 +91,9 @@ describe('WaveDegreeCalculator', () => {
     const candlesW = generateCandles(35, 'W');
     const candlesD = generateCandles(240, 'D');
 
-    expect(WaveDegreeCalculator.calculateWaveDegree(candlesM)).toBe(Degree.PRIMARY);
-    expect(WaveDegreeCalculator.calculateWaveDegree(candlesW)).toBe(Degree.PRIMARY);
-    expect(WaveDegreeCalculator.calculateWaveDegree(candlesD)).toBe(Degree.PRIMARY);
+    expect(WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesM)).toBe(WaveDegree.PRIMARY);
+    expect(WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesW)).toBe(WaveDegree.PRIMARY);
+    expect(WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesD)).toBe(WaveDegree.PRIMARY);
   });
 
   test('calculates the correct wave degree for INTERMEDIATE', () => {
@@ -101,9 +101,9 @@ describe('WaveDegreeCalculator', () => {
     const candlesW = generateCandles(12, 'W');
     const candlesD = generateCandles(90, 'D');
 
-    expect(WaveDegreeCalculator.calculateWaveDegree(candlesM)).toBe(Degree.INTERMEDIATE);
-    expect(WaveDegreeCalculator.calculateWaveDegree(candlesW)).toBe(Degree.INTERMEDIATE);
-    expect(WaveDegreeCalculator.calculateWaveDegree(candlesD)).toBe(Degree.INTERMEDIATE);
+    expect(WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesM)).toBe(WaveDegree.INTERMEDIATE);
+    expect(WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesW)).toBe(WaveDegree.INTERMEDIATE);
+    expect(WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesD)).toBe(WaveDegree.INTERMEDIATE);
   });
 
   test('calculates the correct wave degree for MINOR', () => {
@@ -111,25 +111,25 @@ describe('WaveDegreeCalculator', () => {
     const candlesD = generateCandles(8, 'D');
     const candlesH = generateCandles(45 * 24, 'H');
 
-    expect(WaveDegreeCalculator.calculateWaveDegree(candlesW)).toBe(Degree.MINOR);
-    expect(WaveDegreeCalculator.calculateWaveDegree(candlesD)).toBe(Degree.MINOR);
-    expect(WaveDegreeCalculator.calculateWaveDegree(candlesH)).toBe(Degree.MINOR);
+    expect(WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesW)).toBe(WaveDegree.MINOR);
+    expect(WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesD)).toBe(WaveDegree.MINOR);
+    expect(WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesH)).toBe(WaveDegree.MINOR);
   });
 
   test('calculates the correct wave degree for MINUTE', () => {
     const candlesD = generateCandles(5, 'D');
     const candlesH = generateCandles(5 * 24, 'H');
 
-    expect(WaveDegreeCalculator.calculateWaveDegree(candlesD)).toBe(Degree.MINUTE);
-    expect(WaveDegreeCalculator.calculateWaveDegree(candlesH)).toBe(Degree.MINUTE);
+    expect(WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesD)).toBe(WaveDegree.MINUTE);
+    expect(WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesH)).toBe(WaveDegree.MINUTE);
   });
 
   test('calculates the correct wave degree for MINUETTE', () => {
     const candlesH = generateCandles(10, 'H');
     const candlesMin = generateCandles(23, 'H'); // Approx 10 days worth of hourly candles
 
-    expect(WaveDegreeCalculator.calculateWaveDegree(candlesH)).toBe(Degree.MINUETTE);
-    expect(WaveDegreeCalculator.calculateWaveDegree(candlesMin)).toBe(Degree.MINUETTE);
+    expect(WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesH)).toBe(WaveDegree.MINUETTE);
+    expect(WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesMin)).toBe(WaveDegree.MINUETTE);
   });
 
   test('throws an error for invalid period', () => {

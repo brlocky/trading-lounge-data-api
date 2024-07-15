@@ -77,3 +77,14 @@ export interface PivotTest {
   pivot: Pivot | null;
   type: PivotTestType;
 }
+
+export interface Candle {
+  time: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+  rsi: number;
+  stochastic: number;
+}

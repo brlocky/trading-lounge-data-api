@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { AIService } from 'src/ai/ai.service';
-import { CandleDto } from 'src/search/dto';
 import { WaveDegreeCalculator } from '../class/utils';
 import { Fibonacci } from '../class/utils/fibonacci.class';
 import { MotiveExtendedWave3 } from '../class/wave/motive/motive-extended-wave-3.class';
-import { Degree, degreeToString } from '../enums';
+import { WaveDegree, degreeToString } from '../enums';
 import { MotiveWaveInterface } from '../interfaces/motive-wave.interface';
-import { CandlesInfo } from '../types';
+import { Candle, CandlesInfo } from '../types';
 import { CandleService } from './candle.service';
 import { ChartService } from './chart.service';
 import { ClusterService } from './cluster.service';
-import { ClusterWaves, Pivot } from '../class';
+import { ClusterWaves, ElliottWaveAnalyzer, Pivot } from '../class';
+import { WaveInfoService } from './wave-info.service';
 
 @Injectable()
 export class WaveCalculationService {
@@ -19,28 +19,33 @@ export class WaveCalculationService {
     private candleService: CandleService,
     private chartService: ChartService,
     private clusterService: ClusterService,
+    private waveInfoService: WaveInfoService,
     private aiService: AIService,
   ) {
     this.fibonacci = new Fibonacci();
   }
 
-  async getWaveCounts(candles: CandleDto[], degree: number, logScale: boolean, definition: number): Promise<ClusterWaves[]> {
+  async getWaveCounts(candles: Candle[], degree: WaveDegree, logScale: boolean, definition: number): Promise<ClusterWaves[]> {
     const { pivots } = this.getPivotsInfo(candles, definition);
 
-    return this.clusterService.findMajorStructure(pivots, candles, 2, definition, logScale);
+    return this.clusterService.findMajorStructure(pivots, candles, definition, 0, logScale);
   }
 
-  async getSubWaveCounts(
-    candles: CandleDto[],
-    degree: number,
+  async getSubWaveCounts4(
+    candles: Candle[],
+    degree: WaveDegree,
     startPivot: Pivot,
     endPivot: Pivot,
     logScale: boolean,
   ): Promise<ClusterWaves[]> {
-    const pivots = this.candleService.getZigZag(candles);
+    const analyzer = new ElliottWaveAnalyzer(this.candleService, this.waveInfoService, this.chartService);
+    const waves = analyzer.analyzeCandles(candles);
 
-    const clusters = await this.clusterService.findMajorStructure(pivots, candles, 3, 0, logScale);
-    const isTargetInsidePivots = !!pivots.find(
+    console.log(waves);
+
+    return [];
+
+    /*     const isTargetInsidePivots = !!pivots.find(
       (p) => endPivot && p.time === endPivot.time && p.price === endPivot.price && p.type === endPivot.type,
     );
 
@@ -52,21 +57,36 @@ export class WaveCalculationService {
           if (lastWave.pEnd.price !== endPivot.price || lastWave.pEnd.time !== endPivot.time) return false;
           return true;
         })
-      : clusters;
-
-    return filteredCluster;
+      : clusters; */
   }
 
-  getSubWaveCounts2(candles: CandleDto[], degree: number, startPivot: Pivot, endPivot: Pivot, logScale: boolean): Promise<ClusterWaves[]> {
+  async getSubWaveCounts(
+    candles: Candle[],
+    degree: number,
+    startPivot: Pivot,
+    endPivot: Pivot,
+    logScale: boolean,
+  ): Promise<ClusterWaves[]> {
     const pivots = this.candleService.getZigZag(candles);
 
     const motivePatterns = this.getImpulsePatterns(degree - 1);
 
+    const waveClusters = await this.clusterService.findMajorStructure(pivots, candles, 3, 0, logScale);
     const isTargetInsidePivots = !!pivots.find(
       (p) => endPivot && p.time === endPivot.time && p.price === endPivot.price && p.type === endPivot.type,
     );
+    const filteredCluster = isTargetInsidePivots
+      ? waveClusters.filter((w) => {
+          if (w.waves.length !== 5) return false;
+          const lastWave = w.waves[w.waves.length - 1];
 
-    const waveClusters: ClusterWaves[] = [];
+          if (lastWave.pEnd.price !== endPivot.price || lastWave.pEnd.time !== endPivot.time) return false;
+          return true;
+        })
+      : waveClusters;
+
+    return new Promise((r) => r(filteredCluster));
+    /*     const waveClusters: ClusterWaves[] = [];
     for (const pattern of motivePatterns) {
       isTargetInsidePivots && pattern.setTargetPivot(endPivot);
       pattern.load(candles, pivots, new Fibonacci(logScale));
@@ -85,14 +105,14 @@ export class WaveCalculationService {
         })
       : waveClusters;
 
-    return new Promise((r) => r(filteredCluster));
+    return new Promise((r) => r(filteredCluster)); */
   }
 
-  private getPivotsInfo(candles: CandleDto[], definition: number): CandlesInfo {
+  private getPivotsInfo(candles: Candle[], definition: number): CandlesInfo {
     const pivots = this.candleService.getZigZag(candles);
     const retracements = this.candleService.getWavePivotRetracementsByNumberOfWaves(pivots, definition);
 
-    const degreeEnum = this.calculateCandlesExpectedDegree(candles);
+    const degreeEnum = WaveDegreeCalculator.calculateWaveDegreeFromCandles(candles);
     const degree = degreeToString(degreeEnum);
 
     return {
@@ -105,11 +125,7 @@ export class WaveCalculationService {
     };
   }
 
-  private calculateCandlesExpectedDegree(candles: CandleDto[]): Degree {
-    return WaveDegreeCalculator.calculateWaveDegree(candles);
-  }
-
-  private getImpulsePatterns(degree: Degree): MotiveWaveInterface[] {
+  private getImpulsePatterns(degree: WaveDegree): MotiveWaveInterface[] {
     return [
       new MotiveExtendedWave3(degree),
       /*       new MotiveExtendedWave1(candles, pivots, fibonacci, degree),

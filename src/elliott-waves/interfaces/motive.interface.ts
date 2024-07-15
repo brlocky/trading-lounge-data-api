@@ -23,6 +23,14 @@ export abstract class MotiveInterface {
   public abstract allowWave4Overlap(): boolean;
 
   public abstract calculateWave5Projection(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave, useLogScale: boolean): number;
+  public abstract calculateWave5ProjectionTime(
+    wave1: Wave,
+    wave2: Wave,
+    wave3: Wave,
+    wave4: Wave,
+    wave5: Wave,
+    commonInterval: number,
+  ): number;
   public abstract validateWaveStructure(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave, useLogScale: boolean): boolean;
 
   public getWaveType(): WaveType {
@@ -35,6 +43,13 @@ export abstract class MotiveInterface {
 
   public getWave4LongTimeConfig(): ScoreRange[] {
     return this.getWave4TimeConfig();
+  }
+
+  public calculateTimeRetracement(waveA: Wave, waveB: Wave, commonInterval: number): number {
+    this.fibonacci.setLogScale(false);
+    const waveATime = waveA.duration() || commonInterval * 24 * 3600;
+    const waveBTime = waveB.duration() || commonInterval * 24 * 3600;
+    return Math.abs(waveBTime / waveATime) * 100;
   }
 
   public calculateWave2Retracement(wave1: Wave, wave2: Wave, useLogScale: boolean): number {

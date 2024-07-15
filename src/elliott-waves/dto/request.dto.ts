@@ -1,24 +1,23 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { CandleDto } from 'src/search/dto';
 import { Pivot } from '../class';
+import { WaveDegree } from '../enums';
+import { Candle } from '../types';
 
 export class BaseRequest {
   @ApiProperty()
   symbol: string;
 
   @ApiProperty()
-  interval: 'M' | 'W' | 'D';
+  logScale: boolean;
 
   @ApiProperty()
-  logScale: boolean;
+  candles: CandleDto[] | Candle[];
 }
 
 export class WaveCountClusterRequest extends BaseRequest {
   @ApiProperty()
-  degree: number;
-
-  @ApiProperty()
-  candles: CandleDto[];
+  degree: WaveDegree;
 
   @ApiProperty()
   subCounts: number;
@@ -29,10 +28,7 @@ export class WaveCountClusterRequest extends BaseRequest {
 
 export class SubWaveCountClusterRequest extends BaseRequest {
   @ApiProperty()
-  degree: number;
-
-  @ApiProperty()
-  candles: CandleDto[];
+  degree: WaveDegree;
 
   @ApiProperty()
   startPivot: Pivot;

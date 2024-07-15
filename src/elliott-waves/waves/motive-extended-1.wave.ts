@@ -17,12 +17,17 @@ export class MotiveExtended1 extends MotiveInterface {
     return this.fibonacci.getProjectionPercentage(wave1.pStart.price, wave1.pEnd.price, wave2.pEnd.price, wave5.pEnd.price);
   }
 
+  public calculateWave5ProjectionTime(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave, commonInterval: number): number {
+    return this.calculateTimeRetracement(wave3, wave5, commonInterval);
+  }
+
   public validateWaveStructure(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave, useLogScale: boolean): boolean {
     // Wave 1 is bigger
     const wave1isBigger = wave1.length(useLogScale) >= wave3.length(useLogScale) && wave3.length(useLogScale) >= wave5.length(useLogScale);
     if (!wave1isBigger) return false;
 
     // Wave 3 is not the sortest
+    // Invalidation when wave 5 is bigger than 3
     const wave3IsNotTheShortest = wave3.length(useLogScale) >= wave5.length(useLogScale);
     if (!wave3IsNotTheShortest) return false;
 
@@ -122,10 +127,12 @@ export class MotiveExtended1 extends MotiveInterface {
 
   public getWave5ProjectionConfig(): ScoreRange[] {
     return [
-      { range: [10, 14.2], score: WaveScore.WORSTCASESCENARIO },
-      { range: [14.2, 38.2], score: WaveScore.PERFECT },
-      { range: [38.2, 80], score: WaveScore.WORK },
-      { range: [80, 99.9], score: WaveScore.WORSTCASESCENARIO },
+      { range: [14.2, 38.2], score: WaveScore.WORSTCASESCENARIO },
+      { range: [38.2, 60], score: WaveScore.WORK },
+      { range: [60, 78.6], score: WaveScore.PERFECT },
+      { range: [78.6, 88.6], score: WaveScore.GOOD },
+      { range: [88.6, 138.2], score: WaveScore.WORSTCASESCENARIO },
+      { range: [138.2, 261.8], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 }

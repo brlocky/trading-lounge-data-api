@@ -17,6 +17,10 @@ export class MotiveExtended3 extends MotiveInterface {
     return this.fibonacci.getProjectionPercentage(wave3.pStart.price, wave3.pEnd.price, wave4.pEnd.price, wave5.pEnd.price);
   }
 
+  public calculateWave5ProjectionTime(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave, commonInterval: number): number {
+    return this.calculateTimeRetracement(wave1, wave5, commonInterval);
+  }
+
   public validateWaveStructure(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave, useLogScale: boolean): boolean {
     // Wave 3 is bigger
     const wave3isBigger = wave3.length(useLogScale) >= wave1.length(useLogScale) && wave3.length(useLogScale) >= wave5.length(useLogScale);
@@ -84,7 +88,6 @@ export class MotiveExtended3 extends MotiveInterface {
 
   public getWave2RetracementConfig(): ScoreRange[] {
     return [
-      { range: [0, 14.2], score: WaveScore.INVALID },
       { range: [14.2, 23.6], score: WaveScore.WORSTCASESCENARIO },
       { range: [23.6, 50], score: WaveScore.WORK },
       { range: [50, 55.9], score: WaveScore.PERFECT },
@@ -104,20 +107,18 @@ export class MotiveExtended3 extends MotiveInterface {
       { range: [138.2, 160], score: WaveScore.GOOD },
       { range: [160, 268.1], score: WaveScore.PERFECT },
       { range: [268.1, 468.1], score: WaveScore.WORK },
-      { range: [468.1, 800], score: WaveScore.WORSTCASESCENARIO },
+      { range: [468.1, 1600], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 
   public getWave4RetracementConfig(): ScoreRange[] {
     return [
-      { range: [14.2, 18.9], score: WaveScore.WORSTCASESCENARIO },
+      { range: [10, 18.9], score: WaveScore.WORSTCASESCENARIO },
       { range: [18.9, 23.6], score: WaveScore.WORK },
       { range: [23.6, 30.9], score: WaveScore.GOOD },
       { range: [30.9, 38.2], score: WaveScore.PERFECT },
       { range: [38.2, 44.1], score: WaveScore.GOOD },
       { range: [44.1, 50], score: WaveScore.WORK },
-      { range: [50, 61.8], score: WaveScore.WORSTCASESCENARIO },
-      { range: [61.8, 88.6], score: WaveScore.WORSTCASESCENARIO }, // need to add alternation
     ];
   }
 
@@ -139,7 +140,7 @@ export class MotiveExtended3 extends MotiveInterface {
       { range: [78.6, 88.6], score: WaveScore.GOOD },
       { range: [88.6, 138.2], score: WaveScore.WORK },
       { range: [138.2, 261.8], score: WaveScore.WORK },
-      { range: [261.8, 461.8], score: WaveScore.WORSTCASESCENARIO },
+      { range: [261.8, 861.8], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 }

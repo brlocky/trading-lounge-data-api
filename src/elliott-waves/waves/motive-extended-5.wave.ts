@@ -19,6 +19,12 @@ export class MotiveExtended5 extends MotiveInterface {
     return this.fibonacci.getProjectionPercentage(wave1.pStart.price, wave3.pEnd.price, wave4.pEnd.price, wave5.pEnd.price);
   }
 
+  public calculateWave5ProjectionTime(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave, commonInterval: number): number {
+    const wave1To3 = wave1.copy();
+    wave1To3.pEnd = wave5.pEnd;
+    return this.calculateTimeRetracement(wave1To3, wave5, commonInterval);
+  }
+
   public validateWaveStructure(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave, useLogScale: boolean): boolean {
     // Wave 5 is bigger
     const wave5isBigger = wave5.length(useLogScale) >= wave1.length(useLogScale) && wave5.length(useLogScale) >= wave3.length(useLogScale);

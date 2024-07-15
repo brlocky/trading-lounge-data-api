@@ -1,14 +1,14 @@
-import { CandleDto } from 'src/search/dto';
 import { calculateAngle, getHHBeforeBreak, getLLBeforeBreak, TimeProjection } from '../class/utils';
-import { Degree, PivotType, Trend, WaveName, WaveType } from '../enums';
+import { WaveDegree, PivotType, Trend, WaveName, WaveType } from '../enums';
 import { BaseWaveInterface } from './base-wave.interface';
 import { ClusterPivot, ClusterWaves, Pivot, Wave } from '../class';
+import { Candle } from '../types';
 
 export abstract class MotiveWaveInterface extends BaseWaveInterface {
   _waveType: WaveType;
-  _degree: Degree;
+  _degree: WaveDegree;
 
-  constructor(degree: Degree, waveType: WaveType) {
+  constructor(degree: WaveDegree, waveType: WaveType) {
     super();
     this._waveType = waveType;
     this._degree = degree;
@@ -74,7 +74,7 @@ export abstract class MotiveWaveInterface extends BaseWaveInterface {
     return waveClusters;
   }
 
-  protected getInitialImpulses(candles: CandleDto[], pivots: Pivot[]): Wave[][] {
+  protected getInitialImpulses(candles: Candle[], pivots: Pivot[]): Wave[][] {
     const p0 = pivots[0];
     let minP1 = this.trend === Trend.UP ? -Infinity : Infinity;
 

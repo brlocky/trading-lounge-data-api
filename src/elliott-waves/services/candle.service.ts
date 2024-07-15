@@ -1,9 +1,8 @@
 import { Injectable, PreconditionFailedException } from '@nestjs/common';
-import { PivotTest } from '../types';
+import { Candle, PivotTest } from '../types';
 import { getLLBeforeBreak, getTrend } from '../class/utils/pivot.utils';
 import { PivotType, Trend } from '../enums';
 import { Fibonacci } from '../class/utils/fibonacci.class';
-import { CandleDto } from 'src/search/dto';
 import { Pivot } from '../class';
 
 // Interface to represent a wave retracement
@@ -16,7 +15,7 @@ interface WaveRetracement {
 @Injectable()
 export class CandleService {
   // Method to calculate ZigZag pivots from an array of candles
-  getZigZag(candles: CandleDto[]): Pivot[] {
+  getZigZag(candles: Candle[]): Pivot[] {
     if (candles.length < 2) {
       throw new PreconditionFailedException(`${this.constructor.name}:getZigZag: The candles array must have at least 2 elements.`);
     }
@@ -195,20 +194,20 @@ export class CandleService {
   }
 
   // Helper method to create a Pivot object
-  protected createPivot(candle: CandleDto, index: number, type: PivotType): Pivot {
+  protected createPivot(candle: Candle, index: number, type: PivotType): Pivot {
     return new Pivot(index, type, type === PivotType.HIGH ? candle.high : candle.low, candle.time);
   }
 
   // Helper methods to determine candle types
-  protected isRedCandle(candle: CandleDto): boolean {
+  protected isRedCandle(candle: Candle): boolean {
     return candle.close < candle.open;
   }
 
-  protected isGreenCandle(candle: CandleDto): boolean {
+  protected isGreenCandle(candle: Candle): boolean {
     return candle.close > candle.open;
   }
 
-  protected isNeutral(candle: CandleDto): boolean {
+  protected isNeutral(candle: Candle): boolean {
     return candle.close === candle.open;
   }
 }

@@ -1,8 +1,8 @@
-import { Degree, WaveName, WaveType } from 'src/elliott-waves/enums';
+import { WaveDegree, WaveName, WaveType } from 'src/elliott-waves/enums';
 import { MotiveWaveInterface } from 'src/elliott-waves/interfaces/motive-wave.interface';
 
 export class MotiveExtendedWave3 extends MotiveWaveInterface {
-  constructor(degree: Degree) {
+  constructor(degree: WaveDegree) {
     super(degree, WaveType.MOTIVE_EXTENDED_3);
   }
 

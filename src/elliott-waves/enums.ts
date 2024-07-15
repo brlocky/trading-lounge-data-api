@@ -74,7 +74,7 @@ export function waveNameToString(waveName: WaveName): string {
 }
 
 // Define the Degree enum
-export enum Degree {
+export enum WaveDegree {
   MINISCULE = 1,
   SUBMICRO,
   MICRO,
@@ -91,7 +91,7 @@ export enum Degree {
   MILLENNIUM,
   SUPERMILLENNIUM,
 }
-const DegreeLabels = createEnumLabelMappings(Degree, {
+const DegreeLabels = createEnumLabelMappings(WaveDegree, {
   MINISCULE: 'Miniscule',
   SUBMICRO: 'Submicro',
   MICRO: 'Micro',
@@ -108,7 +108,7 @@ const DegreeLabels = createEnumLabelMappings(Degree, {
   MILLENNIUM: 'Millennium',
   SUPERMILLENNIUM: 'Supermillennium',
 });
-export function degreeToString(degree: Degree): string {
+export function degreeToString(degree: WaveDegree): string {
   return getEnumLabel(degree, DegreeLabels);
 }
 
@@ -136,15 +136,15 @@ export function waveTypeToString(waveType: WaveType): string {
 }
 
 // Functions to change the Degree
-export function decreaseDegree(degree: Degree): Degree {
-  if (degree > Degree.MINISCULE) {
+export function decreaseDegree(degree: WaveDegree): WaveDegree {
+  if (degree > WaveDegree.MINISCULE) {
     return degree - 1;
   }
   return degree;
 }
 
-export function increaseDegree(degree: Degree): Degree {
-  const maxDegree = Object.keys(Degree).length / 2; // Since both key and value pairs exist
+export function increaseDegree(degree: WaveDegree): WaveDegree {
+  const maxDegree = Object.keys(WaveDegree).length / 2; // Since both key and value pairs exist
   if (degree < maxDegree) {
     return degree + 1;
   }

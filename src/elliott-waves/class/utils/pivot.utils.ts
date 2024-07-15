@@ -1,10 +1,9 @@
 import { PreconditionFailedException } from '@nestjs/common';
-import { Degree, PivotType, Trend, WaveName } from 'src/elliott-waves/enums';
-import { CandleDto } from 'src/search/dto';
+import { WaveDegree, PivotType, Trend, WaveName } from 'src/elliott-waves/enums';
 import { Pivot } from '../pivot.class';
 import { Wave } from '../wave.class';
 import { ClusterWaves } from '../cluster-wave.class';
-import { PivotTest } from 'src/elliott-waves/types';
+import { Candle, PivotTest } from 'src/elliott-waves/types';
 
 /**
  * Get next Low before it breaks the Resistance
@@ -120,7 +119,7 @@ export const getLocalLow = (pivots: Pivot[], length: number = 3): Pivot | null =
   return localLow;
 };
 
-export const getTrend = (data: CandleDto[] | Pivot[]): Trend => {
+export const getTrend = (data: Candle[] | Pivot[]): Trend => {
   if (data.length < 2) {
     throw new PreconditionFailedException(`getTrend: The candles array must have at least 2 elements.`);
   }
@@ -128,8 +127,8 @@ export const getTrend = (data: CandleDto[] | Pivot[]): Trend => {
   const isPivot = (item: any): item is Pivot => item.price !== undefined;
   const startItem = data[0];
   const endItem = data[data.length - 1];
-  const startPrice = isPivot(startItem) ? startItem.price : (startItem as CandleDto).low;
-  const endPrice = isPivot(endItem) ? endItem.price : (endItem as CandleDto).low;
+  const startPrice = isPivot(startItem) ? startItem.price : (startItem as Candle).low;
+  const endPrice = isPivot(endItem) ? endItem.price : (endItem as Candle).low;
 
   return startPrice < endPrice ? Trend.UP : Trend.DOWN;
 };
@@ -154,7 +153,7 @@ export const convertPivotsToWaves = (pivots: Pivot[]): Wave[] => {
   for (let i = 0; i < pivots.length - 1; i++) {
     const p1 = pivots[i];
     const p2 = pivots[i + 1];
-    const wave = new Wave(waveName, Degree.SUPERMILLENNIUM, p1, p2);
+    const wave = new Wave(waveName, WaveDegree.SUPERMILLENNIUM, p1, p2);
     waves.push(wave);
     waveName++;
   }

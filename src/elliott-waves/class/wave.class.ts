@@ -1,11 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { v4 } from 'uuid';
-import { WaveName, Degree, Trend } from '../enums';
+import { WaveName, WaveDegree, Trend } from '../enums';
 import { Pivot } from './pivot.class';
 import { ClusterPivot } from './cluster-pivot.class';
 
 export class Wave {
-  constructor(wave: WaveName, degree: Degree, pStart: Pivot | ClusterPivot, pEnd: Pivot | ClusterPivot) {
+  constructor(wave: WaveName, degree: WaveDegree, pStart: Pivot | ClusterPivot, pEnd: Pivot | ClusterPivot) {
     this.id = v4();
     this.wave = wave;
     this.degree = degree;
@@ -19,7 +19,7 @@ export class Wave {
   @ApiProperty()
   wave: WaveName;
   @ApiProperty()
-  degree: Degree;
+  degree: WaveDegree;
   @ApiProperty()
   pStart: ClusterPivot;
   @ApiProperty()

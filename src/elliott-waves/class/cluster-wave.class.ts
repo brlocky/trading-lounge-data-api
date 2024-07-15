@@ -1,10 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { v4 } from 'uuid';
-import { WaveType, Degree } from '../enums';
+import { WaveType, WaveDegree } from '../enums';
 import { Wave } from './wave.class';
 
 export class ClusterWaves {
-  constructor(waves: Wave[] = [], waveType: WaveType = WaveType.UNKNOWN, degree: Degree = Degree.SUPERMILLENNIUM) {
+  constructor(waves: Wave[] = [], waveType: WaveType = WaveType.UNKNOWN, degree: WaveDegree = WaveDegree.SUPERMILLENNIUM) {
     this.id = v4();
     this.degree = degree;
     this.waveType = waveType;
@@ -15,6 +15,10 @@ export class ClusterWaves {
     this.waves.push(wave);
   }
 
+  public addWaves(waves: Wave[]): void {
+    waves.forEach((w) => this.waves.push(w));
+  }
+
   public duplicate(): ClusterWaves {
     return new ClusterWaves([...this.waves], this.waveType, this.degree);
   }
@@ -22,7 +26,7 @@ export class ClusterWaves {
   @ApiProperty()
   id: string;
   @ApiProperty()
-  degree: Degree;
+  degree: WaveDegree;
   @ApiProperty()
   waveType: WaveType;
   @ApiProperty()

@@ -1,17 +1,17 @@
-import { CandleDto } from 'src/search/dto';
 import { Fibonacci } from '../class/utils/fibonacci.class';
 import { getTrend } from '../class/utils/pivot.utils';
 import { Trend } from '../enums';
 import { Pivot } from '../class';
+import { Candle } from '../types';
 
 export abstract class BaseWaveInterface {
-  protected candles: CandleDto[] = [];
+  protected candles: Candle[] = [];
   protected pivots: Pivot[] = [];
   protected trend: Trend;
   protected fibonacci: Fibonacci;
   protected targetPivot: Pivot | null;
 
-  public load(candles: CandleDto[], pivots: Pivot[], fibonacci: Fibonacci) {
+  public load(candles: Candle[], pivots: Pivot[], fibonacci: Fibonacci) {
     this.candles = candles;
     this.pivots = pivots;
     this.fibonacci = fibonacci;

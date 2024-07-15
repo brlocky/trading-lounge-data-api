@@ -36,17 +36,30 @@ export class WaveInfoService {
     };
   }
 
-  getWaveInformation(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave | null = null, useLogScale = true): WaveInfo[] {
-    const getWavesTimePercentage = (waveA: Wave, waveB: Wave): number => {
-      const time1 = waveA.pEnd.time - waveA.pStart.time;
-      const time2 = waveB.pEnd.time - waveB.pStart.time;
-      if (time1 == 0 || time2 === 0) {
-        console.log('Get time retracement, missing candles to validate time diff');
-        return 0;
-      }
-      return (time2 / time1) * 100;
-    };
+  private sortWaveInfoArray(array: WaveInfo[]) {
+    return array.sort((a, b) => {
+      // Sorting by isValid (wave, time, structure)
+      if (a.isValid.wave !== b.isValid.wave) return a.isValid.wave ? -1 : 1;
+      if (a.isValid.time !== b.isValid.time) return a.isValid.time ? -1 : 1;
+      if (a.isValid.structure !== b.isValid.structure) return a.isValid.structure ? -1 : 1;
 
+      // Sorting by score (wave, time, structure)
+      if (a.score.wave !== b.score.wave) return b.score.wave - a.score.wave;
+      if (a.score.time !== b.score.time) return b.score.time - a.score.time;
+      if (a.score.structure !== b.score.structure) return b.score.structure - a.score.structure;
+
+      return 0;
+    });
+  }
+  getWaveInformation(
+    wave1: Wave,
+    wave2: Wave,
+    wave3: Wave,
+    wave4: Wave,
+    wave5: Wave | null = null,
+    useLogScale = true,
+    commonInterval: number,
+  ): WaveInfo[] {
     const isWave1Broken = (wave1: Wave, wave4: Wave): boolean => {
       const upTrend = !!(wave1.pStart.price < wave2.pEnd.price);
 
@@ -80,20 +93,20 @@ export class WaveInfoService {
         wave5Validation = p.validateWave5Projection(projectionWave5);
       }
 
-      const projectionTimeWave2 = getWavesTimePercentage(wave1, wave2);
+      const projectionTimeWave2 = p.calculateTimeRetracement(wave1, wave2, commonInterval);
       const wave2TimeValidation = p.validateWave2Time(projectionTimeWave2);
 
-      const projectionTimeWave3 = getWavesTimePercentage(wave1, wave3);
+      const projectionTimeWave3 = p.calculateTimeRetracement(wave1, wave3, commonInterval);
       const wave3TimeValidation = p.validateWave3Time(projectionTimeWave3);
 
-      const projectionTimeWave4 = getWavesTimePercentage(wave2, wave4);
+      const projectionTimeWave4 = p.calculateTimeRetracement(wave2, wave4, commonInterval);
       const wave4TimeValidation =
         projectionTimeWave2 > 100 ? p.validateWave4DeepTime(projectionTimeWave4) : p.validateWave4Time(projectionTimeWave4);
 
       let projectionTimeWave5: number | null = 0;
       let wave5TimeValidation = WaveScore.INVALID;
       if (wave5) {
-        projectionTimeWave5 = getWavesTimePercentage(wave3, wave5);
+        projectionTimeWave5 = p.calculateWave5ProjectionTime(wave1, wave2, wave3, wave4, wave5, commonInterval);
         wave5TimeValidation = p.validateWave5Time(projectionTimeWave5);
       }
 
@@ -177,6 +190,6 @@ export class WaveInfoService {
       wavesInfo.push(waveInfo);
     }
 
-    return wavesInfo;
+    return this.sortWaveInfoArray(wavesInfo);
   }
 }

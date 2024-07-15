@@ -1,33 +1,50 @@
 import { Injectable } from '@nestjs/common';
 import QuickChart from 'quickchart-js';
-import { CandleDto } from 'src/search/dto';
 import { Pivot } from '../class';
+import { Candle } from '../types';
 
 @Injectable()
 export class ChartService {
-  async createCandlestickChart(candles: CandleDto[], pivots: Pivot[], outputFilename: string, useLogScale = true) {
+  async createCandlestickChart(candles: Candle[], pivots: Pivot[], outputFilename: string, useLogScale = true) {
     const chart = new QuickChart();
 
     const markerData = pivots.map((pivot) => ({
-      x: pivot.time,
+      x: new Date(pivot.time).getTime(),
       y: pivot.price,
     }));
 
     const candlestickData = candles.map((candle) => ({
-      x: candle.time,
+      x: new Date(candle.time).getTime(),
       o: candle.open,
       h: candle.high,
       l: candle.low,
       c: candle.close,
     }));
 
-    chart.setWidth(2560);
-    chart.setHeight(1440);
+    const rsiData = candles.map((candle) => ({
+      x: new Date(candle.time).getTime(),
+      y: candle.rsi,
+    }));
+
+    const priceValues = candlestickData.flatMap((d) => [d.o, d.h, d.l, d.c]);
+    const minPrice = Math.min(...priceValues, ...markerData.map((d) => d.y));
+    const maxPrice = Math.max(...priceValues, ...markerData.map((d) => d.y));
 
     chart.setConfig({
-      type: 'ohlc',
+      type: 'bar',
       data: {
         datasets: [
+          {
+            type: 'candlestick',
+            label: 'Candlestick',
+            data: candlestickData,
+            color: {
+              up: '#00ff00',
+              down: '#ff0000',
+              unchanged: '#999999',
+            },
+            yAxisID: 'y',
+          },
           {
             type: 'scatter',
             label: 'Markers',
@@ -36,42 +53,43 @@ export class ChartService {
             backgroundColor: '#f00',
             pointStyle: 'rectRot',
             pointRadius: 5,
-            color: {
-              up: '#0F0',
-              down: '#F00',
-            },
+            yAxisID: 'y',
           },
           {
-            label: 'Candlestick',
-            data: candlestickData,
-            color: {
-              up: '#000',
-              down: '#000',
-              unchanged: '#000',
-            },
+            type: 'line',
+            label: 'RSI',
+            data: rsiData,
+            borderColor: '#00f',
+            fill: false,
+            yAxisID: 'rsi',
           },
         ],
       },
       options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: {
+          padding: {
+            left: 10,
+            right: 10,
+            top: 10,
+            bottom: 10,
+          },
+        },
         scales: {
           x: {
             type: 'time',
-            adapters: {
-              date: {
-                zone: 'UTC',
-              },
-            },
+            position: 'bottom',
             time: {
               unit: 'day',
-              stepSize: 1,
               displayFormats: {
-                day: 'd',
-                month: 'MMM',
-                year: 'Y',
+                day: 'MMM d',
               },
             },
             ticks: {
-              autoSkip: false,
+              source: 'data',
+              autoSkip: true,
+              maxTicksLimit: 20,
             },
             grid: {
               display: false,
@@ -79,26 +97,63 @@ export class ChartService {
           },
           y: {
             type: useLogScale ? 'logarithmic' : 'linear',
+            position: 'left',
             grid: {
-              display: false,
+              drawOnChartArea: true,
             },
+            ticks: {
+              beginAtZero: false,
+            },
+            min: minPrice * 0.95,
+            max: maxPrice * 1.05,
+            weight: 3, // This makes the main chart take up more space
+          },
+
+          rsi: {
+            position: 'right',
+            grid: {
+              drawOnChartArea: false,
+            },
+            min: 0,
+            max: 100,
+            ticks: {
+              stepSize: 20,
+            },
+            weight: 1, // This makes the RSI chart take up less space
           },
         },
         plugins: {
           legend: {
             display: true,
           },
+          zoom: {
+            pan: {
+              enabled: true,
+              mode: 'xy',
+            },
+            zoom: {
+              wheel: {
+                enabled: true,
+              },
+              pinch: {
+                enabled: true,
+              },
+              mode: 'xy',
+            },
+          },
         },
       },
     });
 
-    chart.setVersion('3');
+    chart.setWidth(2560);
+    chart.setHeight(1920);
+    chart.setVersion('4');
 
     try {
       await chart.toFile(outputFilename);
-      //console.log(`Candlestick chart saved as ${outputFilename}`);
+      console.log(`Chart saved as ${outputFilename}`);
     } catch (error) {
-      console.error('Error creating candlestick chart:');
+      console.error('Error creating chart:', error);
     }
   }
 }

@@ -1,4 +1,4 @@
-import { Degree, WaveType } from '../enums';
+import { WaveDegree, WaveType } from '../enums';
 import { MotiveWaveInterface } from '../interfaces/motive-wave.interface';
 import { ClusterWaves } from '../class';
 
@@ -29,12 +29,12 @@ describe('MotiveWaveInterface', () => {
   let motiveWave: MotiveWaveInterface;
 
   beforeEach(() => {
-    motiveWave = new ConcreteMotiveWave(Degree.PRIMARY, WaveType.MOTIVE);
+    motiveWave = new ConcreteMotiveWave(WaveDegree.PRIMARY, WaveType.MOTIVE);
   });
 
   it('should initialize with correct wave type and degree', () => {
     expect(motiveWave._waveType).toBe(WaveType.MOTIVE);
-    expect(motiveWave._degree).toBe(Degree.PRIMARY);
+    expect(motiveWave._degree).toBe(WaveDegree.PRIMARY);
   });
 
   it('should return true when check value is in range', () => {
