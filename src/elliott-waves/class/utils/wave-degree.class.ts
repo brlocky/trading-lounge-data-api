@@ -1,6 +1,6 @@
 import { degreeToString, WaveDegree } from 'src/elliott-waves/enums';
 
-interface WaveDegreeLocal {
+export interface WaveDegreeNode {
   degree: WaveDegree;
   minDays: number;
   maxDays: number;
@@ -12,32 +12,31 @@ export interface CandleTime {
 }
 
 export class WaveDegreeCalculator {
-  private static waveDegrees: WaveDegreeLocal[] = [
-    { degree: WaveDegree.SUPERMILLENNIUM, minDays: 125 * 365, maxDays: Infinity, useLogScale: true },
-    { degree: WaveDegree.MILLENNIUM, minDays: 62.5 * 365, maxDays: 125 * 365, useLogScale: true },
-    { degree: WaveDegree.SUBMILLENNIUM, minDays: 12.5 * 365, maxDays: 62.5 * 365, useLogScale: true },
-    { degree: WaveDegree.GRANDSUPERCYCLE, minDays: 6.25 * 365, maxDays: 12.5 * 365, useLogScale: true },
-    { degree: WaveDegree.SUPERCYCLE, minDays: 3.75 * 365, maxDays: 12.5 * 365, useLogScale: true },
-    { degree: WaveDegree.CYCLE, minDays: 1.25 * 365, maxDays: 2.5 * 365, useLogScale: true },
-    { degree: WaveDegree.PRIMARY, minDays: 45, maxDays: 228, useLogScale: false },
-    { degree: WaveDegree.INTERMEDIATE, minDays: 4, maxDays: 91, useLogScale: false },
-    { degree: WaveDegree.MINOR, minDays: 1, maxDays: 11, useLogScale: false },
-    { degree: WaveDegree.MINUTE, minDays: 0.125, maxDays: 1.75, useLogScale: false },
-    { degree: WaveDegree.MINUETTE, minDays: 0.005, maxDays: 0.375, useLogScale: false },
-    { degree: WaveDegree.SUBMINUETTE, minDays: 0.0001, maxDays: 0.005, useLogScale: false },
-    { degree: WaveDegree.MICRO, minDays: 0.000012, maxDays: 0.0001, useLogScale: false },
-    { degree: WaveDegree.SUBMICRO, minDays: 0.0000012, maxDays: 0.000012, useLogScale: false },
-    { degree: WaveDegree.MINISCULE, minDays: 0, maxDays: 0.0000012, useLogScale: false },
+  private static waveDegrees: WaveDegreeNode[] = [
+    { degree: WaveDegree.SUPERMILLENNIUM, minDays: 365000, maxDays: Infinity, useLogScale: true }, // minDays: ~1000 years, maxDays: Forever
+    { degree: WaveDegree.MILLENNIUM, minDays: 73000, maxDays: 365000, useLogScale: true }, // minDays: ~200 years, maxDays: ~1000 years
+    { degree: WaveDegree.SUBMILLENNIUM, minDays: 18250, maxDays: 73000, useLogScale: true }, // minDays: ~50 years, maxDays: ~200 years
+    { degree: WaveDegree.GRANDSUPERCYCLE, minDays: 7300, maxDays: 18250, useLogScale: true }, // minDays: ~20 years, maxDays: ~50 years
+    { degree: WaveDegree.SUPERCYCLE, minDays: 3650, maxDays: 7300, useLogScale: true }, // minDays: ~10 years, maxDays: ~20 years
+    { degree: WaveDegree.CYCLE, minDays: 365, maxDays: 3650, useLogScale: false }, // minDays: ~1 year, maxDays: ~10 years
+    { degree: WaveDegree.PRIMARY, minDays: 30, maxDays: 365, useLogScale: false }, // minDays: ~1 month, maxDays: ~1 year
+    { degree: WaveDegree.INTERMEDIATE, minDays: 7, maxDays: 30, useLogScale: false }, // minDays: ~1 week, maxDays: ~1 month
+    { degree: WaveDegree.MINOR, minDays: 1, maxDays: 7, useLogScale: false }, // minDays: 1 day, maxDays: ~1 week
+    { degree: WaveDegree.MINUTE, minDays: 0.04, maxDays: 1, useLogScale: false }, // minDays: ~1 hour, maxDays: 1 day
+    { degree: WaveDegree.MINUETTE, minDays: 0.0008, maxDays: 0.04, useLogScale: false }, // minDays: ~1 minute, maxDays: ~1 hour
+    { degree: WaveDegree.SUBMINUETTE, minDays: 0.0001, maxDays: 0.0008, useLogScale: false }, // minDays: ~10 seconds, maxDays: ~1 minute
+    { degree: WaveDegree.MICRO, minDays: 0.00001, maxDays: 0.0001, useLogScale: false }, // minDays: ~1 second, maxDays: ~10 seconds
+    { degree: WaveDegree.SUBMICRO, minDays: 0.000001, maxDays: 0.00001, useLogScale: false }, // minDays: ~0.1 second, maxDays: ~1 second
+    { degree: WaveDegree.MINISCULE, minDays: 0, maxDays: 0.000001, useLogScale: false }, // minDays: 0 seconds, maxDays: ~0.1 second
   ];
 
-  public static calculateWaveDegreeFromCandles(candles: CandleTime[], type: 'full' | 'wave1' = 'full'): WaveDegree {
-    const divider = type === 'full' ? 8 : 64;
+  public static calculateWaveDegreeFromCandles(candles: CandleTime[], type: 'full' | 'wave1' = 'full'): WaveDegreeNode {
     const days = WaveDegreeCalculator.getNumberOfDays(candles);
-    return WaveDegreeCalculator.getWaveDegree(days / divider);
+    return WaveDegreeCalculator.getWaveDegree(days, type);
   }
 
-  public static calculateWaveDegreeFromDays(days: number): WaveDegree {
-    return WaveDegreeCalculator.getWaveDegree(days);
+  public static calculateWaveDegreeFromDays(days: number, type: 'full' | 'wave1' = 'full'): WaveDegreeNode {
+    return WaveDegreeCalculator.getWaveDegree(days, type);
   }
 
   private static getNumberOfDays(candles: CandleTime[]): number {
@@ -50,12 +49,13 @@ export class WaveDegreeCalculator {
     return candles.length * commonInterval;
   }
 
-  private static getWaveDegree(days: number): WaveDegree {
-    const degreeRanges = WaveDegreeCalculator.waveDegrees.reverse();
+  private static getWaveDegree(days: number, type: 'full' | 'wave1'): WaveDegreeNode {
+    const adjustedDays = type === 'wave1' ? days * 8 : days; // Multiply by 8 for wave1 type to represent full cycle
+    const degreeRanges = WaveDegreeCalculator.waveDegrees.slice().reverse();
     for (const degreeRange of degreeRanges) {
-      if (days >= degreeRange.minDays && days <= degreeRange.maxDays) {
+      if (adjustedDays >= degreeRange.minDays && adjustedDays <= degreeRange.maxDays) {
         console.info('found degree:', degreeToString(degreeRange.degree));
-        return degreeRange.degree;
+        return degreeRange;
       }
     }
 
@@ -63,23 +63,25 @@ export class WaveDegreeCalculator {
   }
 
   // Analyze the candles param and return the common interval in Days
-  public static determineCommonInterval(candles: CandleTime[]): number {
+  public static determineCommonInterval(candles: { time: number }[]): number {
     const intervals = (): number[] => {
       const intervals: number[] = [];
       for (let i = 1; i < candles.length; i++) {
-        const interval = (candles[i].time - candles[i - 1].time) / (60 * 60 * 24);
+        const interval = (candles[i].time - candles[i - 1].time) / (60 * 60 * 24); // Convert seconds to days
         intervals.push(interval);
       }
       return intervals;
     };
 
-    const intervalCounts: { [key: number]: number } = {};
+    const intervalCounts: { [key: string]: number } = {};
     for (const interval of intervals()) {
-      if (!intervalCounts[interval]) {
-        intervalCounts[interval] = 0;
+      const roundedInterval = interval.toFixed(6); // Round to six decimal places for better accuracy
+      if (!intervalCounts[roundedInterval]) {
+        intervalCounts[roundedInterval] = 0;
       }
-      intervalCounts[interval]++;
+      intervalCounts[roundedInterval]++;
     }
+
     let commonInterval = 0;
     let maxCount = 0;
     for (const interval in intervalCounts) {
@@ -88,6 +90,6 @@ export class WaveDegreeCalculator {
         commonInterval = parseFloat(interval);
       }
     }
-    return commonInterval;
+    return commonInterval; // The result is in days
   }
 }

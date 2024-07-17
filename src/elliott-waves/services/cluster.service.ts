@@ -43,7 +43,7 @@ export class ClusterService {
       const [p1, p2] = pivots;
       // Calculate Wave degree using wave 1 time.
       const candlesToCalculateDegree = candles.filter((c) => c.time >= pStart.time && c.time <= p2.time);
-      const calculatedDegree = WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesToCalculateDegree, 'wave1');
+      const { degree: calculatedDegree } = WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesToCalculateDegree, 'wave1');
 
       const wave1 = new Wave(WaveName._1, calculatedDegree, pStart, p1);
       const wave2 = new Wave(WaveName._2, calculatedDegree, p1, p2);
@@ -184,7 +184,7 @@ export class ClusterService {
 
           const newWave2ClusterPivot = new ClusterPivot(newWave2Pivot, 'CONFIRMED');
           const candlesToCalculateDegree = candles.filter((c) => c.time >= wave1.pStart.time && c.time <= wave5.pEnd.time);
-          const calculatedDegree = WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesToCalculateDegree, 'wave1');
+          const { degree: calculatedDegree } = WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesToCalculateDegree, 'wave1');
 
           const newWave1 = new Wave(WaveName._1, calculatedDegree, wave1.pStart, wave5.pEnd);
           c.waves.forEach((w) => newWave1.addChidren(w));

@@ -99,12 +99,12 @@ export class WaveCalculationService {
     const retracements = this.candleService.getWavePivotRetracementsByNumberOfWaves(pivots, definition);
 
     const degreeEnum = WaveDegreeCalculator.calculateWaveDegreeFromCandles(candles);
-    const degree = degreeToString(degreeEnum);
+    const degree = degreeToString(degreeEnum.degree);
 
     return {
       degree: {
         title: degree,
-        value: degreeEnum,
+        value: degreeEnum.degree,
       },
       pivots,
       retracements,

@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { Fibonacci } from '../class/utils/fibonacci.class';
-import { WaveScore } from '../enums';
+import { WaveDegree, WaveScore } from '../enums';
 import { MotiveInterface } from '../interfaces/motive.interface';
 import { WaveInfo, WavesConfig } from '../types';
 import { MotiveExtended1, MotiveExtended3, MotiveExtended5, MotiveContractingDiagonal, MotiveExpandingDiagonal } from '../waves';
-import { Wave } from '../class';
+import { Pivot, Wave } from '../class';
+import { WaveDegreeCalculator, WaveDegreeNode } from '../class/utils';
 
 @Injectable()
 export class WaveInfoService {
@@ -132,9 +133,19 @@ export class WaveInfoService {
         wave4TimeValidation !== WaveScore.INVALID &&
         (!wave5 || wave5TimeValidation !== WaveScore.INVALID);
 
+      const expectedWaveDegree = wave5
+        ? this.getWaveDegreeInformation(wave1.pStart, wave5.pEnd)
+        : {
+            degree: WaveDegree.MINISCULE,
+            minDays: 0,
+            maxDays: 0,
+            useLogScale: false,
+          };
+
       const isStructureValid = wave5 ? p.validateWaveStructure(wave1, wave2, wave3, wave4, wave5, useLogScale) : false;
       const waveInfo: WaveInfo = {
         waveType: p.getWaveType(),
+        degree: expectedWaveDegree,
         score: {
           wave: waveScore,
           time: timeScore,
@@ -191,5 +202,13 @@ export class WaveInfoService {
     }
 
     return this.sortWaveInfoArray(wavesInfo);
+  }
+
+  getWaveDegreeInformation(pStart: Pivot, pEnd: Pivot): WaveDegreeNode {
+    const secondsInDay = 86400; // Number of seconds in a day
+    const durationInSeconds = pEnd.time - pStart.time;
+    const durationInDays = durationInSeconds / secondsInDay;
+
+    return WaveDegreeCalculator.calculateWaveDegreeFromDays(durationInDays);
   }
 }

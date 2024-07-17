@@ -25,7 +25,7 @@ export class ElliottWavesService {
     const pivots = this.candleService.getZigZag(candles);
     const retracements = this.candleService.getWavePivotRetracementsByNumberOfWaves(pivots, definition);
 
-    const degreeEnum = WaveDegreeCalculator.calculateWaveDegreeFromCandles(candles);
+    const { degree: degreeEnum } = WaveDegreeCalculator.calculateWaveDegreeFromCandles(candles);
     const degree = degreeToString(degreeEnum);
 
     return {
