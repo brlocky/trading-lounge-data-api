@@ -156,5 +156,5 @@ export enum WaveScore {
   'WORSTCASESCENARIO' = 1,
   'WORK' = 2,
   'GOOD' = 3,
-  'PERFECT' = 4,
+  'PERFECT' = 5,
 }
