@@ -2,8 +2,9 @@ import { degreeToString, WaveDegree } from 'src/elliott-waves/enums';
 
 interface WaveDegreeLocal {
   degree: WaveDegree;
-  minCandles: number;
-  maxCandles: number;
+  minDays: number;
+  maxDays: number;
+  useLogScale: boolean;
 }
 
 export interface CandleTime {
@@ -12,23 +13,27 @@ export interface CandleTime {
 
 export class WaveDegreeCalculator {
   private static waveDegrees: WaveDegreeLocal[] = [
-    { degree: WaveDegree.SUPERMILLENNIUM, minCandles: 2000 * 365, maxCandles: Infinity },
-    { degree: WaveDegree.MILLENNIUM, minCandles: 300 * 365, maxCandles: 2000 * 365 },
-    { degree: WaveDegree.GRANDSUPERCYCLE, minCandles: 40 * 365, maxCandles: 300 * 365 },
-    { degree: WaveDegree.SUPERCYCLE, minCandles: 8 * 365, maxCandles: 40 * 365 },
-    { degree: WaveDegree.CYCLE, minCandles: 2 * 365, maxCandles: 8 * 365 },
-    { degree: WaveDegree.PRIMARY, minCandles: 3 * 30, maxCandles: 2 * 365 },
-    { degree: WaveDegree.INTERMEDIATE, minCandles: 7 * 7, maxCandles: 3 * 30 },
-    { degree: WaveDegree.MINOR, minCandles: 1 * 7, maxCandles: 7 * 7 },
-    { degree: WaveDegree.MINUTE, minCandles: 1, maxCandles: 1 * 7 },
-    { degree: WaveDegree.MINUETTE, minCandles: 1 / 24, maxCandles: 0.99 },
-    { degree: WaveDegree.SUBMINUETTE, minCandles: 0, maxCandles: 1 / 24 },
+    { degree: WaveDegree.SUPERMILLENNIUM, minDays: 125 * 365, maxDays: Infinity, useLogScale: true },
+    { degree: WaveDegree.MILLENNIUM, minDays: 62.5 * 365, maxDays: 125 * 365, useLogScale: true },
+    { degree: WaveDegree.SUBMILLENNIUM, minDays: 12.5 * 365, maxDays: 62.5 * 365, useLogScale: true },
+    { degree: WaveDegree.GRANDSUPERCYCLE, minDays: 6.25 * 365, maxDays: 12.5 * 365, useLogScale: true },
+    { degree: WaveDegree.SUPERCYCLE, minDays: 3.75 * 365, maxDays: 12.5 * 365, useLogScale: true },
+    { degree: WaveDegree.CYCLE, minDays: 1.25 * 365, maxDays: 2.5 * 365, useLogScale: true },
+    { degree: WaveDegree.PRIMARY, minDays: 45, maxDays: 228, useLogScale: false },
+    { degree: WaveDegree.INTERMEDIATE, minDays: 4, maxDays: 91, useLogScale: false },
+    { degree: WaveDegree.MINOR, minDays: 1, maxDays: 11, useLogScale: false },
+    { degree: WaveDegree.MINUTE, minDays: 0.125, maxDays: 1.75, useLogScale: false },
+    { degree: WaveDegree.MINUETTE, minDays: 0.005, maxDays: 0.375, useLogScale: false },
+    { degree: WaveDegree.SUBMINUETTE, minDays: 0.0001, maxDays: 0.005, useLogScale: false },
+    { degree: WaveDegree.MICRO, minDays: 0.000012, maxDays: 0.0001, useLogScale: false },
+    { degree: WaveDegree.SUBMICRO, minDays: 0.0000012, maxDays: 0.000012, useLogScale: false },
+    { degree: WaveDegree.MINISCULE, minDays: 0, maxDays: 0.0000012, useLogScale: false },
   ];
 
   public static calculateWaveDegreeFromCandles(candles: CandleTime[], type: 'full' | 'wave1' = 'full'): WaveDegree {
-    const multiplier = type === 'full' ? 1 : 3;
+    const divider = type === 'full' ? 8 : 64;
     const days = WaveDegreeCalculator.getNumberOfDays(candles);
-    return WaveDegreeCalculator.getWaveDegree(days * multiplier);
+    return WaveDegreeCalculator.getWaveDegree(days / divider);
   }
 
   public static calculateWaveDegreeFromDays(days: number): WaveDegree {
@@ -48,7 +53,7 @@ export class WaveDegreeCalculator {
   private static getWaveDegree(days: number): WaveDegree {
     const degreeRanges = WaveDegreeCalculator.waveDegrees.reverse();
     for (const degreeRange of degreeRanges) {
-      if (days >= degreeRange.minCandles && days <= degreeRange.maxCandles) {
+      if (days >= degreeRange.minDays && days <= degreeRange.maxDays) {
         console.info('found degree:', degreeToString(degreeRange.degree));
         return degreeRange.degree;
       }
