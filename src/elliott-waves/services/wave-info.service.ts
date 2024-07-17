@@ -38,15 +38,15 @@ export class WaveInfoService {
 
   private sortWaveInfoArray(array: WaveInfo[]) {
     return array.sort((a, b) => {
-      // Sorting by isValid (wave, time, structure)
+      // Sorting by isValid (structure, wave, time)
+      if (a.isValid.structure !== b.isValid.structure) return a.isValid.structure ? -1 : 1;
       if (a.isValid.wave !== b.isValid.wave) return a.isValid.wave ? -1 : 1;
       if (a.isValid.time !== b.isValid.time) return a.isValid.time ? -1 : 1;
-      if (a.isValid.structure !== b.isValid.structure) return a.isValid.structure ? -1 : 1;
 
-      // Sorting by score (wave, time, structure)
+      // Sorting by score (structure, wave, time)
+      if (a.score.structure !== b.score.structure) return b.score.structure - a.score.structure;
       if (a.score.wave !== b.score.wave) return b.score.wave - a.score.wave;
       if (a.score.time !== b.score.time) return b.score.time - a.score.time;
-      if (a.score.structure !== b.score.structure) return b.score.structure - a.score.structure;
 
       return 0;
     });

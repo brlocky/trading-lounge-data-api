@@ -119,6 +119,7 @@ export class MotiveExtended3 extends MotiveInterface {
       { range: [30.9, 38.2], score: WaveScore.PERFECT },
       { range: [38.2, 44.1], score: WaveScore.GOOD },
       { range: [44.1, 50], score: WaveScore.WORK },
+      { range: [50, 61.8], score: WaveScore.WORSTCASESCENARIO }, // we can use the candles to see the close and check if was a wick test of a close.
     ];
   }
 
