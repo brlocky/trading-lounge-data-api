@@ -62,6 +62,11 @@ export interface WavesConfig {
   waveConfigs: WaveConfig[];
 }
 
+export interface GeneralConfig {
+  waves: WavesConfig;
+  degree: WaveDegreeNode[];
+}
+
 export type PivotStatus = 'CONFIRMED' | 'WAITING' | 'PROJECTED';
 
 export interface CandlesInfo {

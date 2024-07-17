@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, UseInterceptors } from '@nestjs/common';
 import { ElliottWavesService } from './elliott-waves.service';
-import { Candle, WaveInfo, WavesConfig } from './types';
+import { Candle, GeneralConfig, WaveInfo } from './types';
 import {
   TransformCandleInterceptor,
   WaveCountClusterRequest,
@@ -9,6 +9,7 @@ import {
   SubWaveCountClusterRequest,
   WaveInfoRequest,
 } from './dto';
+import { NoCache } from 'src/decorators/no-cache.decorator';
 
 @Controller('elliott-waves')
 @UseInterceptors(TransformCandleInterceptor)
@@ -41,7 +42,8 @@ export class ElliottWavesController {
   }
 
   @Get('waves-config')
-  async getWavesConfig(): Promise<WavesConfig> {
-    return this.service.getWavesConfig();
+  @NoCache()
+  async getWavesConfig(): Promise<GeneralConfig> {
+    return this.service.getGeneralConfig();
   }
 }

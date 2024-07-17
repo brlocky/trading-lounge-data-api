@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Candle, CandlesInfo, WaveInfo, WavesConfig } from './types';
+import { Candle, CandlesInfo, GeneralConfig, WaveInfo, WavesConfig } from './types';
 import { CandleService, WaveCalculationService, WaveInfoService } from './services';
 import { convertPivotsToWaves, WaveDegreeCalculator } from './class/utils';
 import { WaveDegree, degreeToString } from './enums';
@@ -45,7 +45,10 @@ export class ElliottWavesService {
     return this.waveInfoService.getWaveInformation(wave1, wave2, wave3, wave4, wave5, useLogScale, commonInterval);
   }
 
-  getWavesConfig(): WavesConfig {
-    return this.waveInfoService.getWavesConfig();
+  getGeneralConfig(): GeneralConfig {
+    return {
+      waves: this.waveInfoService.getWavesConfig(),
+      degree: WaveDegreeCalculator.getConfig(),
+    };
   }
 }
