@@ -51,15 +51,17 @@ export class ClusterService {
       clusters.push(newWaveCluster);
     });
 
-    const { completed, incompleted } = await this.processClusterGroups(clusters, candles, pivots, loop, useLogScale);
+    const { completed, incompleted } = await this.processClusterGroups(clusters, candles, pivots, loop);
 
     // Apply new Degree
     const commonInterval = WaveDegreeCalculator.determineCommonInterval(candles);
-    const scoredClusters = completed.map((c) => {
+    const scoredClusters = completed.map((c: ClusterWaves) => {
       const waveInfoArray = this.waveInfoService.getWaveClusterInformation(c, useLogScale, commonInterval);
       if (waveInfoArray && waveInfoArray.length > 0) {
         const firstWaveInfo = waveInfoArray[0];
-        return { cluster: { ...c, degree: firstWaveInfo.degree }, scoreTotal: firstWaveInfo.score.total };
+        c.changeDegree(firstWaveInfo.degree.degree);
+        // Update Expected Degree
+        return { cluster: c, scoreTotal: firstWaveInfo.score.total };
       } else {
         return { cluster: c, scoreTotal: -Infinity }; // Use -Infinity to ensure clusters with undefined score go to the end
       }
@@ -149,7 +151,6 @@ export class ClusterService {
     candles: Candle[],
     pivots: Pivot[],
     loop: number = 0,
-    useLogScale: boolean,
   ): Promise<{ completed: ClusterWaves[]; incompleted: ClusterWaves[] }> {
     let currentCompletedCluster = clusters;
     let currentIncompletedCluster: ClusterWaves[] = [];
@@ -158,6 +159,8 @@ export class ClusterService {
 
     for (let i = 0; i < loop; i++) {
       for (const cluster of currentCompletedCluster) {
+        WaveDegreeCalculator.getConfig;
+        const { useLogScale } = WaveDegreeCalculator.getDegreeConfig(cluster.degree);
         const { completed, incompleted } = await this.completeWaveCluster(cluster, candles, pivots, useLogScale);
 
         // Search for perfect cluster amount grouped Wave 4

@@ -1,26 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { AIService } from 'src/ai/ai.service';
+import { ClusterWaves, Pivot } from '../class';
 import { WaveDegreeCalculator } from '../class/utils';
 import { Fibonacci } from '../class/utils/fibonacci.class';
-import { MotiveExtendedWave3 } from '../class/wave/motive/motive-extended-wave-3.class';
 import { WaveDegree, degreeToString } from '../enums';
-import { MotiveWaveInterface } from '../interfaces/motive-wave.interface';
 import { Candle, CandlesInfo } from '../types';
 import { CandleService } from './candle.service';
-import { ChartService } from './chart.service';
 import { ClusterService } from './cluster.service';
-import { ClusterWaves, ElliottWaveAnalyzer, Pivot } from '../class';
-import { WaveInfoService } from './wave-info.service';
 
 @Injectable()
 export class WaveCalculationService {
   protected fibonacci: Fibonacci;
   constructor(
     private candleService: CandleService,
-    private chartService: ChartService,
     private clusterService: ClusterService,
-    private waveInfoService: WaveInfoService,
-    private aiService: AIService,
   ) {
     this.fibonacci = new Fibonacci();
   }
@@ -29,35 +21,6 @@ export class WaveCalculationService {
     const { pivots } = this.getPivotsInfo(candles, definition);
 
     return this.clusterService.findMajorStructure(pivots, candles, definition, 0, logScale);
-  }
-
-  async getSubWaveCounts4(
-    candles: Candle[],
-    degree: WaveDegree,
-    startPivot: Pivot,
-    endPivot: Pivot,
-    logScale: boolean,
-  ): Promise<ClusterWaves[]> {
-    const analyzer = new ElliottWaveAnalyzer(this.candleService, this.waveInfoService, this.chartService);
-    const waves = analyzer.analyzeCandles(candles);
-
-    console.log(waves);
-
-    return [];
-
-    /*     const isTargetInsidePivots = !!pivots.find(
-      (p) => endPivot && p.time === endPivot.time && p.price === endPivot.price && p.type === endPivot.type,
-    );
-
-    const filteredCluster = isTargetInsidePivots
-      ? clusters.filter((w) => {
-          if (w.waves.length !== 5) return false;
-          const lastWave = w.waves[w.waves.length - 1];
-
-          if (lastWave.pEnd.price !== endPivot.price || lastWave.pEnd.time !== endPivot.time) return false;
-          return true;
-        })
-      : clusters; */
   }
 
   async getSubWaveCounts(
@@ -106,14 +69,5 @@ export class WaveCalculationService {
       pivots,
       retracements,
     };
-  }
-
-  private getImpulsePatterns(degree: WaveDegree): MotiveWaveInterface[] {
-    return [
-      new MotiveExtendedWave3(degree),
-      /*       new MotiveExtendedWave1(candles, pivots, fibonacci, degree),
-      new MotiveContractingDiagonal(candles, pivots, fibonacci, degree),
-      new MotiveExpandingDiagonal(candles, pivots, fibonacci, degree), */
-    ];
   }
 }

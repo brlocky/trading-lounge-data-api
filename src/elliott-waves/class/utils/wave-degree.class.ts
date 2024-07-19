@@ -34,6 +34,13 @@ export class WaveDegreeCalculator {
     return this.waveDegrees;
   }
 
+  public static getDegreeConfig(degree: WaveDegree): WaveDegreeNode {
+    const config = this.waveDegrees.find((d) => d.degree === degree);
+
+    if (!config) throw new Error(`Could not find Wave Degree config ${degree}`);
+    return config;
+  }
+
   public static calculateWaveDegreeFromCandles(candles: CandleTime[], type: 'full' | 'wave1' = 'full'): WaveDegreeNode {
     const days = WaveDegreeCalculator.getNumberOfDays(candles);
     return WaveDegreeCalculator.getWaveDegree(days, type);

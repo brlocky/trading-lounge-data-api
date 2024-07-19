@@ -25,7 +25,8 @@ export class ClusterWaves {
   }
 
   public duplicate(): ClusterWaves {
-    return new ClusterWaves([...this.waves], this.waveType, this.degree);
+    const wavesCopy = this.waves.map((w) => w.copy());
+    return new ClusterWaves(wavesCopy, this.waveType, this.degree);
   }
 
   @ApiProperty()
