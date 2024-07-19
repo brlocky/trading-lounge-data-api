@@ -4,7 +4,7 @@ import { WaveDegree, WaveScore } from '../enums';
 import { MotiveInterface } from '../interfaces/motive.interface';
 import { WaveInfo, WavesConfig } from '../types';
 import { MotiveExtended1, MotiveExtended3, MotiveExtended5, MotiveContractingDiagonal, MotiveExpandingDiagonal } from '../waves';
-import { Pivot, Wave } from '../class';
+import { ClusterWaves, Pivot, Wave } from '../class';
 import { WaveDegreeCalculator, WaveDegreeNode } from '../class/utils';
 
 @Injectable()
@@ -45,13 +45,18 @@ export class WaveInfoService {
       if (a.isValid.time !== b.isValid.time) return a.isValid.time ? -1 : 1;
 
       // Sorting by score (structure, wave, time)
-      if (a.score.structure !== b.score.structure) return b.score.structure - a.score.structure;
-      if (a.score.wave !== b.score.wave) return b.score.wave - a.score.wave;
+      if (a.score.total !== b.score.total) return b.score.total - a.score.total;
       if (a.score.time !== b.score.time) return b.score.time - a.score.time;
 
       return 0;
     });
   }
+
+  getWaveClusterInformation(cluster: ClusterWaves, useLogScale = true, commonInterval: number): WaveInfo[] {
+    const [wave1, wave2, wave3, wave4, wave5] = cluster.waves;
+    return this.getWaveInformation(wave1, wave2, wave3, wave4, wave5, useLogScale, commonInterval);
+  }
+
   getWaveInformation(
     wave1: Wave,
     wave2: Wave,
@@ -120,6 +125,9 @@ export class WaveInfoService {
         ? (wave2TimeValidation + wave3TimeValidation + wave4TimeValidation + wave5TimeValidation) / 4
         : (wave2TimeValidation + wave3TimeValidation + wave4TimeValidation) / 3;
 
+      const isStructureValid = wave5 ? p.validateWaveStructure(wave1, wave2, wave3, wave4, wave5, useLogScale) : false;
+
+      const structureScore = isStructureValid ? WaveScore.PERFECT : WaveScore.INVALID;
       // Determine validity
       const isWaveValid =
         wave2Validation !== WaveScore.INVALID &&
@@ -142,14 +150,14 @@ export class WaveInfoService {
             useLogScale: false,
           };
 
-      const isStructureValid = wave5 ? p.validateWaveStructure(wave1, wave2, wave3, wave4, wave5, useLogScale) : false;
       const waveInfo: WaveInfo = {
         waveType: p.getWaveType(),
         degree: expectedWaveDegree,
         score: {
+          total: waveScore + timeScore + structureScore,
           wave: waveScore,
           time: timeScore,
-          structure: isStructureValid ? WaveScore.PERFECT : WaveScore.INVALID,
+          structure: structureScore,
         },
         isValid: {
           wave: isWaveValid,

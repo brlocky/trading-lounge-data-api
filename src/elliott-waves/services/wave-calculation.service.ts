@@ -88,9 +88,6 @@ export class WaveCalculationService {
         })
       : waveClusters;
 
-    // Apply new Degree
-    filteredCluster.map((c) => c.changeDegree(newDegree));
-
     return new Promise((r) => r(filteredCluster));
   }
 

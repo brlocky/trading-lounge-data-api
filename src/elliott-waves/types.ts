@@ -22,6 +22,7 @@ export interface WaveInfo {
   waveType: WaveType;
   degree: WaveDegreeNode;
   score: {
+    total: number;
     wave: number;
     time: number;
     structure: number;

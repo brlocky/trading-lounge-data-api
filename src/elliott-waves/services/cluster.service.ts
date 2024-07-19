@@ -53,7 +53,22 @@ export class ClusterService {
 
     const { completed, incompleted } = await this.processClusterGroups(clusters, candles, pivots, loop, useLogScale);
 
-    return [...completed, ...incompleted];
+    // Apply new Degree
+    const commonInterval = WaveDegreeCalculator.determineCommonInterval(candles);
+    const scoredClusters = completed.map((c) => {
+      const waveInfoArray = this.waveInfoService.getWaveClusterInformation(c, useLogScale, commonInterval);
+      if (waveInfoArray && waveInfoArray.length > 0) {
+        const firstWaveInfo = waveInfoArray[0];
+        return { cluster: { ...c, degree: firstWaveInfo.degree }, scoreTotal: firstWaveInfo.score.total };
+      } else {
+        return { cluster: c, scoreTotal: -Infinity }; // Use -Infinity to ensure clusters with undefined score go to the end
+      }
+    });
+    const sortedFilteredClusters = scoredClusters
+      .sort((a, b) => b.scoreTotal - a.scoreTotal)
+      .map((scoredCluster) => scoredCluster.cluster) as ClusterWaves[];
+
+    return [...sortedFilteredClusters, ...incompleted];
   }
 
   async findSubStructure(
