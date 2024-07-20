@@ -143,7 +143,7 @@ export const calculateAngle = (pivot1: { price: number; time: number }, pivot2: 
   return Math.abs(angleInDegrees);
 };
 
-export const convertPivotsToWaves = (pivots: Pivot[]): Wave[] => {
+export const convertPivotsToWaves = (pivots: Pivot[], degree: WaveDegree): Wave[] => {
   let waveName = WaveName._1;
   const waves: Wave[] = [];
   if (pivots.length !== 6) {
@@ -153,7 +153,7 @@ export const convertPivotsToWaves = (pivots: Pivot[]): Wave[] => {
   for (let i = 0; i < pivots.length - 1; i++) {
     const p1 = pivots[i];
     const p2 = pivots[i + 1];
-    const wave = new Wave(waveName, WaveDegree.SUPERMILLENNIUM, p1, p2);
+    const wave = new Wave(waveName, degree, p1, p2);
     waves.push(wave);
     waveName++;
   }

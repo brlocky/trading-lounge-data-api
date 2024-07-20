@@ -1,11 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { ClusterWaves, Pivot } from '../class';
+import { ClusterWaves, ElliottWaveAnalyzer, Pivot } from '../class';
 import { WaveDegreeCalculator } from '../class/utils';
 import { Fibonacci } from '../class/utils/fibonacci.class';
 import { WaveDegree, degreeToString } from '../enums';
 import { Candle, CandlesInfo } from '../types';
 import { CandleService } from './candle.service';
+import { ChartService } from './chart.service';
 import { ClusterService } from './cluster.service';
+import { WaveInfoService } from './wave-info.service';
 
 @Injectable()
 export class WaveCalculationService {
@@ -13,6 +15,8 @@ export class WaveCalculationService {
   constructor(
     private candleService: CandleService,
     private clusterService: ClusterService,
+    private waveInfoService: WaveInfoService,
+    private chartService: ChartService,
   ) {
     this.fibonacci = new Fibonacci();
   }
@@ -20,7 +24,12 @@ export class WaveCalculationService {
   async getWaveCounts(candles: Candle[], degree: WaveDegree, logScale: boolean, definition: number): Promise<ClusterWaves[]> {
     const { pivots } = this.getPivotsInfo(candles, definition);
 
-    return this.clusterService.findMajorStructure(pivots, candles, definition, 0, logScale);
+    const analyzer = new ElliottWaveAnalyzer(this.candleService, this.waveInfoService, this.chartService);
+
+    analyzer.analyzeCandles(candles, degree);
+
+
+    return this.clusterService.findMajorStructure(pivots, candles, definition, 5, logScale);
   }
 
   async getSubWaveCounts(

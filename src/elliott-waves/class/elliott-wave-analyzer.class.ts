@@ -37,11 +37,11 @@ export class ElliottWaveAnalyzer {
     this.windowSize = 10; // Default value, can be adjusted
   }
 
-  analyzeCandles(candles: Candle[]): WaveSequence[] {
+  analyzeCandles(candles: Candle[], degree: WaveDegree): WaveSequence[] {
     this.candles = candles;
     this.pivots = this.candleService.getZigZag(this.candles);
 
-    this.chartService.createCandlestickChart(candles, this.pivots, 'z_findsub.jpg');
+    this.chartService.createCandlestickChart(candles, this.pivots, 'z_ElliottWaveAnalyzer_analyzeCandles.jpg');
 
     return this.analyzeWaves();
   }

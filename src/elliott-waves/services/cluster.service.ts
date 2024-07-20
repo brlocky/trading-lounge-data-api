@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ClusterPivot, ClusterWaves, ElliottWaveAnalyzer, Pivot, Wave } from '../class';
+import { ClusterPivot, ClusterWaves, Pivot, Wave } from '../class';
 import { getLLBeforeBreak, groupClustersByWaves, WaveDegreeCalculator } from '../class/utils';
 import { Fibonacci } from '../class/utils/fibonacci.class';
 import { Trend, WaveDegree, WaveName, WaveType } from '../enums';
@@ -159,7 +159,6 @@ export class ClusterService {
 
     for (let i = 0; i < loop; i++) {
       for (const cluster of currentCompletedCluster) {
-        WaveDegreeCalculator.getConfig;
         const { useLogScale } = WaveDegreeCalculator.getDegreeConfig(cluster.degree);
         const { completed, incompleted } = await this.completeWaveCluster(cluster, candles, pivots, useLogScale);
 
@@ -219,6 +218,7 @@ export class ClusterService {
     let finalIncompleted: ClusterWaves[] = [];
 
     for (const cluster of currentCompletedCluster) {
+      const { useLogScale } = WaveDegreeCalculator.getDegreeConfig(cluster.degree);
       const { completed, incompleted } = await this.completeWaveCluster(cluster, candles, pivots, useLogScale);
 
       const groupedByWave4 = groupClustersByWaves(completed, 4);

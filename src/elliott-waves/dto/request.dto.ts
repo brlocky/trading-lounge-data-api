@@ -37,7 +37,10 @@ export class SubWaveCountClusterRequest extends BaseRequest {
   endPivot: InputPivot;
 }
 
-export class WaveInfoRequest extends BaseRequest {
+export class WaveInfoRequest {
+  @ApiProperty()
+  candles: CandleDto[] | Candle[];
+
   @ApiProperty()
   pivots: InputPivot[];
 }
