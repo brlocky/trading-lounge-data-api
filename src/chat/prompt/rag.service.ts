@@ -34,20 +34,20 @@ export class RAGService {
   async loadRagData(tickerInfo: AITickerInfo): Promise<RagData[] | null> {
     const { ticker, interval } = tickerInfo;
     try {
-      const dailyInfo = await this.getPivotsInfo(ticker, 'D');
+      const dailyInfo = await this.getPivotsInfo(ticker, 'W', 13);
 
       if (!dailyInfo) return null;
 
       const ragData: RagData[] = [];
-      const dailyRagData = this.prepareRagData(ticker, 'D', dailyInfo.degree, dailyInfo.retracements);
+      const dailyRagData = this.prepareRagData(ticker, 'W', dailyInfo.degree, dailyInfo.retracements);
       ragData.push(dailyRagData);
       if (interval === 'D') {
         return ragData;
       }
 
-      const intradayInfo = await this.getPivotsInfo(ticker, '1h', 50);
+      const intradayInfo = await this.getPivotsInfo(ticker, '4h', 13);
       if (!intradayInfo) return ragData;
-      const intradayRagData = this.prepareRagData(ticker, '1h', intradayInfo.degree, intradayInfo.retracements);
+      const intradayRagData = this.prepareRagData(ticker, '4h', intradayInfo.degree, intradayInfo.retracements);
       ragData.push(intradayRagData);
 
       return ragData;
@@ -89,7 +89,7 @@ export class RAGService {
       index: r.candleIndex,
       type: r.type === 1 ? 'H' : 'L',
       price: r.price,
-      date: moment(new Date(r.time * 1000)).toString(),
+      date: moment(new Date(r.time * 1000)).format('YYYY-MM-DD HH:mm'),
     }));
 
     const lastPivot = retracements[retracements.length - 1];
@@ -97,7 +97,7 @@ export class RAGService {
       degree,
       interval,
       symbol: ticker,
-      date: moment(new Date(lastPivot.time * 1000)).toString(),
+      date: moment(new Date(lastPivot.time * 1000)).format('YYYY-MM-DD HH:mm'),
       price: lastPivot.price,
       pivots,
     };
