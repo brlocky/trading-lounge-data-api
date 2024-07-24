@@ -1,0 +1,95 @@
+[33mbaf3867[m[33m ([m[1;36mHEAD[m[33m)[m HEAD@{0}: reset: moving to HEAD~1
+[33m6f74f87[m HEAD@{1}: checkout: moving from main to 6f74f87798b727544469bcdf8a74c1c450b14529
+[33m8106266[m[33m ([m[1;32mmain[m[33m)[m HEAD@{2}: commit: s
+[33m6f74f87[m HEAD@{3}: commit: AI improvemtns
+[33mbaf3867[m[33m ([m[1;36mHEAD[m[33m)[m HEAD@{4}: commit: Fix - Rag data was too long
+[33m08300ed[m[33m ([m[1;31morigin/main[m[33m)[m HEAD@{5}: commit: d
+[33mf0e2464[m HEAD@{6}: commit: LogScale Use Degree from detected waves to
+[33mcc8be02[m HEAD@{7}: commit: Sort all Counts before return
+[33m5f1e53d[m HEAD@{8}: commit: Config - Add degrees information
+[33mf3603df[m HEAD@{9}: commit: better degrees
+[33m87ce79f[m HEAD@{10}: commit: mew degrww
+[33m994ed45[m HEAD@{11}: commit: fix Score
+[33md85aaef[m HEAD@{12}: commit: Fix -sorting
+[33m3a39366[m HEAD@{13}: commit: Fix degree on subcount
+[33m4c38e68[m HEAD@{14}: commit: j
+[33mac17652[m HEAD@{15}: commit: rr
+[33me26f3ab[m HEAD@{16}: commit: nn
+[33mde5d55c[m HEAD@{17}: commit: asd
+[33m7824d0d[m HEAD@{18}: commit: Better count
+[33mddb356a[m HEAD@{19}: commit: s
+[33mcb469da[m HEAD@{20}: commit: go
+[33m15f7624[m HEAD@{21}: commit: GO
+[33m3ea7080[m HEAD@{22}: commit: WIP
+[33mcd630da[m HEAD@{23}: commit: search pagination
+[33m6bb4ad8[m HEAD@{24}: commit: wip
+[33mf1b2ce8[m HEAD@{25}: commit: Quotes - add candle information
+[33m92e393f[m HEAD@{26}: commit: AI - Rag improvement to include intraday data
+[33m6547ee9[m HEAD@{27}: commit: New Search
+[33m280c918[m HEAD@{28}: commit: Fix Candles
+[33m2fa1a22[m HEAD@{29}: commit: Cleaner code
+[33m0c2cb78[m HEAD@{30}: commit: API - new endpoint to for Quotes
+[33mff26df5[m HEAD@{31}: commit: AI - cleanner approach
+[33m5bc3c5b[m HEAD@{32}: commit: Chat - improve ticker detection
+[33ma632f42[m HEAD@{33}: commit: Fix Typo
+[33mb38edd1[m HEAD@{34}: commit: Add Limit to candles
+[33mbbc6ffc[m HEAD@{35}: commit: Fix - issue where setting an invalid symbol would break the app load
+[33m6110ec2[m HEAD@{36}: commit: llama3 70b
+[33mdc1b6c8[m HEAD@{37}: commit: look good
+[33m6175deb[m HEAD@{38}: commit: Fix date
+[33m3e09d3d[m HEAD@{39}: commit: Fix crash with wrong symbol
+[33m6b4ad65[m HEAD@{40}: commit: Rag Live data
+[33me268c5e[m HEAD@{41}: commit: Alphavantage add support to other time frames
+[33mde6b747[m HEAD@{42}: commit: new api
+[33m75a8184[m HEAD@{43}: commit: Add Wave Extended wave 1
+[33m0856314[m HEAD@{44}: commit: use wave 3 no wave 5 extend for now
+[33m67bf74e[m HEAD@{45}: commit: allow deep wave 4 expecting shallow wave 2
+[33mec2c766[m HEAD@{46}: commit: Fix TimeProjections
+[33m78967a8[m HEAD@{47}: commit: gic pyimr
+[33md5a3c39[m HEAD@{48}: commit: add comments
+[33m4d3e07f[m HEAD@{49}: commit: fix time for wave 3
+[33m79a0b59[m HEAD@{50}: commit: io
+[33mc3cfd1a[m HEAD@{51}: commit: wave 3 projections tweaks
+[33m22be244[m HEAD@{52}: commit: same
+[33m2615c74[m HEAD@{53}: commit: Fix Sub Counts
+[33m510eca0[m HEAD@{54}: commit: yes
+[33me48a4e9[m HEAD@{55}: commit: j
+[33m6a5d30d[m HEAD@{56}: commit: WIP
+[33m4d92169[m HEAD@{57}: commit: Better than the other
+[33m3e81515[m HEAD@{58}: commit: Cache + updated Chat API
+[33m93199b8[m HEAD@{59}: commit: SSE Endpoint
+[33m1cfa1ed[m HEAD@{60}: commit: update system_prompt
+[33m574e798[m HEAD@{61}: commit: short
+[33m490e76a[m HEAD@{62}: commit: snidff
+[33m2cc5106[m HEAD@{63}: commit: fex
+[33m537db65[m HEAD@{64}: commit: force push
+[33ma8e32c6[m HEAD@{65}: commit: Chat Controller
+[33m2681b9c[m HEAD@{66}: commit: Test CICD gcloud
+[33m895b1df[m HEAD@{67}: commit: gcloud
+[33m4282f89[m HEAD@{68}: commit: test fix server start
+[33m9c0d855[m HEAD@{69}: commit: test push
+[33m18e7a12[m HEAD@{70}: commit: Change Port
+[33mda032c2[m HEAD@{71}: commit: test agian from deploy
+[33m306f6d7[m HEAD@{72}: commit: Vercel - test config
+[33mf7816f7[m HEAD@{73}: commit: Test vercel deploy
+[33m660ef9e[m HEAD@{74}: commit: Fix W and M aggregator
+[33m0f83a57[m HEAD@{75}: commit: Aggregate by start of week and month
+[33m9af86a4[m HEAD@{76}: commit: Use Daily to show Week and Montly
+[33mdfac7b4[m HEAD@{77}: commit: Fix Load more - remove duplicated times
+[33mf6b9c17[m HEAD@{78}: commit: Fix - Load more - remove candles greather then date filter
+[33m331dcad[m HEAD@{79}: commit: Fix - We need to have a month to ensure pagination to work for the previous month
+[33mc792473[m HEAD@{80}: commit: Pagination - only allow 'to' parameter
+[33m930c12d[m HEAD@{81}: commit: Adjusted close
+[33ma21e55d[m HEAD@{82}: commit: DTO - use numbers instead of strings for the prices
+[33m1acde71[m HEAD@{83}: commit: Swagger - Expose all DTOS
+[33m68a129b[m HEAD@{84}: commit: API - Rename country to region in Search Result DTO
+[33m638337f[m HEAD@{85}: commit: Swagger - Expose DTO Properties
+[33m6f68119[m HEAD@{86}: commit: Swagger - Expose DTO Properties
+[33mb48418d[m HEAD@{87}: commit: Enabled Cors
+[33m63a6a16[m HEAD@{88}: commit: Revert
+[33m2d130eb[m HEAD@{89}: commit: Try Render.com
+[33m6e94124[m HEAD@{90}: commit: Port 3000
+[33m1dd8b61[m HEAD@{91}: commit: Vercel Config for node
+[33m5a423ed[m HEAD@{92}: commit: change port to 80
+[33m7966b6f[m HEAD@{93}: commit: GO
+[33mab7b674[m HEAD@{94}: commit (initial): Initial Commit

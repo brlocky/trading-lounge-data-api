@@ -7,6 +7,7 @@ import Replicate, { ServerSentEvent } from 'replicate';
 export class AIService {
   private aiClient: Replicate;
   private model: `${string}/${string}` = 'meta/meta-llama-3-70b-instruct';
+  //private model: `${string}/${string}` = 'meta/meta-llama-3.1-405b-instruct';
 
   constructor(private readonly configService: ConfigService) {
     const apiKey = this.configService.get<string>('REPLICATE_API_TOKEN') || 'demo';
