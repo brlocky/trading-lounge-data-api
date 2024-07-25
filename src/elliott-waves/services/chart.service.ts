@@ -5,7 +5,7 @@ import { Candle } from '../types';
 
 @Injectable()
 export class ChartService {
-  async createCandlestickChart(candles: Candle[], pivots: Pivot[], outputFilename: string, useLogScale = true) {
+  async createCandlestickChart(candles: Candle[], pivots: Pivot[], outputFilename: string, useLogScale = true, showRsi = false) {
     const chart = new QuickChart();
 
     const markerData = pivots.map((pivot) => ({
@@ -21,10 +21,12 @@ export class ChartService {
       c: candle.close,
     }));
 
-    const rsiData = candles.map((candle) => ({
-      x: new Date(candle.time).getTime(),
-      y: candle.rsi,
-    }));
+    const rsiData = showRsi
+      ? candles.map((candle) => ({
+          x: new Date(candle.time).getTime(),
+          y: candle.rsi,
+        }))
+      : [];
 
     const priceValues = candlestickData.flatMap((d) => [d.o, d.h, d.l, d.c]);
     const minPrice = Math.min(...priceValues, ...markerData.map((d) => d.y));

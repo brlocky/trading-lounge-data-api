@@ -119,18 +119,29 @@ export const getLocalLow = (pivots: Pivot[], length: number = 3): Pivot | null =
   return localLow;
 };
 
-export const getTrend = (data: Candle[] | Pivot[]): Trend => {
+export const getTrend = (data: Candle[]): Trend => {
   if (data.length < 2) {
-    throw new PreconditionFailedException(`getTrend: The candles array must have at least 2 elements.`);
+    throw new PreconditionFailedException(`getTrend: The data array must have at least 2 elements.`);
   }
 
-  const isPivot = (item: any): item is Pivot => item.price !== undefined;
-  const startItem = data[0];
-  const endItem = data[data.length - 1];
-  const startPrice = isPivot(startItem) ? startItem.price : (startItem as Candle).low;
-  const endPrice = isPivot(endItem) ? endItem.price : (endItem as Candle).low;
+  const firstCandle = data[0];
+  const firstHigh = firstCandle.high;
+  const firstLow = firstCandle.low;
 
-  return startPrice < endPrice ? Trend.UP : Trend.DOWN;
+  for (let i = 1; i < data.length; i++) {
+    const currentCandle = data[i];
+
+    if (currentCandle.high > firstHigh) {
+      return Trend.UP;
+    }
+
+    if (currentCandle.low < firstLow) {
+      return Trend.DOWN;
+    }
+  }
+
+  // If no break occurred, throw an error
+  throw new Error(`getTrend: Unable to determine trend. No break of the first candle's high or low occurred.`);
 };
 
 export const calculateAngle = (pivot1: { price: number; time: number }, pivot2: { price: number; time: number }): number => {

@@ -41,6 +41,7 @@ export class Wave {
 
   public changeDegree(newDegree: WaveDegree): void {
     this.degree = newDegree;
+    // TODO: change degree on child
   }
 
   public length(useLogScale: boolean): number {

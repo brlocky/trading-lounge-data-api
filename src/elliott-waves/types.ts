@@ -1,6 +1,6 @@
 import { Pivot } from './class';
 import { WaveDegreeNode } from './class/utils';
-import { WaveDegree, WaveScore, WaveType } from './enums';
+import { WaveScore, WaveType } from './enums';
 
 export interface ScoreRange {
   range: [number, number];

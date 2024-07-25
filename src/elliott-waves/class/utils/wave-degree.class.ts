@@ -1,4 +1,4 @@
-import { degreeToString, WaveDegree } from 'src/elliott-waves/enums';
+import { WaveDegree } from 'src/elliott-waves/enums';
 
 export interface WaveDegreeNode {
   degree: WaveDegree;
@@ -65,7 +65,6 @@ export class WaveDegreeCalculator {
     const degreeRanges = WaveDegreeCalculator.waveDegrees.slice().reverse();
     for (const degreeRange of degreeRanges) {
       if (adjustedDays >= degreeRange.minDays && adjustedDays <= degreeRange.maxDays) {
-        console.info('found degree:', degreeToString(degreeRange.degree));
         return degreeRange;
       }
     }

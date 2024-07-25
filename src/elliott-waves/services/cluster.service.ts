@@ -37,10 +37,9 @@ export class ClusterService {
       return [];
     }
 
-    const tuplesRet1 = this.createPivotTuples(retracements);
+    for (let i = 0; i < retracements.length - 1; i += 2) {
+      const [p1, p2] = [retracements[i], retracements[i + 1]];
 
-    tuplesRet1.forEach((pivots) => {
-      const [p1, p2] = pivots;
       // Calculate Wave degree using wave 1 time.
       const candlesToCalculateDegree = candles.filter((c) => c.time >= pStart.time && c.time <= p2.time);
       const { degree: calculatedDegree } = WaveDegreeCalculator.calculateWaveDegreeFromCandles(candlesToCalculateDegree, 'wave1');
@@ -49,7 +48,7 @@ export class ClusterService {
       const wave2 = new Wave(WaveName._2, calculatedDegree, p1, p2);
       const newWaveCluster = new ClusterWaves([wave1, wave2], WaveType.MOTIVE, calculatedDegree);
       clusters.push(newWaveCluster);
-    });
+    }
 
     const { completed, incompleted } = await this.processClusterGroups(clusters, candles, pivots, loop);
 
