@@ -28,6 +28,7 @@ export class WaveDegreeCalculator {
     { degree: WaveDegree.MICRO, minDays: 0.00001, maxDays: 0.0001, useLogScale: false }, // minDays: ~1 second, maxDays: ~10 seconds
     { degree: WaveDegree.SUBMICRO, minDays: 0.000001, maxDays: 0.00001, useLogScale: false }, // minDays: ~0.1 second, maxDays: ~1 second
     { degree: WaveDegree.MINISCULE, minDays: 0, maxDays: 0.000001, useLogScale: false }, // minDays: 0 seconds, maxDays: ~0.1 second
+    { degree: WaveDegree.UNKNOWN, minDays: 0, maxDays: 0, useLogScale: false }, // minDays: 0 seconds, maxDays: ~0.1 second
   ];
 
   public static getConfig(): WaveDegreeNode[] {
@@ -54,7 +55,7 @@ export class WaveDegreeCalculator {
     const commonInterval = this.determineCommonInterval(candles);
 
     if (commonInterval === 0) {
-      throw new Error('Could not identify Degree.');
+      return 0;
     }
 
     return candles.length * commonInterval;

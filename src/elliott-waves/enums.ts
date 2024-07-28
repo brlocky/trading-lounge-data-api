@@ -75,7 +75,8 @@ export function waveNameToString(waveName: WaveName): string {
 
 // Define the Degree enum
 export enum WaveDegree {
-  MINISCULE = 1,
+  UNKNOWN = 0,
+  MINISCULE,
   SUBMICRO,
   MICRO,
   SUBMINUETTE,
@@ -92,6 +93,7 @@ export enum WaveDegree {
   SUPERMILLENNIUM,
 }
 const DegreeLabels = createEnumLabelMappings(WaveDegree, {
+  UNKNOWN: 'Unknown',
   MINISCULE: 'Miniscule',
   SUBMICRO: 'Submicro',
   MICRO: 'Micro',

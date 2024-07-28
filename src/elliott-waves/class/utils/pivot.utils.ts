@@ -4,6 +4,7 @@ import { Pivot } from '../pivot.class';
 import { Wave } from '../wave.class';
 import { ClusterWaves } from '../cluster-wave.class';
 import { Candle, PivotTest } from 'src/elliott-waves/types';
+import { ClusterPivot } from '..';
 
 /**
  * Get next Low before it breaks the Resistance
@@ -207,4 +208,14 @@ export function groupClustersByWaves(clusters: ClusterWaves[], waveCount: number
   });
 
   return groups;
+}
+
+export function findPivotIndex(pivots: Pivot[], targetPivot: Pivot | ClusterPivot): number {
+  const index = pivots.findIndex((p) => p.id === targetPivot.id || (p.time === targetPivot.time && p.price === targetPivot.price));
+
+  if (index === -1) {
+    throw new Error(`Pivot not found: ${JSON.stringify(targetPivot)}`);
+  }
+
+  return index;
 }

@@ -211,14 +211,13 @@ export class CandleService {
     return candle.close === candle.open;
   }
 
-  findFirstImpulsiveWave(pivots: Pivot[]): Pivot[] {
+  findFirstImpulsiveWave(pivots: Pivot[]): [Pivot, Pivot, Pivot][] {
     if (!Array.isArray(pivots) || pivots.length < 3) {
-      console.log('Not enough pivots to form an impulsive wave');
       return [];
     }
 
     const fibs = new Fibonacci();
-    const validWaves: Pivot[][] = [];
+    const validWaves: [Pivot, Pivot, Pivot][] = [];
 
     // Start with the first candle as the first pivot (P0)
     const p0 = pivots[0].copy();
@@ -242,27 +241,12 @@ export class CandleService {
       if (type === 'FOUND-WITH-BREAK' && pivot) {
         const p2 = pivot;
 
-        /*         const nextPivot = pivots.find((p) => p.time >= p2.time && p.type !== p2.type);
-        if (nextPivot) {
-          if (trendIsUp) {
-            if (nextPivot.price > lastMax) {
-              continue;
-            }
-          } else {
-            if (nextPivot.price < lastMax) {
-              continue;
-            }
-          }
-        } */
-
         const wave1Time = p1.time - p0.time;
         const wave2Time = p2.time - p1.time;
         const consolidationRatio = Math.abs(wave2Time / wave1Time);
-        console.log('Consolidation ratio:', consolidationRatio);
 
         if (consolidationRatio >= 0.03) {
           const retracementLevel = fibs.getRetracementPercentage(p0.price, p1.price, p2.price);
-          console.log('Retracement level:', retracementLevel);
 
           if (retracementLevel >= 10 && retracementLevel <= 99.999) {
             validWaves.push([p0, p1, p2]);
@@ -272,7 +256,7 @@ export class CandleService {
     }
 
     // Filter out waves with lower P2
-    const filteredWaves: Pivot[][] = [];
+    const filteredWaves: [Pivot, Pivot, Pivot][] = [];
     for (let i = 0; i < validWaves.length; i++) {
       const currentP2 = validWaves[i][2].price;
       const hasLowerP2 = validWaves
@@ -284,6 +268,6 @@ export class CandleService {
       }
     }
 
-    return filteredWaves.flat();
+    return filteredWaves;
   }
 }

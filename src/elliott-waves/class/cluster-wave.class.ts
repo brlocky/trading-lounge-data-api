@@ -9,6 +9,11 @@ export class ClusterWaves {
     this.degree = degree;
     this.waveType = waveType;
     this.waves = waves;
+    this.parent = null;
+  }
+
+  setParentWave(parentWave: Wave) {
+    this.parent = parentWave;
   }
 
   public addWave(wave: Wave): void {
@@ -37,4 +42,6 @@ export class ClusterWaves {
   waveType: WaveType;
   @ApiProperty()
   waves: Wave[];
+  @ApiProperty()
+  parent: Wave | null;
 }

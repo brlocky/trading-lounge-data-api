@@ -12,6 +12,7 @@ export class Wave {
     this.pStart = this.ensureClusterPivot(pStart);
     this.pEnd = this.ensureClusterPivot(pEnd);
     this.children = [];
+    this.parent = null;
   }
 
   @ApiProperty()
@@ -26,6 +27,8 @@ export class Wave {
   pEnd: ClusterPivot;
   @ApiProperty()
   children: Wave[];
+  @ApiProperty()
+  parent?: Wave | null;
 
   public copy(): Wave {
     return new Wave(this.wave, this.degree, this.pStart, this.pEnd);
@@ -37,6 +40,10 @@ export class Wave {
 
   public setChidren(waves: Wave[]) {
     this.children = waves;
+  }
+
+  public setParent(wave: Wave | null) {
+    this.parent = wave;
   }
 
   public changeDegree(newDegree: WaveDegree): void {

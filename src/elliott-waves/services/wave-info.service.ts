@@ -60,12 +60,14 @@ export class WaveInfoService {
   getWaveInformation(
     wave1: Wave,
     wave2: Wave,
-    wave3: Wave,
-    wave4: Wave,
+    wave3: Wave | null = null,
+    wave4: Wave | null = null,
     wave5: Wave | null = null,
     useLogScale = true,
     commonInterval: number,
   ): WaveInfo[] {
+    if (!wave3 || !wave4) return [];
+
     const isWave1Broken = (wave1: Wave, wave4: Wave): boolean => {
       const upTrend = !!(wave1.pStart.price < wave2.pEnd.price);
 

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ClusterWaves, Pivot } from './class';
 import { convertPivotsToWaves, WaveDegreeCalculator } from './class/utils';
 import { degreeToString, WaveDegree } from './enums';
-import { CandleService, ClusterService, WaveInfoService } from './services';
+import { CandleService, ChartService, ClusterService, DiscoveryService, WaveInfoService } from './services';
 import { Candle, CandlesInfo, GeneralConfig, WaveInfo } from './types';
 
 @Injectable()
@@ -11,17 +11,18 @@ export class ElliottWavesService {
     private candleService: CandleService,
     private waveInfoService: WaveInfoService,
     private clusterService: ClusterService,
+    private discoveryService: DiscoveryService,
+    private chartService: ChartService,
   ) {}
 
   getWaveCounts(candles: Candle[], degree: WaveDegree, logScale: boolean, definition: number): Promise<ClusterWaves[]> {
     const pivots = this.candleService.getZigZag(candles);
 
-    /*     const p1 = this.candleService.findFirstImpulsiveWave(pivots);
-    this.chartService.createCandlestickChart(candles, p1, 'z_p1.png', true);
+    const p1 = this.candleService.findFirstImpulsiveWave(pivots);
+    this.chartService.createCandlestickChart(candles, p1.flat(), 'z_p1.png', true);
     this.chartService.createCandlestickChart(candles, pivots, 'z_p2.png', true);
-    const analyzer = new ElliottWaveAnalyzer(this.candleService, this.waveInfoService, this.chartService);
-    analyzer.analyzeCandles(candles, degree); */
 
+    //return this.discoveryService.findMajorStructure(candles, definition, logScale);
     return this.clusterService.findMajorStructure(pivots, candles, definition, 5, logScale);
   }
 
