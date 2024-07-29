@@ -1,4 +1,4 @@
-import { Injectable, PreconditionFailedException } from '@nestjs/common';
+import { Injectable, NotAcceptableException, PreconditionFailedException, UnprocessableEntityException } from '@nestjs/common';
 import { Pivot } from '../class';
 import { Fibonacci } from '../class/utils/fibonacci.class';
 import { getHHBeforeBreak, getLLBeforeBreak, getTrend } from '../class/utils/pivot.utils';
@@ -98,6 +98,7 @@ export class CandleService {
 
     // Create pivot objects based on the identified pivot points
     const pivots = [];
+    let lastTrend: Trend | null = trend;
     for (let i = 0; i < candles.length; i++) {
       const candle = candles[i];
       if (pivotHigh[i] && pivotLow[i]) {
@@ -105,26 +106,21 @@ export class CandleService {
         const p1 = this.createPivot(candle, i, PivotType.HIGH);
         const p2 = this.createPivot(candle, i, PivotType.LOW);
 
-        // Determine the order of pivots based on candle type and trend
-        if (this.isNeutral(candle)) {
-          if (trend === Trend.UP) {
-            pivots.push(p1);
-            pivots.push(p2);
-          } else {
-            pivots.push(p1);
-            pivots.push(p2);
-          }
-        } else if (this.isGreenCandle(candle)) {
+        if (lastTrend === Trend.UP) {
+          pivots.push(p1);
+          pivots.push(p2);
+        } else if (lastTrend === Trend.DOWN) {
           pivots.push(p2);
           pivots.push(p1);
         } else {
-          pivots.push(p1);
-          pivots.push(p2);
+          throw new NotAcceptableException('Lost track of the trend');
         }
       } else if (pivotHigh[i]) {
         pivots.push(this.createPivot(candle, i, PivotType.HIGH));
+        lastTrend = Trend.DOWN;
       } else if (pivotLow[i]) {
         pivots.push(this.createPivot(candle, i, PivotType.LOW));
+        lastTrend = Trend.UP;
       }
     }
 
@@ -205,10 +201,6 @@ export class CandleService {
 
   protected isGreenCandle(candle: Candle): boolean {
     return candle.close > candle.open;
-  }
-
-  protected isNeutral(candle: Candle): boolean {
-    return candle.close === candle.open;
   }
 
   findFirstImpulsiveWave(pivots: Pivot[]): [Pivot, Pivot, Pivot][] {
