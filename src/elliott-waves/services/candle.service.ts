@@ -16,111 +16,102 @@ interface WaveRetracement {
 export class CandleService {
   // Method to calculate ZigZag pivots from an array of candles
   getZigZag(candles: Candle[]): Pivot[] {
+    // Check if there are enough candles to process
     if (candles.length < 2) {
       throw new PreconditionFailedException(`${this.constructor.name}:getZigZag: The candles array must have at least 2 elements.`);
     }
 
-    // Initialize arrays to mark potential pivot highs and lows
+    // Initialize arrays to mark all pivot as highs and lows
     const pivotHigh = new Array(candles.length).fill(1);
     const pivotLow = new Array(candles.length).fill(1);
 
-    // Determine the overall trend
+    // Determine the trend based on initial candle break
     const trend = getTrend(candles);
 
-    // Set the first pivot based on the trend
-    if (trend === Trend.UP) {
+    if (trend === Trend.UP && this.isRedCandle(candles[0])) {
       pivotHigh[0] = 0;
-    } else {
+    }
+
+    if (trend === Trend.DOWN && this.isGreenCandle(candles[0])) {
       pivotLow[0] = 0;
     }
 
-    // Iterate through candles to identify potential pivots
-    for (let i = 1; i < candles.length - 1; i++) {
+    // Iterate through candles to remove unwanted pivots
+    /*     for (let i = 1; i < candles.length - 1; i++) {
       const prevCandle = candles[i - 1];
       const currCandle = candles[i];
 
-      // Check for doji candles (open = close = high = low)
-      if (currCandle.open === currCandle.low && currCandle.open === currCandle.high && currCandle.open === currCandle.close) {
-        pivotHigh[i] = 0;
-        pivotLow[i] = 0;
-      }
-
-      // Check for gaps between candles
       if (currCandle.low >= prevCandle.high) {
-        pivotLow[i] = 0;
         pivotHigh[i - 1] = 0;
+        pivotLow[i] = 0;
+        continue;
       }
 
       if (currCandle.high <= prevCandle.low) {
         pivotHigh[i] = 0;
         pivotLow[i - 1] = 0;
-      }
-
-      // Check for potential pivot highs and lows based on candle patterns
-      if (pivotHigh[i - 1] && !pivotLow[i - 1] && prevCandle.high > currCandle.high && this.isRedCandle(currCandle)) {
-        pivotHigh[i] = 0;
-      }
-
-      if (pivotLow[i - 1] && !pivotHigh[i - 1] && prevCandle.low < currCandle.low && this.isGreenCandle(currCandle)) {
-        pivotLow[i] = 0;
-      }
-
-      // Additional checks for pivot high/low based on candle patterns
-      if (i > 1 && this.isGreenCandle(prevCandle) && this.isRedCandle(currCandle) && candles[i - 1].high < currCandle.high) {
-        pivotHigh[i - 1] = 0;
-      }
-
-      if (i > 1 && this.isRedCandle(prevCandle) && this.isGreenCandle(currCandle) && candles[i - 1].low > currCandle.low) {
-        pivotLow[i - 1] = 0;
-      }
-
-      // Check for potential pivot changes based on candle patterns and previous pivots
-      if (
-        this.isGreenCandle(prevCandle) &&
-        pivotLow[i - 1] &&
-        pivotHigh[i - 1] &&
-        candles[i - 1].low > currCandle.low &&
-        candles[i - 1].high > currCandle.high
-      ) {
-        pivotHigh[i] = 0;
-      }
-
-      if (
-        this.isRedCandle(prevCandle) &&
-        pivotLow[i - 1] &&
-        pivotHigh[i - 1] &&
-        candles[i - 1].low < currCandle.low &&
-        candles[i - 1].high < currCandle.high
-      ) {
-        pivotLow[i] = 0;
+        continue;
       }
     }
-
+ */
     // Create pivot objects based on the identified pivot points
     const pivots = [];
-    let lastTrend: Trend | null = trend;
+
     for (let i = 0; i < candles.length; i++) {
       const candle = candles[i];
       if (pivotHigh[i] && pivotLow[i]) {
         // Create two pivots for a spike
         const p1 = this.createPivot(candle, i, PivotType.HIGH);
         const p2 = this.createPivot(candle, i, PivotType.LOW);
-
-        if (lastTrend === Trend.UP) {
+        if (this.isRedCandle(candle)) {
           pivots.push(p1);
           pivots.push(p2);
-        } else if (lastTrend === Trend.DOWN) {
+        }
+        if (this.isGreenCandle(candle)) {
           pivots.push(p2);
           pivots.push(p1);
-        } else {
-          throw new NotAcceptableException('Lost track of the trend');
         }
       } else if (pivotHigh[i]) {
         pivots.push(this.createPivot(candle, i, PivotType.HIGH));
-        lastTrend = Trend.DOWN;
       } else if (pivotLow[i]) {
         pivots.push(this.createPivot(candle, i, PivotType.LOW));
-        lastTrend = Trend.UP;
+      }
+    }
+
+    let i = 0;
+    while (i < pivots.length - 1) {
+      const p1 = pivots[i];
+      const p2 = pivots[i + 1];
+      if (p1.isHigh() === p2.isHigh() || p1.isLow() === p2.isLow()) {
+        // Found two consecutive pivots of the same type
+        console.log(`Found consecutive pivots at indices ${i} and ${i + 1}`);
+
+        if (p1.isHigh()) {
+          if (p2.price >= p1.price) {
+            pivots.splice(i, 1);
+          } else {
+            pivots.splice(i + 1, 1);
+          }
+        }
+        if (p1.isLow()) {
+          if (p2.price <= p1.price) {
+            pivots.splice(i, 1);
+          } else {
+            pivots.splice(i + 1, 1);
+          }
+        }
+      } else {
+        i++;
+      }
+    }
+
+    // Validate the sequence of pivots
+    for (let i = 1; i < pivots.length - 1; i++) {
+      const lastPivot = pivots[i - 1];
+      const currentPivot = pivots[i];
+      if ((lastPivot.isHigh() && currentPivot.isHigh()) || (lastPivot.isLow() && currentPivot.isLow())) {
+        console.error('found pivots out of sequence');
+        //throw new Error('found pivots out of sequence');
       }
     }
 

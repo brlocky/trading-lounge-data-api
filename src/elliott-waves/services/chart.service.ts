@@ -125,6 +125,19 @@ export class ChartService {
           },
         },
         plugins: {
+          annotation: {
+            annotations: pivots.map((pivot, index) => ({
+              type: 'label',
+              xValue: new Date(pivot.time).getTime(),
+              yValue: pivot.price,
+              backgroundColor: 'rgba(255, 255, 255, 0.7)',
+              content: `${index}`, // Display price with 2 decimal places
+              font: {
+                size: 12,
+                weight: 'bold',
+              },
+            })),
+          },
           legend: {
             display: true,
           },
