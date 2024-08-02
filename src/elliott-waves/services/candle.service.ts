@@ -1,4 +1,4 @@
-import { Injectable, NotAcceptableException, PreconditionFailedException, UnprocessableEntityException } from '@nestjs/common';
+import { Injectable, PreconditionFailedException } from '@nestjs/common';
 import { Pivot } from '../class';
 import { Fibonacci } from '../class/utils/fibonacci.class';
 import { getHHBeforeBreak, getLLBeforeBreak, getTrend } from '../class/utils/pivot.utils';
@@ -36,24 +36,6 @@ export class CandleService {
       pivotLow[0] = 0;
     }
 
-    // Iterate through candles to remove unwanted pivots
-    /*     for (let i = 1; i < candles.length - 1; i++) {
-      const prevCandle = candles[i - 1];
-      const currCandle = candles[i];
-
-      if (currCandle.low >= prevCandle.high) {
-        pivotHigh[i - 1] = 0;
-        pivotLow[i] = 0;
-        continue;
-      }
-
-      if (currCandle.high <= prevCandle.low) {
-        pivotHigh[i] = 0;
-        pivotLow[i - 1] = 0;
-        continue;
-      }
-    }
- */
     // Create pivot objects based on the identified pivot points
     const pivots = [];
 
@@ -84,7 +66,6 @@ export class CandleService {
       const p2 = pivots[i + 1];
       if (p1.isHigh() === p2.isHigh() || p1.isLow() === p2.isLow()) {
         // Found two consecutive pivots of the same type
-        console.log(`Found consecutive pivots at indices ${i} and ${i + 1}`);
 
         if (p1.isHigh()) {
           if (p2.price >= p1.price) {
@@ -110,8 +91,7 @@ export class CandleService {
       const lastPivot = pivots[i - 1];
       const currentPivot = pivots[i];
       if ((lastPivot.isHigh() && currentPivot.isHigh()) || (lastPivot.isLow() && currentPivot.isLow())) {
-        console.error('found pivots out of sequence');
-        //throw new Error('found pivots out of sequence');
+        throw new Error('found pivots out of sequence');
       }
     }
 
