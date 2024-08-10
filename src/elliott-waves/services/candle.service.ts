@@ -1,9 +1,11 @@
 import { Injectable, PreconditionFailedException } from '@nestjs/common';
 import { Pivot } from '../class';
 import { Fibonacci } from '../class/utils/fibonacci.class';
-import { getHHBeforeBreak, getLLBeforeBreak, getTrend } from '../class/utils/pivot.utils';
+import { findPivotIndex, getHHBeforeBreak, getLLBeforeBreak, getTrend } from '../class/utils/pivot.utils';
 import { PivotType, Trend } from '../enums';
 import { Candle, PivotTest } from '../types';
+import { CandleTime, WaveDegreeCalculator } from '../class/utils';
+import { pbkdf2 } from 'crypto';
 
 // Interface to represent a wave retracement
 interface WaveRetracement {
@@ -150,7 +152,6 @@ export class CandleService {
 
       // Calculate retracement and add to the list if it exceeds the threshold
       const retracementValue = fibonacci.calculatePercentageDecrease(pivot.price, nextPivot.price);
-      retracementValue > 90 && console.log(retracementValue);
       if (retracementValue >= threshold) {
         retracements.push({ p1: pivot, p2: nextPivot, retracement: retracementValue });
       }
@@ -174,63 +175,62 @@ export class CandleService {
     return candle.close > candle.open;
   }
 
-  findFirstImpulsiveWave(pivots: Pivot[]): [Pivot, Pivot, Pivot][] {
+  findFirstImpulsiveWave(pivots: Pivot[], candles: Candle[]): [Pivot, Pivot, Pivot][] {
     if (!Array.isArray(pivots) || pivots.length < 3) {
       return [];
     }
 
     const fibs = new Fibonacci();
     const validWaves: [Pivot, Pivot, Pivot][] = [];
-
     // Start with the first candle as the first pivot (P0)
-    const p0 = pivots[0].copy();
+    const p0 = pivots[0];
 
     const trendIsUp = p0.isLow() ? true : false;
 
     let lastMax = trendIsUp ? -Infinity : Infinity;
     for (let i = 1; i < pivots.length - 1; i++) {
       const p1 = pivots[i];
+      if (trendIsUp && p1.price <= p0.price) break;
+      if (!trendIsUp && p1.price >= p0.price) break;
 
-      // Find potential wave 2 bottoms (P2)
-      const remainingCandles = pivots.slice(i + 1);
-      const { type, pivot } = trendIsUp ? getLLBeforeBreak(remainingCandles, p1) : getHHBeforeBreak(remainingCandles, p1);
+      if (trendIsUp && p1.type === PivotType.LOW) continue;
+      if (!trendIsUp && p1.type === PivotType.HIGH) continue;
 
-      if ((trendIsUp && p1.price > lastMax) || (!trendIsUp && p1.price < lastMax)) {
+      if ((trendIsUp && p1.price >= lastMax) || (!trendIsUp && p1.price <= lastMax)) {
         lastMax = p1.price;
       } else {
         continue;
       }
 
-      if (type === 'FOUND-WITH-BREAK' && pivot) {
+      // Find potential wave 2 bottoms (P2)
+      const index = findPivotIndex(pivots, p1) + 1;
+      const remainingPivots = pivots.slice(index);
+      const { pivot } = trendIsUp ? getLLBeforeBreak(remainingPivots, p1) : getHHBeforeBreak(remainingPivots, p1);
+
+      if (pivot) {
         const p2 = pivot;
 
-        const wave1Time = p1.time - p0.time;
-        const wave2Time = p2.time - p1.time;
-        const consolidationRatio = Math.abs(wave2Time / wave1Time);
+        const { useLogScale } = WaveDegreeCalculator.calculateWaveDegreeFromCandles([p0 as CandleTime, p1 as CandleTime], 'wave1');
+        /*         const commonInterval = WaveDegreeCalculator.determineCommonInterval(candles);
 
-        if (consolidationRatio >= 0.03) {
-          const retracementLevel = fibs.getRetracementPercentage(p0.price, p1.price, p2.price);
+        const wave1Time = p1.time === p0.time ? commonInterval * 24 * 3600 : p1.time - p0.time;
+        const wave2Time = p2.time === p1.time ? commonInterval * 24 * 3600 : p2.time - p1.time;
 
-          if (retracementLevel >= 10 && retracementLevel <= 99.999) {
-            validWaves.push([p0, p1, p2]);
-          }
+        const consolidationRatio = Math.abs(wave2Time / wave1Time); */
+
+        fibs.setLogScale(useLogScale);
+        const retracementLevel = fibs.getRetracementPercentage(p0.price, p1.price, p2.price);
+
+        if (retracementLevel > 99.999) {
+          break;
+        }
+
+        if (retracementLevel >= 14.2) {
+          validWaves.push([p0, p1, p2]);
         }
       }
     }
 
-    // Filter out waves with lower P2
-    const filteredWaves: [Pivot, Pivot, Pivot][] = [];
-    for (let i = 0; i < validWaves.length; i++) {
-      const currentP2 = validWaves[i][2].price;
-      const hasLowerP2 = validWaves
-        .slice(i + 1)
-        .some((wave) => (trendIsUp && wave[2].price < currentP2) || (!trendIsUp && wave[2].price > currentP2));
-
-      if (!hasLowerP2) {
-        filteredWaves.push(validWaves[i]);
-      }
-    }
-
-    return filteredWaves;
+    return validWaves;
   }
 }

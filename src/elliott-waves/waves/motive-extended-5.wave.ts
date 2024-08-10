@@ -1,5 +1,5 @@
 import { Wave } from '../class';
-import { WaveScore, WaveType } from '../enums';
+import { Trend, WaveScore, WaveType } from '../enums';
 import { MotiveInterface } from '../interfaces/motive.interface';
 import { ScoreRange } from '../types';
 
@@ -34,6 +34,13 @@ export class MotiveExtended5 extends MotiveInterface {
     const wave3IsNotTheShortest = wave3.length(useLogScale) >= wave1.length(useLogScale);
     if (!wave3IsNotTheShortest) return false;
 
+    if (wave1.trend() === Trend.UP && wave5.pEnd.price < wave3.pEnd.price) {
+      return false;
+    }
+    if (wave1.trend() === Trend.DOWN && wave5.pEnd.price > wave3.pEnd.price) {
+      return false;
+    }
+
     return true;
   }
   public getWave2TimeConfig(): ScoreRange[] {
@@ -52,8 +59,9 @@ export class MotiveExtended5 extends MotiveInterface {
       { range: [68.1, 100], score: WaveScore.WORK },
       { range: [100, 161.8], score: WaveScore.PERFECT },
       { range: [161.8, 250], score: WaveScore.GOOD },
-      { range: [250, 350], score: WaveScore.WORK },
-      { range: [350, 800], score: WaveScore.WORSTCASESCENARIO },
+      { range: [250, 350], score: WaveScore.GOOD },
+      { range: [350, 800], score: WaveScore.WORK },
+      { range: [800, 1000], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 
@@ -91,9 +99,11 @@ export class MotiveExtended5 extends MotiveInterface {
     return [
       { range: [14.2, 23.6], score: WaveScore.WORSTCASESCENARIO },
       { range: [23.6, 50], score: WaveScore.WORK },
-      { range: [50, 60], score: WaveScore.GOOD },
-      { range: [60, 64], score: WaveScore.PERFECT },
-      { range: [64, 99], score: WaveScore.WORSTCASESCENARIO },
+      { range: [50, 55.9], score: WaveScore.PERFECT },
+      { range: [55.9, 61.8], score: WaveScore.PERFECT },
+      { range: [61.8, 78.6], score: WaveScore.PERFECT },
+      { range: [78.6, 83.6], score: WaveScore.WORK },
+      { range: [83.6, 88.6], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 

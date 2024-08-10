@@ -1,5 +1,5 @@
 import { Wave } from '../class';
-import { WaveScore, WaveType } from '../enums';
+import { Trend, WaveScore, WaveType } from '../enums';
 import { MotiveInterface } from '../interfaces/motive.interface';
 import { ScoreRange } from '../types';
 
@@ -30,6 +30,13 @@ export class MotiveExtended1 extends MotiveInterface {
     // Invalidation when wave 5 is bigger than 3
     const wave3IsNotTheShortest = wave3.length(useLogScale) >= wave5.length(useLogScale);
     if (!wave3IsNotTheShortest) return false;
+
+    if (wave1.trend() === Trend.UP && wave5.pEnd.price < wave3.pEnd.price) {
+      return false;
+    }
+    if (wave1.trend() === Trend.DOWN && wave5.pEnd.price > wave3.pEnd.price) {
+      return false;
+    }
 
     return true;
   }
@@ -92,7 +99,6 @@ export class MotiveExtended1 extends MotiveInterface {
       { range: [14.2, 23.6], score: WaveScore.WORK },
       { range: [23.6, 45], score: WaveScore.PERFECT },
       { range: [45, 61.8], score: WaveScore.WORK },
-      { range: [61.8, 70], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 
@@ -117,7 +123,7 @@ export class MotiveExtended1 extends MotiveInterface {
 
   public getWave4DeepRetracementConfig(): ScoreRange[] {
     return [
-      { range: [14.2, 23.6], score: WaveScore.WORSTCASESCENARIO },
+      { range: [10, 23.6], score: WaveScore.WORSTCASESCENARIO },
       { range: [23.6, 50], score: WaveScore.WORK },
       { range: [50, 60], score: WaveScore.PERFECT },
       { range: [60, 64], score: WaveScore.GOOD },

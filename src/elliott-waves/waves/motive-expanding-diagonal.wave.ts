@@ -1,5 +1,5 @@
 import { Wave } from '../class';
-import { WaveScore, WaveType } from '../enums';
+import { Trend, WaveScore, WaveType } from '../enums';
 import { MotiveInterface } from '../interfaces/motive.interface';
 import { ScoreRange } from '../types';
 
@@ -34,7 +34,12 @@ export class MotiveExpandingDiagonal extends MotiveInterface {
       }
     }
 
-    // Wave 3 can be shorter than wave1 !!!!
+    if (wave1.trend() === Trend.UP && wave5.pEnd.price < wave3.pEnd.price) {
+      return false;
+    }
+    if (wave1.trend() === Trend.DOWN && wave5.pEnd.price > wave3.pEnd.price) {
+      return false;
+    }
 
     return true;
   }

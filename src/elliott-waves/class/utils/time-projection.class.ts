@@ -22,6 +22,20 @@ export class TimeProjection {
   };
 
   /**
+   * Projects time based on given pivot times and ratio range.
+   * @param startTime - The start time
+   * @param endTime - The end time
+   * @param pivotTime - The pivot time
+   * @param percentage - The percentage projection
+   * @returns A number with the Projected Time
+   */
+  static projectTime(startTime: number, endTime: number, pivotTime: number, percentage: number): number {
+    const timeDiff = endTime - startTime;
+    const projectedTime = pivotTime + timeDiff * (percentage / 100);
+
+    return projectedTime;
+  }
+  /**
    * Calculates the projected times for Wave 2.
    * @param p0 - Pivot 0
    * @param p1 - Pivot 1

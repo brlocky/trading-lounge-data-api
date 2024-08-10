@@ -8,6 +8,39 @@ describe('TimeProjection', () => {
   const p3: PivotTime = { time: 1609718400 }; // 2021-01-04 00:00:00
   const p4: PivotTime = { time: 1609804800 }; // 2021-01-05 00:00:00
 
+  it('should project time correctly', () => {
+    const startTime = p0.time;
+    const endTime = p1.time;
+    const pivotTime = p1.time;
+    const percentage = 38.2;
+
+    const projectedTime = TimeProjection.projectTime(startTime, endTime, pivotTime, percentage);
+
+    const timeDiff = endTime - startTime;
+    const expectedTime = pivotTime + timeDiff * (percentage / 100);
+
+    expect(projectedTime).toBeCloseTo(expectedTime, 1);
+  });
+
+  it('should project time correctly for Wave 3', () => {
+    const percentage = 161.8;
+    const projectedTime = TimeProjection.projectTime(p0.time, p2.time, p2.time, percentage);
+
+    const timeDiff = p2.time - p0.time;
+    const expectedTime = p2.time + timeDiff * (percentage / 100);
+
+    expect(projectedTime).toBe(expectedTime);
+  });
+
+  it('should project time correctly for Wave 5', () => {
+    const projectedTime = TimeProjection.projectTime(p2.time, p4.time, p4.time, 100);
+
+    const timeDiff = p4.time - p2.time;
+    const expectedTime = p4.time + timeDiff * 1;
+
+    expect(projectedTime).toBeCloseTo(expectedTime, 1);
+  });
+
   it('should calculate Wave 2 Time', () => {
     const result = TimeProjection.calculateWave2Time(p0, p1);
     const timeDiff = p1.time - p0.time;

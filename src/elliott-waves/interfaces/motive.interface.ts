@@ -46,7 +46,6 @@ export abstract class MotiveInterface {
   }
 
   public calculateTimeRetracement(waveA: Wave, waveB: Wave, commonInterval: number): number {
-    this.fibonacci.setLogScale(false);
     const waveATime = waveA.duration() || commonInterval * 24 * 3600;
     const waveBTime = waveB.duration() || commonInterval * 24 * 3600;
     return Math.abs(waveBTime / waveATime) * 100;

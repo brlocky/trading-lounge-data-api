@@ -31,7 +31,11 @@ export class Wave {
   parent?: Wave | null;
 
   public copy(): Wave {
-    return new Wave(this.wave, this.degree, this.pStart, this.pEnd);
+    const newWave = new Wave(this.wave, this.degree, this.pStart, this.pEnd);
+    newWave.parent = this.parent;
+    const childrenCopy = this.children.map((c) => c.copy());
+    newWave.setChidren(childrenCopy);
+    return newWave;
   }
 
   public addChidren(wave: Wave) {

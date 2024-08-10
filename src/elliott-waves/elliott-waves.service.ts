@@ -16,21 +16,17 @@ export class ElliottWavesService {
   ) {}
 
   getWaveCounts(candles: Candle[], degree: WaveDegree, logScale: boolean, definition: number): Promise<ClusterWaves[]> {
-    const pivots = this.candleService.getZigZag(candles);
-
-    const p1 = this.candleService.findFirstImpulsiveWave(pivots);
-    this.chartService.createCandlestickChart(candles, p1.flat(), 'z_p1.png', true);
-    this.chartService.createCandlestickChart(candles, pivots, 'z_p2.png', true);
-
-    //return this.discoveryService.findMajorStructure(candles, definition, logScale);
+    /*     const pivots = this.candleService.getZigZag(candles);
     return this.clusterService.findMajorStructure(pivots, candles, definition, 5, logScale);
+ */
+    return this.discoveryService.findMajorStructure(candles, definition);
   }
 
   async getSubWaveCounts(
     candles: Candle[],
     degree: WaveDegree,
-    startPivot: Pivot,
-    endPivot: Pivot,
+    startIndex: number,
+    endIndex: number | undefined,
     logScale: boolean,
   ): Promise<ClusterWaves[]> {
     const newDegree: WaveDegree = degree - 1;
@@ -40,17 +36,20 @@ export class ElliottWavesService {
 
     const pivots = this.candleService.getZigZag(candles);
 
+    const endCandle = endIndex && endIndex <= candles.length - 1 ? candles[endIndex] : null;
+
     const waveClusters = await this.clusterService.findMajorStructure(pivots, candles, 3, 0, logScale);
     const isTargetInsidePivots = !!pivots.find(
-      (p) => endPivot && p.time === endPivot.time && p.price === endPivot.price && p.type === endPivot.type,
+      (p) => endCandle && p.time === endCandle.time && (p.price === endCandle.high || p.price === endCandle.low),
     );
     const filteredCluster = isTargetInsidePivots
       ? waveClusters.filter((w) => {
           if (w.waves.length !== 5) return false;
-          const lastWave = w.waves[w.waves.length - 1];
 
-          if (lastWave.pEnd.price !== endPivot.price || lastWave.pEnd.time !== endPivot.time) return false;
-          return true;
+          if (!endCandle) return true;
+          const lastWave = w.waves[w.waves.length - 1];
+          if (lastWave.pEnd.time === endCandle.time) return true;
+          return false;
         })
       : waveClusters;
 
