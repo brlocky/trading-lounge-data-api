@@ -42,16 +42,21 @@ export class ElliottWavesService {
     const isTargetInsidePivots = !!pivots.find(
       (p) => endCandle && p.time === endCandle.time && (p.price === endCandle.high || p.price === endCandle.low),
     );
-    const filteredCluster = isTargetInsidePivots
-      ? waveClusters.filter((w) => {
-          if (w.waves.length !== 5) return false;
+    const filteredCluster = (
+      isTargetInsidePivots
+        ? waveClusters.filter((w) => {
+            if (w.waves.length !== 5) return false;
 
-          if (!endCandle) return true;
-          const lastWave = w.waves[w.waves.length - 1];
-          if (lastWave.pEnd.time === endCandle.time) return true;
-          return false;
-        })
-      : waveClusters;
+            if (!endCandle) return true;
+            const lastWave = w.waves[w.waves.length - 1];
+            if (lastWave.pEnd.time === endCandle.time) return true;
+            return false;
+          })
+        : waveClusters
+    ).map((w) => {
+      w.changeDegree(newDegree);
+      return w;
+    });
 
     return new Promise((r) => r(filteredCluster));
   }
