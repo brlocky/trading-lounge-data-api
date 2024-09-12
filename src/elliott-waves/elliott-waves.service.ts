@@ -16,10 +16,10 @@ export class ElliottWavesService {
   ) {}
 
   getWaveCounts(candles: Candle[], degree: WaveDegree, logScale: boolean, definition: number): Promise<ClusterWaves[]> {
-    /*     const pivots = this.candleService.getZigZag(candles);
+    const pivots = this.candleService.getZigZag(candles);
     return this.clusterService.findMajorStructure(pivots, candles, definition, 5, logScale);
- */
-    return this.discoveryService.findMajorStructure(candles, definition);
+
+    //return this.discoveryService.findMajorStructure(candles, definition);
   }
 
   async getSubWaveCounts(

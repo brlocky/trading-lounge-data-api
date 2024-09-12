@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { GetCandlesDto, GetCandlesResultDto, GetQuoteDto, GetQuoteResultDto, QuoteResult } from 'src/search/dto';
@@ -97,7 +97,7 @@ export class TradingViewService implements SearchProvider {
         candles,
       };
     } catch (e) {
-      console.error('Fail to get candles', request.symbol);
+      throw new HttpException('Fail to get candles', HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     return result;
