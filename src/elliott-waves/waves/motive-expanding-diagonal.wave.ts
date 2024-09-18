@@ -24,7 +24,8 @@ export class MotiveExpandingDiagonal extends MotiveInterface {
   public validateWaveStructure(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave, useLogScale: boolean): boolean {
     // Wave 4 longer than wave 2
     const wave4IsLongerThanWave2 = wave4.length(useLogScale) > wave2.length(useLogScale);
-    if (!wave4IsLongerThanWave2) return false;
+    const wave4IsMoreTimeThanWave2 = wave4.duration() > wave2.duration();
+    if (!wave4IsLongerThanWave2 && !wave4IsMoreTimeThanWave2) return false;
 
     // Wave 3 is shorter than wave 5 ( we allow 88.6 to be valid)
     const wave3IsShorterThanWave5 = wave3.length(useLogScale) < wave5.length(useLogScale);
@@ -90,7 +91,7 @@ export class MotiveExpandingDiagonal extends MotiveInterface {
       { range: [44.1, 50], score: WaveScore.WORK },
       { range: [50, 88.6], score: WaveScore.PERFECT },
       { range: [88.6, 90], score: WaveScore.WORK },
-      { range: [90, 99], score: WaveScore.WORSTCASESCENARIO },
+      { range: [90, 99.9], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 

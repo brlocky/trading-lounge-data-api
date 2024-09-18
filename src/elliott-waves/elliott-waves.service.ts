@@ -38,7 +38,7 @@ export class ElliottWavesService {
 
     const endCandle = endIndex && endIndex <= candles.length - 1 ? candles[endIndex] : null;
 
-    const waveClusters = await this.clusterService.findMajorStructure(pivots, candles, 3, 0, logScale);
+    const waveClusters = await this.clusterService.findMajorStructure(pivots, candles, 6, 0, logScale);
     const isTargetInsidePivots = !!pivots.find(
       (p) => endCandle && p.time === endCandle.time && (p.price === endCandle.high || p.price === endCandle.low),
     );

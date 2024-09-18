@@ -31,6 +31,7 @@ export interface WaveInfo {
     wave: boolean;
     time: boolean;
     structure: boolean;
+    channel: boolean;
   };
   wave2: WaveInfoResult;
   wave3: WaveInfoResult;

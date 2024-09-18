@@ -2,14 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { ClusterWaves, Wave } from '../class';
 import { WaveDegreeCalculator } from '../class/utils';
 import { Fibonacci } from '../class/utils/fibonacci.class';
-import { WaveScore } from '../enums';
+import { WaveScore, WaveType } from '../enums';
 import { MotiveInterface } from '../interfaces/motive.interface';
 import { WaveInfo, WavesConfig } from '../types';
 import { MotiveContractingDiagonal, MotiveExpandingDiagonal, MotiveExtended1, MotiveExtended3, MotiveExtended5 } from '../waves';
+import { ChannelValidationService } from './channel-validation.service';
 
 @Injectable()
 export class WaveInfoService {
   protected fibonacci: Fibonacci;
+  protected channelService: ChannelValidationService;
   protected patterns: MotiveInterface[];
 
   constructor() {
@@ -21,6 +23,7 @@ export class WaveInfoService {
       new MotiveContractingDiagonal(),
       new MotiveExpandingDiagonal(),
     ];
+    this.channelService = new ChannelValidationService();
   }
 
   getWavesConfig(): WavesConfig {
@@ -147,6 +150,28 @@ export class WaveInfoService {
         ? WaveDegreeCalculator.calculateWaveDegreeFromCandles([wave1.pStart, wave5.pEnd])
         : WaveDegreeCalculator.calculateWaveDegreeFromCandles([wave1.pStart, wave1.pEnd], 'wave1');
 
+      let isChannelValid: null | boolean = null;
+      if (wave5) {
+        switch (p.getWaveType()) {
+          case WaveType.MOTIVE:
+          case WaveType.MOTIVE_EXTENDED_1:
+          case WaveType.MOTIVE_EXTENDED_3:
+          case WaveType.MOTIVE_EXTENDED_5:
+            isChannelValid = this.channelService.validateWaveChannels([wave1, wave2, wave3, wave4, wave5], useLogScale);
+            break;
+
+          case WaveType.MOTIVE_CONTRACTING_DIAGONAL:
+            isChannelValid =
+              this.channelService.validateDiagonal([wave1, wave2, wave3, wave4, wave5], useLogScale).type === 'contracting' ? true : false;
+            break;
+
+          case WaveType.MOTIVE_EXPANDING_DIAGONAL:
+            isChannelValid =
+              this.channelService.validateDiagonal([wave1, wave2, wave3, wave4, wave5], useLogScale).type === 'expanding' ? true : false;
+            break;
+        }
+      }
+
       const waveInfo: WaveInfo = {
         waveType: p.getWaveType(),
         degree: expectedWaveDegree,
@@ -160,6 +185,7 @@ export class WaveInfoService {
           wave: isWaveValid,
           time: isTimeValid,
           structure: isStructureValid,
+          channel: isChannelValid || false,
         },
         wave2: {
           time: {

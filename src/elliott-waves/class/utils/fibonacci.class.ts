@@ -147,12 +147,12 @@ export class Fibonacci {
   }
 
   /**
-   * Calculates the percentage gain from p1 to p2.
+   * Calculates the percentage increase from p1 to p2.
    * @param {number} p1 - The initial value.
    * @param {number} p2 - The final value.
    * @returns {number} The percentage gain.
    */
-  calculatePercentageGain(p1: number, p2: number): number {
+  calculatePercentageIncrease(p1: number, p2: number): number {
     if (p1 === 0) {
       return 0;
     }

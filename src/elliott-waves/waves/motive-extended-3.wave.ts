@@ -101,7 +101,7 @@ export class MotiveExtended3 extends MotiveInterface {
       { range: [55.9, 61.8], score: WaveScore.PERFECT },
       { range: [61.8, 78.6], score: WaveScore.PERFECT },
       { range: [78.6, 83.6], score: WaveScore.WORK },
-      { range: [83.6, 88.6], score: WaveScore.WORSTCASESCENARIO },
+      { range: [83.6, 99.9], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 

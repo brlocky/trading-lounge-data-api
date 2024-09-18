@@ -103,7 +103,7 @@ export class MotiveExtended5 extends MotiveInterface {
       { range: [55.9, 61.8], score: WaveScore.PERFECT },
       { range: [61.8, 78.6], score: WaveScore.PERFECT },
       { range: [78.6, 83.6], score: WaveScore.WORK },
-      { range: [83.6, 88.6], score: WaveScore.WORSTCASESCENARIO },
+      { range: [83.6, 99.9], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 
@@ -111,7 +111,7 @@ export class MotiveExtended5 extends MotiveInterface {
     return [
       { range: [101, 138.2], score: WaveScore.PERFECT },
       { range: [138.2, 161.8], score: WaveScore.GOOD },
-      { range: [161.8, 261.8], score: WaveScore.WORSTCASESCENARIO },
+      { range: [161.8, 1600], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 

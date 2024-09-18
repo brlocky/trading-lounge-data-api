@@ -87,7 +87,7 @@ export class MotiveContractingDiagonal extends MotiveInterface {
       { range: [61.8, 70.2], score: WaveScore.PERFECT },
       { range: [70.2, 78.6], score: WaveScore.GOOD },
       { range: [78.6, 88.6], score: WaveScore.WORK },
-      { range: [88.6, 99], score: WaveScore.WORSTCASESCENARIO },
+      { range: [88.6, 99.9], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 

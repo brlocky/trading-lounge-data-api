@@ -12,8 +12,8 @@ export class MotiveContractingDiagonal extends MotiveWaveInterface {
   }
 
   isValidWave3Stucture(p0: Pivot, p1: Pivot, p2: Pivot, p3: Pivot): boolean {
-    const w1Gains = this.fibonacci.calculatePercentageGain(p0.price, p1.price);
-    const w3Gains = this.fibonacci.calculatePercentageGain(p2.price, p3.price);
+    const w1Gains = this.fibonacci.calculatePercentageIncrease(p0.price, p1.price);
+    const w3Gains = this.fibonacci.calculatePercentageIncrease(p2.price, p3.price);
     return w3Gains < w1Gains;
   }
 
@@ -24,8 +24,8 @@ export class MotiveContractingDiagonal extends MotiveWaveInterface {
   }
 
   isValidWave5Stucture(p0: Pivot, p1: Pivot, p2: Pivot, p3: Pivot, p4: Pivot, p5: Pivot): boolean {
-    const w3Gains = this.fibonacci.calculatePercentageGain(p2.price, p3.price);
-    const w5Gains = this.fibonacci.calculatePercentageGain(p4.price, p5.price);
+    const w3Gains = this.fibonacci.calculatePercentageIncrease(p2.price, p3.price);
+    const w5Gains = this.fibonacci.calculatePercentageIncrease(p4.price, p5.price);
     return w5Gains < w3Gains;
   }
 

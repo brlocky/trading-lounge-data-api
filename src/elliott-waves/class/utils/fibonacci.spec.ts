@@ -182,33 +182,33 @@ describe('Fibonacci', () => {
 
   describe('calculatePercentageGain', () => {
     it('should return 20 when increasing from 100 to 120', () => {
-      expect(instanceLinear.calculatePercentageGain(100, 120)).toBe(20);
-      expect(instanceLog.calculatePercentageGain(100, 120)).toBe(20);
+      expect(instanceLinear.calculatePercentageIncrease(100, 120)).toBe(20);
+      expect(instanceLog.calculatePercentageIncrease(100, 120)).toBe(20);
     });
 
     it('should return 50 when increasing from 100 to 150', () => {
-      expect(instanceLinear.calculatePercentageGain(100, 150)).toBe(50);
-      expect(instanceLog.calculatePercentageGain(100, 150)).toBe(50);
+      expect(instanceLinear.calculatePercentageIncrease(100, 150)).toBe(50);
+      expect(instanceLog.calculatePercentageIncrease(100, 150)).toBe(50);
     });
 
     it('should return 300 when increasing from 50 to 200', () => {
-      expect(instanceLinear.calculatePercentageGain(50, 200)).toBe(300);
-      expect(instanceLog.calculatePercentageGain(50, 200)).toBe(300);
+      expect(instanceLinear.calculatePercentageIncrease(50, 200)).toBe(300);
+      expect(instanceLog.calculatePercentageIncrease(50, 200)).toBe(300);
     });
 
     it('should return 0 when increasing from 100 to 100', () => {
-      expect(instanceLinear.calculatePercentageGain(100, 100)).toBe(0);
-      expect(instanceLog.calculatePercentageGain(100, 100)).toBe(0);
+      expect(instanceLinear.calculatePercentageIncrease(100, 100)).toBe(0);
+      expect(instanceLog.calculatePercentageIncrease(100, 100)).toBe(0);
     });
 
     it('should return -50 when decreasing from 100 to 50 (negative gain)', () => {
-      expect(instanceLinear.calculatePercentageGain(100, 50)).toBe(-50);
-      expect(instanceLog.calculatePercentageGain(100, 50)).toBe(-50);
+      expect(instanceLinear.calculatePercentageIncrease(100, 50)).toBe(-50);
+      expect(instanceLog.calculatePercentageIncrease(100, 50)).toBe(-50);
     });
 
     it('should return 0 when starting value is 0', () => {
-      expect(instanceLinear.calculatePercentageGain(0, 50)).toBe(0);
-      expect(instanceLog.calculatePercentageGain(0, 50)).toBe(0);
+      expect(instanceLinear.calculatePercentageIncrease(0, 50)).toBe(0);
+      expect(instanceLog.calculatePercentageIncrease(0, 50)).toBe(0);
     });
   });
 });
