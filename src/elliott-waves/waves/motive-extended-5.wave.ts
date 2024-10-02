@@ -12,6 +12,10 @@ export class MotiveExtended5 extends MotiveInterface {
     return false;
   }
 
+  public validateChannel(waves: Wave[], useLogScale: boolean): WaveScore {
+    return WaveScore.INVALID;
+  }
+
   calculateWave5Projection(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave, useLogScale: boolean): number {
     this.fibonacci.setLogScale(useLogScale);
 

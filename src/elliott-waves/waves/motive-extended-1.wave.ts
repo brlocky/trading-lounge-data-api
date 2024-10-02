@@ -12,6 +12,10 @@ export class MotiveExtended1 extends MotiveInterface {
     return false;
   }
 
+  public validateChannel(waves: Wave[], useLogScale: boolean): WaveScore {
+    return WaveScore.INVALID;
+  }
+
   public calculateWave5Projection(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave, useLogScale: boolean): number {
     this.fibonacci.setLogScale(useLogScale);
     return this.fibonacci.getProjectionPercentage(wave1.pStart.price, wave1.pEnd.price, wave2.pEnd.price, wave5.pEnd.price);
@@ -97,8 +101,8 @@ export class MotiveExtended1 extends MotiveInterface {
   public getWave2RetracementConfig(): ScoreRange[] {
     return [
       { range: [14.2, 23.6], score: WaveScore.WORK },
-      { range: [23.6, 45], score: WaveScore.PERFECT },
-      { range: [45, 61.8], score: WaveScore.WORK },
+      { range: [23.6, 38.2], score: WaveScore.PERFECT },
+      { range: [38.2, 45], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 

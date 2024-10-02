@@ -26,6 +26,7 @@ export interface WaveInfo {
     wave: number;
     time: number;
     structure: number;
+    channel: number;
   };
   isValid: {
     wave: boolean;

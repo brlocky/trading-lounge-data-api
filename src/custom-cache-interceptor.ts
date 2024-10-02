@@ -1,17 +1,29 @@
-import { CallHandler, ExecutionContext, Injectable } from '@nestjs/common';
+import { CallHandler, ExecutionContext, Injectable, Inject } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { NO_CACHE_KEY } from './decorators/no-cache.decorator';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class CustomCacheInterceptor extends CacheInterceptor {
-  constructor(cacheManager: any, reflector: Reflector) {
+  private readonly isDevelopment: boolean;
+
+  constructor(
+    cacheManager: any,
+    reflector: Reflector,
+    @Inject(ConfigService) private configService: ConfigService,
+  ) {
     super(cacheManager, reflector);
+    this.isDevelopment = this.configService.get<string>('NODE_ENV') === 'development';
   }
 
   async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
+    if (this.isDevelopment) {
+      return next.handle(); // Bypass cache in development
+    }
+
     const isNoCache = this.reflector.getAllAndOverride<boolean>(NO_CACHE_KEY, [context.getHandler(), context.getClass()]);
 
     if (isNoCache) {
@@ -22,15 +34,17 @@ export class CustomCacheInterceptor extends CacheInterceptor {
   }
 
   trackBy(context: ExecutionContext): string | undefined {
+    if (this.isDevelopment) {
+      return undefined; // Bypass cache in development
+    }
+
     const isNoCache = this.reflector.getAllAndOverride<boolean>(NO_CACHE_KEY, [context.getHandler(), context.getClass()]);
 
     if (isNoCache) {
-      return undefined; // Returning undefined bypasses the cache
+      return undefined;
     }
 
-    // Check if there's a custom cache key set using CacheKey decorator
     const cacheKey = this.reflector.get<string>('cacheKey', context.getHandler());
-
     if (cacheKey) {
       return cacheKey;
     }

@@ -17,9 +17,9 @@ export class WaveInfoService {
   constructor() {
     this.fibonacci = new Fibonacci();
     this.patterns = [
-      new MotiveExtended1(),
+      //new MotiveExtended1(),
       new MotiveExtended3(),
-      new MotiveExtended5(),
+      //new MotiveExtended5(),
       new MotiveContractingDiagonal(),
       new MotiveExpandingDiagonal(),
     ];
@@ -40,22 +40,7 @@ export class WaveInfoService {
     };
   }
 
-  private sortWaveInfoArray(array: WaveInfo[]) {
-    return array.sort((a, b) => {
-      // Sorting by isValid (structure, wave, time)
-      if (a.isValid.structure !== b.isValid.structure) return a.isValid.structure ? -1 : 1;
-      if (a.isValid.wave !== b.isValid.wave) return a.isValid.wave ? -1 : 1;
-      if (a.isValid.time !== b.isValid.time) return a.isValid.time ? -1 : 1;
-
-      // Sorting by score (structure, wave, time)
-      if (a.score.total !== b.score.total) return b.score.total - a.score.total;
-      if (a.score.time !== b.score.time) return b.score.time - a.score.time;
-
-      return 0;
-    });
-  }
-
-  getWaveClusterInformation(cluster: ClusterWaves, useLogScale = true, commonInterval: number): WaveInfo[] {
+  getWaveClusterInformation(cluster: ClusterWaves, useLogScale = false, commonInterval: number): WaveInfo[] {
     const [wave1, wave2, wave3, wave4, wave5] = cluster.waves;
     return this.getWaveInformation(wave1, wave2, wave3, wave4, wave5, useLogScale, commonInterval);
   }
@@ -72,7 +57,7 @@ export class WaveInfoService {
     if (!wave3 || !wave4) return [];
 
     const isWave1Broken = (wave1: Wave, wave4: Wave): boolean => {
-      const upTrend = !!(wave1.pStart.price < wave2.pEnd.price);
+      const upTrend = wave1.pStart.price < wave1.pEnd.price;
 
       return upTrend ? wave1.pEnd.price > wave4.pEnd.price : wave1.pEnd.price < wave4.pEnd.price;
     };
@@ -86,16 +71,25 @@ export class WaveInfoService {
       }
 
       const retracementWave2 = p.calculateWave2Retracement(wave1, wave2, useLogScale);
-      const wave2Validation = p.validateWave2Retracement(retracementWave2);
+      let wave2Validation = p.validateWave2Retracement(retracementWave2);
+      if (!wave2Validation) {
+        const valueRetracement = this.fibonacci.calculatePercentageDecrease(wave1.pEnd.price, wave2.pEnd.price);
+        wave2Validation = p.validateWave2Retracement(valueRetracement);
+      }
 
       const projectionWave3 = p.calculateWave3Projection(wave1, wave2, wave3, useLogScale);
       const wave3Validation = p.validateWave3Projection(projectionWave3);
 
       const retracementWave4 = p.calculateWave4Retracement(wave3, wave4, useLogScale);
-
       // Wave 4 Alternation to wave 1
-      const wave4Validation =
+      let wave4Validation =
         retracementWave2 <= 50 ? p.validateWave4DeepRetracement(retracementWave4) : p.validateWave4Retracement(retracementWave4);
+
+      if (!wave4Validation) {
+        const valueRetracement = this.fibonacci.calculatePercentageDecrease(wave3.pEnd.price, wave4.pEnd.price);
+        wave4Validation =
+          retracementWave2 <= 50 ? p.validateWave4DeepRetracement(valueRetracement) : p.validateWave4Retracement(valueRetracement);
+      }
 
       let projectionWave5 = 0;
       let wave5Validation = WaveScore.INVALID;
@@ -140,52 +134,33 @@ export class WaveInfoService {
         wave4Validation !== WaveScore.INVALID &&
         (!wave5 || wave5Validation !== WaveScore.INVALID);
 
-      const isTimeValid =
+      /*       const isTimeValid =
         wave2TimeValidation !== WaveScore.INVALID &&
         wave3TimeValidation !== WaveScore.INVALID &&
         wave4TimeValidation !== WaveScore.INVALID &&
-        (!wave5 || wave5TimeValidation !== WaveScore.INVALID);
-
+        (!wave5 || wave5TimeValidation !== WaveScore.INVALID); */
+      const isTimeValid = wave4TimeValidation !== WaveScore.INVALID;
       const expectedWaveDegree = wave5
         ? WaveDegreeCalculator.calculateWaveDegreeFromCandles([wave1.pStart, wave5.pEnd])
         : WaveDegreeCalculator.calculateWaveDegreeFromCandles([wave1.pStart, wave1.pEnd], 'wave1');
 
-      let isChannelValid: null | boolean = null;
-      if (wave5) {
-        switch (p.getWaveType()) {
-          case WaveType.MOTIVE:
-          case WaveType.MOTIVE_EXTENDED_1:
-          case WaveType.MOTIVE_EXTENDED_3:
-          case WaveType.MOTIVE_EXTENDED_5:
-            isChannelValid = this.channelService.validateWaveChannels([wave1, wave2, wave3, wave4, wave5], useLogScale);
-            break;
-
-          case WaveType.MOTIVE_CONTRACTING_DIAGONAL:
-            isChannelValid =
-              this.channelService.validateDiagonal([wave1, wave2, wave3, wave4, wave5], useLogScale).type === 'contracting' ? true : false;
-            break;
-
-          case WaveType.MOTIVE_EXPANDING_DIAGONAL:
-            isChannelValid =
-              this.channelService.validateDiagonal([wave1, wave2, wave3, wave4, wave5], useLogScale).type === 'expanding' ? true : false;
-            break;
-        }
-      }
-
+      const channelScore: WaveScore = wave5 ? p.validateChannel([wave1, wave2, wave3, wave4, wave5], useLogScale) : WaveScore.INVALID;
+      const isChannelValid = channelScore !== WaveScore.INVALID;
       const waveInfo: WaveInfo = {
         waveType: p.getWaveType(),
         degree: expectedWaveDegree,
         score: {
-          total: waveScore + timeScore + structureScore,
+          total: waveScore + timeScore + structureScore + channelScore,
           wave: waveScore,
           time: timeScore,
           structure: structureScore,
+          channel: channelScore,
         },
         isValid: {
           wave: isWaveValid,
           time: isTimeValid,
-          structure: isStructureValid,
-          channel: isChannelValid || false,
+          structure: isStructureValid && isChannelValid && isTimeValid,
+          channel: isChannelValid,
         },
         wave2: {
           time: {
@@ -233,5 +208,20 @@ export class WaveInfoService {
     }
 
     return this.sortWaveInfoArray(wavesInfo);
+  }
+
+  private sortWaveInfoArray(array: WaveInfo[]) {
+    return array.sort((a, b) => {
+      // Sorting by isValid (structure, wave, time)
+      if (a.isValid.structure !== b.isValid.structure) return a.isValid.structure ? -1 : 1;
+      if (a.isValid.wave !== b.isValid.wave) return a.isValid.wave ? -1 : 1;
+      if (a.isValid.channel !== b.isValid.channel) return a.isValid.channel ? -1 : 1;
+      if (a.isValid.time !== b.isValid.time) return a.isValid.time ? -1 : 1;
+
+      // Sorting by score (structure, wave, time)
+      if (a.score.total !== b.score.total) return b.score.total - a.score.total;
+
+      return 0;
+    });
   }
 }

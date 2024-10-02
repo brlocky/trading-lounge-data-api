@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Wave } from '../class/wave.class'; // Adjust the import path as necessary
 import { Trend } from '../enums'; // Adjust the import path as necessary
 
@@ -15,7 +15,14 @@ interface Line {
 
 interface Channel {
   lowerLine: Line;
+  middleLine: Line;
   upperLine: Line;
+}
+
+interface GenericChannels {
+  base: Channel;
+  temporary: Channel;
+  final: Channel;
 }
 
 interface DiagonalValidationResult {
@@ -25,6 +32,66 @@ interface DiagonalValidationResult {
 
 @Injectable()
 export class ChannelValidationService {
+  /**
+   * Create generic channels for the impulse.
+   */
+  createChannels(waves: [Wave, Wave, Wave, Wave, Wave], useLogScale: boolean = false): GenericChannels {
+    const [w1, w2, w3, w4] = waves;
+    const base = this.createChannel(w1.pStart, w2.pEnd, w1.pEnd, useLogScale);
+    const temporary = this.createChannel(w1.pEnd, w3.pEnd, w2.pEnd, useLogScale);
+    const final = this.createChannel(w2.pEnd, w4.pEnd, w1.pEnd, useLogScale);
+
+    return { base, temporary, final };
+  }
+
+  /**
+   * Create a channel between two points.
+   */
+  createChannel(p1: Point, p2: Point, p3: Point, useLogScale: boolean = false): Channel {
+    const line1 = this.calculateLine(p1, p2, useLogScale);
+    const line2 = this.calculateParallelLine(line1, p3, useLogScale);
+
+    // Determine which line is lower based on the price points
+    let lowerLine, upperLine;
+    if (p1.price < p3.price) {
+      lowerLine = line1;
+      upperLine = line2;
+    } else {
+      lowerLine = line2;
+      upperLine = line1;
+    }
+
+    const middleLine = this.calculateMiddleLine(lowerLine, upperLine);
+
+    return { lowerLine, middleLine, upperLine };
+  }
+
+  /**
+   * Check if a point is beyond a given line in the direction of the trend.
+   */
+  isBeyondLine(point: Point, line: Line, trend: Trend, useLogScale: boolean = false): boolean {
+    const price = useLogScale ? Math.log(point.price) : point.price;
+    const linePriceAtTime = line.slope * point.time + line.intercept;
+
+    if (trend === Trend.UP) {
+      return price > linePriceAtTime;
+    } else if (trend === Trend.DOWN) {
+      return price < linePriceAtTime;
+    } else {
+      throw new BadRequestException('Unknown trend direction');
+    }
+  }
+
+  /**
+   * Calculate the relative position of a point within a channel.
+   */
+  calculateChannelPosition(point: Point, channel: Channel, useLogScale: boolean = false): number {
+    const price = useLogScale ? Math.log(point.price) : point.price;
+    const lowerPrice = channel.lowerLine.slope * point.time + channel.lowerLine.intercept;
+    const upperPrice = channel.upperLine.slope * point.time + channel.upperLine.intercept;
+    return (price - lowerPrice) / (upperPrice - lowerPrice);
+  }
+
   /**
    * Calculate a line (slope and intercept) between two points.
    */
@@ -46,19 +113,13 @@ export class ChannelValidationService {
   }
 
   /**
-   * Check if a point is beyond a given line in the direction of the trend.
+   * Calculate the middle line between two given lines.
    */
-  isBeyondLine(point: Point, line: Line, trend: Trend, useLogScale: boolean = false): boolean {
-    const price = useLogScale ? Math.log(point.price) : point.price;
-    const linePriceAtTime = line.slope * point.time + line.intercept;
-
-    if (trend === Trend.UP) {
-      return price > linePriceAtTime;
-    } else if (trend === Trend.DOWN) {
-      return price < linePriceAtTime;
-    } else {
-      throw new Error('Unknown trend direction');
-    }
+  calculateMiddleLine(lowerLine: Line, upperLine: Line): Line {
+    return {
+      slope: (lowerLine.slope + upperLine.slope) / 2,
+      intercept: (lowerLine.intercept + upperLine.intercept) / 2,
+    };
   }
 
   /**
@@ -70,63 +131,11 @@ export class ChannelValidationService {
   }
 
   /**
-   * Validate waves using channels.
-   */
-  validateWaveChannels(waves: Wave[], useLogScale: boolean = false): boolean {
-    // Ensure we have at least 5 waves
-    if (waves.length < 5) {
-      throw new Error('At least 5 waves are required for validation.');
-    }
-
-    // Determine trend from the first wave
-    const trend = waves[0].trend();
-
-    // Extract points from waves
-    const pStart1 = this.wavePoint(waves[0], true);
-    const pEnd1 = this.wavePoint(waves[0], false);
-    const pEnd2 = this.wavePoint(waves[1], false);
-    const pEnd3 = this.wavePoint(waves[2], false);
-    const pEnd4 = this.wavePoint(waves[3], false);
-    const pEnd5 = this.wavePoint(waves[4], false);
-
-    // Create base channel using Wave 1 and Wave 2
-    const baseLineLower = this.calculateLine(pStart1, pEnd2, useLogScale);
-    const baseLineUpper = this.calculateParallelLine(baseLineLower, pEnd1, useLogScale);
-    const baseChannel: Channel = { lowerLine: baseLineLower, upperLine: baseLineUpper };
-
-    // Validate Wave 3 breakout
-    const wave3BreaksBaseChannel = this.isBeyondLine(pEnd3, baseChannel.upperLine, trend, useLogScale);
-
-    if (!wave3BreaksBaseChannel) {
-      console.log('Wave 3 does not break the base channel, validation failed.');
-      return false;
-    }
-
-    // Create acceleration channel using Wave 3 and Wave 4
-    const accelLineLower = this.calculateLine(pEnd2, pEnd4, useLogScale);
-    const accelLineUpper = this.calculateParallelLine(accelLineLower, pEnd3, useLogScale);
-    const accelChannel: Channel = { lowerLine: accelLineLower, upperLine: accelLineUpper };
-
-    // Validate Wave 5 within acceleration channel
-    const wave5WithinAccelChannel =
-      this.isBeyondLine(pEnd5, accelChannel.lowerLine, trend, useLogScale) &&
-      !this.isBeyondLine(pEnd5, accelChannel.upperLine, trend, useLogScale);
-
-    if (!wave5WithinAccelChannel) {
-      console.log('Wave 5 does not conform to the acceleration channel, validation failed.');
-      return false;
-    }
-
-    console.log('All waves validated successfully within their respective channels.');
-    return true;
-  }
-
-  /**
    * Validate contracting or expanding diagonals.
    */
   validateDiagonal(waves: Wave[], useLogScale: boolean = false): DiagonalValidationResult {
     if (waves.length !== 5) {
-      throw new Error('Diagonal validation requires exactly 5 waves.');
+      throw new BadRequestException('Diagonal validation requires exactly 5 waves.');
     }
 
     // Extract points
@@ -159,13 +168,10 @@ export class ChannelValidationService {
     }
 
     if (isContracting) {
-      console.log('Valid contracting diagonal detected.');
       return { isValid: true, type: 'contracting' };
     } else if (isExpanding) {
-      console.log('Valid expanding diagonal detected.');
       return { isValid: true, type: 'expanding' };
     } else {
-      console.log('No valid diagonal pattern detected.');
       return { isValid: false, type: 'none' };
     }
   }

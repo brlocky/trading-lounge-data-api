@@ -1,4 +1,4 @@
-import { PreconditionFailedException } from '@nestjs/common';
+import { BadRequestException, PreconditionFailedException } from '@nestjs/common';
 import { WaveDegree, PivotType, Trend, WaveName } from 'src/elliott-waves/enums';
 import { Pivot } from '../pivot.class';
 import { Wave } from '../wave.class';
@@ -142,7 +142,7 @@ export const getTrend = (data: Candle[]): Trend => {
   }
 
   // If no break occurred, throw an error
-  throw new Error(`getTrend: Unable to determine trend. No break of the first candle's high or low occurred.`);
+  throw new BadRequestException(`getTrend: Unable to determine trend. No break of the first candle's high or low occurred.`);
 };
 
 export const calculateAngle = (pivot1: { price: number; time: number }, pivot2: { price: number; time: number }): number => {
@@ -159,7 +159,7 @@ export const convertPivotsToWaves = (pivots: Pivot[], degree: WaveDegree): Wave[
   let waveName = WaveName._1;
   const waves: Wave[] = [];
   if (pivots.length !== 6) {
-    throw new Error('Pivots array must have an even number of elements');
+    throw new BadRequestException('Pivots array must have exactly 6 elements');
   }
 
   for (let i = 0; i < pivots.length - 1; i++) {
@@ -214,7 +214,7 @@ export function findPivotIndex(pivots: Pivot[], targetPivot: Pivot | ClusterPivo
   const index = pivots.findIndex((p) => p.id === targetPivot.id || (p.time === targetPivot.time && p.price === targetPivot.price));
 
   if (index === -1) {
-    throw new Error(`Pivot not found: ${JSON.stringify(targetPivot)}`);
+    throw new BadRequestException(`Pivot not found: ${JSON.stringify(targetPivot)}`);
   }
 
   return index;

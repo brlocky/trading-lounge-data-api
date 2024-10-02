@@ -166,7 +166,9 @@ export class ChartService {
 
     try {
       await chart.toFile(outputFilename);
-      console.log(`Chart saved as ${outputFilename}`);
-    } catch (error) {}
+      console.log(`Chart saved as - ${outputFilename}`);
+    } catch (error) {
+      console.log(`Fail to Save - ${outputFilename}`);
+    }
   }
 }

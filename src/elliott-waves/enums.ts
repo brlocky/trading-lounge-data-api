@@ -30,12 +30,18 @@ export enum Trend {
   UP = 1,
   DOWN = -1,
 }
+
 const TrendLabels = createEnumLabelMappings(Trend, {
   UP: 'Up',
   DOWN: 'Down',
 });
+
 export function trendToString(trend: Trend): string {
   return getEnumLabel(trend, TrendLabels);
+}
+
+export function reverseTrend(trend: Trend): Trend {
+  return trend === Trend.UP ? Trend.DOWN : Trend.UP;
 }
 
 // Define the WaveName enum
@@ -159,4 +165,34 @@ export enum WaveScore {
   'WORK' = 2,
   'GOOD' = 3,
   'PERFECT' = 5,
+}
+
+export function mapScoreToWaveScore(score: number): WaveScore {
+  if (isNaN(score)) {
+    return WaveScore.INVALID;
+  }
+
+  // Treat any value less than 0 as 0
+  score = Math.max(0, score);
+
+  if (score >= 5) {
+    return WaveScore.PERFECT;
+  }
+
+  // Round down to the nearest integer
+  const roundedScore = Math.floor(score);
+
+  switch (roundedScore) {
+    case 0:
+      return WaveScore.INVALID;
+    case 1:
+      return WaveScore.WORSTCASESCENARIO;
+    case 2:
+      return WaveScore.WORK;
+    case 3:
+    case 4:
+      return WaveScore.GOOD;
+    default:
+      return WaveScore.INVALID; // This should never be reached, but it's here for completeness
+  }
 }

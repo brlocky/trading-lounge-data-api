@@ -1,18 +1,10 @@
-import { Injectable, PreconditionFailedException } from '@nestjs/common';
+import { BadRequestException, Injectable, PreconditionFailedException } from '@nestjs/common';
 import { Pivot } from '../class';
+import { CandleTime, WaveDegreeCalculator } from '../class/utils';
 import { Fibonacci } from '../class/utils/fibonacci.class';
 import { findPivotIndex, getHHBeforeBreak, getLLBeforeBreak, getTrend } from '../class/utils/pivot.utils';
 import { PivotType, Trend } from '../enums';
-import { Candle, PivotTest } from '../types';
-import { CandleTime, WaveDegreeCalculator } from '../class/utils';
-import { pbkdf2 } from 'crypto';
-
-// Interface to represent a wave retracement
-interface WaveRetracement {
-  p1: Pivot;
-  p2: Pivot;
-  retracement: number;
-}
+import { Candle } from '../types';
 
 @Injectable()
 export class CandleService {
@@ -93,7 +85,7 @@ export class CandleService {
       const lastPivot = pivots[i - 1];
       const currentPivot = pivots[i];
       if ((lastPivot.isHigh() && currentPivot.isHigh()) || (lastPivot.isLow() && currentPivot.isLow())) {
-        throw new Error('found pivots out of sequence');
+        throw new BadRequestException('found pivots out of sequence');
       }
     }
 
@@ -101,29 +93,230 @@ export class CandleService {
   }
 
   // Method to get wave pivot retracements based on a minimum number of waves
-  getWavePivotRetracementsByNumberOfWaves(pivots: Pivot[], minWaves: number): Pivot[] {
+  getWavePivotRetracementsByNumberOfWaves(pivots: Pivot[], minWaves: number, extremePivotsOnly: boolean = false): Pivot[] {
     const detailDecrement = 5;
     const minDetail = 0;
     let detail = 90;
-    let waveRetracements: WaveRetracement[] = [];
+    //let waveRetracements: WaveRetracement[] = [];
+    let marketPivots: Pivot[] = [];
+    let waveCount = 0;
+    //let waveRetracements: WaveRetracement[] = [];
 
-    // Adjust the detail level until the desired number of waves is found
-    while (detail >= minDetail && (waveRetracements.length === 0 || waveRetracements.length < minWaves)) {
-      waveRetracements = this.analyzeWaveRetracements(pivots, detail);
+    if (pivots.length < 4) {
+      return [];
+    }
+
+    while (detail > minDetail && waveCount < minWaves) {
+      marketPivots = this.getMarketStructurePivots(pivots, detail, extremePivotsOnly);
+
+      // Calculate wave count
+      waveCount = marketPivots.length / 2;
+
       detail -= detailDecrement;
     }
 
-    return waveRetracements.flatMap((w) => [w.p1, w.p2]);
+    return marketPivots;
   }
 
-  // Method to get wave pivot retracements based on a specific retracement percentage
-  getWavePivotRetracementsByRetracement(pivots: Pivot[], retracement: number): Pivot[] {
-    const waveRetracements: WaveRetracement[] = this.analyzeWaveRetracements(pivots, retracement);
-    return waveRetracements.flatMap((w) => [w.p1, w.p2]);
+  getWavePivotRetracementsByRetracementValue(pivots: Pivot[], retracementValue: number, extremePivotsOnly: boolean = false): Pivot[] {
+    return this.getMarketStructurePivots(pivots, retracementValue, extremePivotsOnly);
   }
 
-  // Protected method to analyze wave retracements
-  protected analyzeWaveRetracements(pivots: Pivot[], threshold: number): WaveRetracement[] {
+  protected getMarketStructurePivots2(pivots: Pivot[], retracementThreshold: number, extremePivotsOnly: boolean = false): Pivot[] {
+    const significantPivots: Pivot[] = [];
+    const fibonacci = new Fibonacci();
+    let trend: 'up' | 'down' | null = null;
+    let lastSignificantHigh: Pivot | null = null;
+    let lastSignificantLow: Pivot | null = null;
+    let currentHigh: Pivot | null = null;
+    let currentLow: Pivot | null = null;
+
+    for (let i = 0; i < pivots.length; i++) {
+      const currentPivot = pivots[i];
+
+      if (trend === null || trend === 'up') {
+        if (!currentHigh || currentPivot.price > currentHigh.price) {
+          currentHigh = currentPivot;
+        } else if (currentHigh) {
+          const retracement = fibonacci.calculatePercentageDecrease(currentHigh.price, currentPivot.price);
+          const retracement2 = lastSignificantLow?.price
+            ? fibonacci.getRetracementPercentage(lastSignificantLow.price, currentHigh.price, currentPivot.price)
+            : 0;
+          if (retracement >= retracementThreshold || retracement2 >= retracementThreshold) {
+            if (lastSignificantHigh !== currentHigh) {
+              significantPivots.push(currentHigh);
+              lastSignificantHigh = currentHigh;
+            }
+            trend = 'down';
+            currentLow = currentPivot;
+          }
+        }
+      }
+
+      if (trend === null || trend === 'down') {
+        if (!currentLow || currentPivot.price < currentLow.price) {
+          currentLow = currentPivot;
+        } else if (currentLow) {
+          const retracement = fibonacci.calculatePercentageDecrease(currentPivot.price, currentLow.price);
+          const retracement2 = lastSignificantHigh?.price
+            ? fibonacci.getRetracementPercentage(lastSignificantHigh.price, currentLow.price, currentPivot.price)
+            : 0;
+          if (retracement >= retracementThreshold || retracement2 >= retracementThreshold) {
+            if (lastSignificantLow !== currentLow) {
+              significantPivots.push(currentLow);
+              lastSignificantLow = currentLow;
+            }
+            trend = 'up';
+            currentHigh = currentPivot;
+          }
+        }
+      }
+    }
+
+    // Add the last significant high or low if it exists
+    if (trend === 'up' && currentHigh && lastSignificantHigh !== currentHigh) {
+      significantPivots.push(currentHigh);
+    } else if (trend === 'down' && currentLow && lastSignificantLow !== currentLow) {
+      significantPivots.push(currentLow);
+    }
+
+    if (extremePivotsOnly) {
+      return this.getExtremePivotsOnly(significantPivots);
+    }
+
+    return significantPivots;
+  }
+  protected getMarketStructurePivots(pivots: Pivot[], retracementThreshold: number, extremePivotsOnly: boolean = false): Pivot[] {
+    const significantPivots: Pivot[] = [];
+    const fibonacci = new Fibonacci();
+    fibonacci.setLogScale(false);
+    let trend: 'up' | 'down' | null = null;
+    let lastSignificantHigh: Pivot | null = null;
+    let lastSignificantLow: Pivot | null = null;
+    let currentHigh: Pivot | null = null;
+    let currentLow: Pivot | null = null;
+
+    for (let i = 0; i < pivots.length; i++) {
+      const currentPivot = pivots[i];
+
+      // Initialize trend and first high/low if not set
+      if (trend === null) {
+        if (i === 0) {
+          currentHigh = currentLow = currentPivot;
+          continue;
+        } else if (i === 1) {
+          trend = currentPivot.price > currentHigh!.price ? 'up' : 'down';
+          if (trend === 'up') {
+            currentHigh = currentPivot;
+            significantPivots.push(currentLow!);
+            lastSignificantLow = currentLow;
+          } else {
+            currentLow = currentPivot;
+            significantPivots.push(currentHigh!);
+            lastSignificantHigh = currentHigh;
+          }
+          continue;
+        }
+      }
+
+      if (trend === 'up') {
+        if (currentPivot.price > currentHigh!.price) {
+          currentHigh = currentPivot;
+        } else {
+          const retracement = currentHigh ? fibonacci.calculatePercentageDecrease(currentHigh.price, currentPivot.price) : 0;
+          const retracement2 =
+            lastSignificantLow && currentHigh
+              ? fibonacci.getRetracementPercentage(lastSignificantLow.price, currentHigh.price, currentPivot.price)
+              : 0;
+
+          if (retracement >= retracementThreshold || retracement2 >= retracementThreshold) {
+            if (lastSignificantHigh !== currentHigh) {
+              significantPivots.push(currentHigh!);
+              lastSignificantHigh = currentHigh;
+            }
+            trend = 'down';
+            currentLow = currentPivot;
+          }
+        }
+      } else if (trend === 'down') {
+        if (currentPivot.price < currentLow!.price) {
+          currentLow = currentPivot;
+        } else {
+          const retracement = currentLow ? fibonacci.calculatePercentageIncrease(currentLow.price, currentPivot.price) : 0;
+          const retracement2 =
+            lastSignificantHigh && currentLow
+              ? fibonacci.getRetracementPercentage(lastSignificantHigh.price, currentLow.price, currentPivot.price)
+              : 0;
+
+          if (retracement >= retracementThreshold || retracement2 >= retracementThreshold) {
+            if (lastSignificantLow !== currentLow) {
+              significantPivots.push(currentLow!);
+              lastSignificantLow = currentLow;
+            }
+            trend = 'up';
+            currentHigh = currentPivot;
+          }
+        }
+      }
+    }
+
+    // Add the last significant high or low if it exists
+    if (trend === 'up' && currentHigh && lastSignificantHigh !== currentHigh) {
+      significantPivots.push(currentHigh);
+    } else if (trend === 'down' && currentLow && lastSignificantLow !== currentLow) {
+      significantPivots.push(currentLow);
+    }
+
+    if (extremePivotsOnly) {
+      return this.getExtremePivotsOnly(significantPivots);
+    }
+
+    return significantPivots;
+  }
+
+  protected getExtremePivotsOnly(pivots: Pivot[]): Pivot[] {
+    if (pivots.length < 2) return pivots;
+    const extremePivots: Pivot[] = [];
+    let currentHigh: Pivot | null = null;
+    let currentLow: Pivot | null = null;
+    const trend = pivots[1].price > pivots[0].price ? Trend.UP : Trend.DOWN;
+
+    for (const pivot of pivots) {
+      if (trend === Trend.UP) {
+        if (!currentHigh || pivot.price > currentHigh.price) {
+          if (currentHigh && currentLow) {
+            extremePivots.push(currentHigh, currentLow);
+          }
+          currentHigh = pivot;
+          currentLow = null;
+        } else if (!currentLow || pivot.price < currentLow.price) {
+          currentLow = pivot;
+        }
+      } else {
+        // Trend.DOWN
+        if (!currentLow || pivot.price < currentLow.price) {
+          if (currentLow && currentHigh) {
+            extremePivots.push(currentLow, currentHigh);
+          }
+          currentLow = pivot;
+          currentHigh = null;
+        } else if (!currentHigh || pivot.price > currentHigh.price) {
+          currentHigh = pivot;
+        }
+      }
+    }
+
+    // Add the last extreme pivot pair if it exists
+    if (trend === Trend.UP && currentHigh && currentLow) {
+      extremePivots.push(currentHigh, currentLow);
+    } else if (trend === Trend.DOWN && currentLow && currentHigh) {
+      extremePivots.push(currentLow, currentHigh);
+    }
+
+    return extremePivots;
+  }
+
+  /*  protected analyzeWaveRetracements(pivots: Pivot[], threshold: number): WaveRetracement[] {
     const retracements: WaveRetracement[] = [];
     const fibonacci = new Fibonacci();
     let index = 0;
@@ -159,7 +352,7 @@ export class CandleService {
     }
 
     return retracements;
-  }
+  } */
 
   // Helper method to create a Pivot object
   protected createPivot(candle: Candle, index: number, type: PivotType): Pivot {

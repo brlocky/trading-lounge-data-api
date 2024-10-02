@@ -9,9 +9,6 @@ export class BaseRequest {
   symbol: string;
 
   @ApiProperty()
-  logScale: boolean;
-
-  @ApiProperty()
   candles: CandleDto[] | Candle[];
 }
 
@@ -43,4 +40,7 @@ export class WaveInfoRequest {
 
   @ApiProperty()
   pivots: Pivot[];
+
+  @ApiProperty()
+  degree: WaveDegree;
 }

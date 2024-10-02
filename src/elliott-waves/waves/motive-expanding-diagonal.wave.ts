@@ -1,5 +1,5 @@
 import { Wave } from '../class';
-import { Trend, WaveScore, WaveType } from '../enums';
+import { mapScoreToWaveScore, reverseTrend, Trend, WaveScore, WaveType } from '../enums';
 import { MotiveInterface } from '../interfaces/motive.interface';
 import { ScoreRange } from '../types';
 
@@ -10,6 +10,39 @@ export class MotiveExpandingDiagonal extends MotiveInterface {
 
   public allowWave4Overlap(): boolean {
     return true;
+  }
+
+  public validateChannel(waves: [Wave, Wave, Wave, Wave, Wave], useLogScale: boolean): WaveScore {
+    const [w1, w2, w3, w4, w5] = waves;
+    const { base, final } = this.channelService.createChannels(waves, useLogScale);
+    const trend = w1.trend();
+    const isUpTrend = trend === Trend.UP;
+
+    const wave3BreakBaseTop = this.channelService.isBeyondLine(w3.pEnd, isUpTrend ? base.upperLine : base.lowerLine, trend, useLogScale);
+    if (!wave3BreakBaseTop) return WaveScore.INVALID;
+
+    const wave4BreakBaseBottom = this.channelService.isBeyondLine(
+      w4.pEnd,
+      isUpTrend ? base.lowerLine : base.upperLine,
+      reverseTrend(trend),
+      useLogScale,
+    );
+
+    const wave5BreakBaseTop = this.channelService.isBeyondLine(w5.pEnd, isUpTrend ? base.upperLine : base.lowerLine, trend, useLogScale);
+    const wave5BrealTopFinalChannel = this.channelService.isBeyondLine(
+      w5.pEnd,
+      isUpTrend ? final.upperLine : final.lowerLine,
+      trend,
+      useLogScale,
+    );
+
+    let score = 0;
+    if (wave3BreakBaseTop) score += 1.5;
+    if (wave4BreakBaseBottom) score += 1.5;
+    if (wave5BreakBaseTop) score += 1.5;
+    if (wave5BrealTopFinalChannel) score += 1.5;
+
+    return mapScoreToWaveScore(score);
   }
 
   public calculateWave5Projection(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave, useLogScale: boolean): number {

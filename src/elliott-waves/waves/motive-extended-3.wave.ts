@@ -1,5 +1,5 @@
 import { Wave } from '../class';
-import { Trend, WaveScore, WaveType } from '../enums';
+import { mapScoreToWaveScore, reverseTrend, Trend, WaveScore, WaveType } from '../enums';
 import { MotiveInterface } from '../interfaces/motive.interface';
 import { ScoreRange } from '../types';
 
@@ -12,9 +12,63 @@ export class MotiveExtended3 extends MotiveInterface {
     return false;
   }
 
+  public validateChannel(waves: [Wave, Wave, Wave, Wave, Wave], useLogScale: boolean): WaveScore {
+    const [w1, w2, w3, w4, w5] = waves;
+    const { base, temporary, final } = this.channelService.createChannels(waves, useLogScale);
+    const trend = w1.trend();
+    const isUpTrend = trend === Trend.UP;
+
+    const wave3BreakOut = this.channelService.isBeyondLine(w3.pEnd, isUpTrend ? base.upperLine : base.lowerLine, trend, useLogScale);
+    const wave3BreakOutMiddle = this.channelService.isBeyondLine(w3.pEnd, base.middleLine, trend, useLogScale);
+    if (!wave3BreakOut && !wave3BreakOutMiddle) return WaveScore.INVALID;
+
+    const wave4BreakTemporaryBottom = this.channelService.isBeyondLine(
+      w4.pEnd,
+      isUpTrend ? temporary.lowerLine : temporary.upperLine,
+      reverseTrend(trend),
+      useLogScale,
+    );
+    const wave4BreakTemporaryMiddle = this.channelService.isBeyondLine(
+      w4.pEnd,
+      isUpTrend ? temporary.middleLine : temporary.middleLine,
+      reverseTrend(trend),
+      useLogScale,
+    );
+    const wave5InisideTemporaryChannel = this.channelService.isBeyondLine(
+      w5.pEnd,
+      isUpTrend ? temporary.lowerLine : temporary.upperLine,
+      trend,
+      useLogScale,
+    );
+
+    const wave5InsideFinalChannel = this.channelService.isBeyondLine(
+      w5.pEnd,
+      isUpTrend ? final.lowerLine : final.upperLine,
+      trend,
+      useLogScale,
+    );
+
+    const wave5BrealTopFinalChannel = this.channelService.isBeyondLine(
+      w5.pEnd,
+      isUpTrend ? final.upperLine : final.lowerLine,
+      trend,
+      useLogScale,
+    );
+
+    let score = 0;
+    if (wave3BreakOut || wave3BreakOutMiddle) score += 1;
+    if (wave4BreakTemporaryBottom) score += 1;
+    if (wave4BreakTemporaryMiddle) score += 1;
+    if (wave5InisideTemporaryChannel) score += 1;
+    if (wave5InsideFinalChannel) score += 1;
+    if (wave5BrealTopFinalChannel) score += 1;
+
+    return mapScoreToWaveScore(score);
+  }
+
   calculateWave5Projection(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave, useLogScale: boolean): number {
     this.fibonacci.setLogScale(useLogScale);
-    return this.fibonacci.getProjectionPercentage(wave3.pStart.price, wave3.pEnd.price, wave4.pEnd.price, wave5.pEnd.price);
+    return this.fibonacci.getProjectionPercentage(wave1.pStart.price, wave1.pEnd.price, wave4.pEnd.price, wave5.pEnd.price);
   }
 
   public calculateWave5ProjectionTime(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave, commonInterval: number): number {
@@ -23,8 +77,13 @@ export class MotiveExtended3 extends MotiveInterface {
 
   public validateWaveStructure(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave, useLogScale: boolean): boolean {
     // Wave 3 is bigger
-    const wave3isBigger = wave3.length(useLogScale) >= wave1.length(useLogScale) && wave3.length(useLogScale) >= wave5.length(useLogScale);
+    /*     const wave3isBigger = wave3.length(useLogScale) >= wave1.length(useLogScale) && wave3.length(useLogScale) >= wave5.length(useLogScale);
     if (!wave3isBigger) return false;
+ */
+    // Wave 3 is not the sortest
+    const wave3IsNotTheShortest =
+      wave3.length(useLogScale) >= wave1.length(useLogScale) || wave3.length(useLogScale) >= wave5.length(useLogScale);
+    if (!wave3IsNotTheShortest) return false;
 
     if (wave1.trend() === Trend.UP && wave5.pEnd.price < wave3.pEnd.price) {
       return false;
@@ -43,7 +102,7 @@ export class MotiveExtended3 extends MotiveInterface {
       { range: [10, 38.2], score: WaveScore.GOOD },
       { range: [38.2, 300], score: WaveScore.PERFECT },
       { range: [300, 400], score: WaveScore.WORK },
-      { range: [400, 600], score: WaveScore.WORSTCASESCENARIO },
+      { range: [400, 10000], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 
@@ -56,14 +115,14 @@ export class MotiveExtended3 extends MotiveInterface {
       { range: [161.8, 250], score: WaveScore.GOOD },
       { range: [250, 350], score: WaveScore.GOOD },
       { range: [350, 800], score: WaveScore.WORK },
-      { range: [800, 1000], score: WaveScore.WORSTCASESCENARIO },
+      { range: [800, 10000], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 
   public getWave4TimeConfig(): ScoreRange[] {
     return [
-      { range: [23.6, 38.2], score: WaveScore.INVALID },
-      { range: [38.2, 100], score: WaveScore.INVALID },
+      { range: [0, 10], score: WaveScore.INVALID },
+      { range: [10, 100], score: WaveScore.WORK },
       { range: [100, 125], score: WaveScore.GOOD },
       { range: [125, 250], score: WaveScore.PERFECT },
       { range: [250, 300], score: WaveScore.GOOD },
@@ -74,11 +133,13 @@ export class MotiveExtended3 extends MotiveInterface {
 
   public getWave4LongTimeConfig(): ScoreRange[] {
     return [
-      { range: [0, 14.2], score: WaveScore.INVALID },
-      { range: [14.2, 38.2], score: WaveScore.GOOD },
-      { range: [38.2, 61.8], score: WaveScore.PERFECT },
-      { range: [61.8, 88.8], score: WaveScore.WORK },
-      { range: [88.8, 138.2], score: WaveScore.WORSTCASESCENARIO },
+      { range: [0, 10], score: WaveScore.INVALID },
+      { range: [10, 100], score: WaveScore.WORK },
+      { range: [100, 125], score: WaveScore.GOOD },
+      { range: [125, 250], score: WaveScore.PERFECT },
+      { range: [250, 300], score: WaveScore.GOOD },
+      { range: [300, 500], score: WaveScore.WORK },
+      { range: [500, 600], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 
@@ -97,9 +158,7 @@ export class MotiveExtended3 extends MotiveInterface {
     return [
       { range: [14.2, 23.6], score: WaveScore.WORSTCASESCENARIO },
       { range: [23.6, 50], score: WaveScore.WORK },
-      { range: [50, 55.9], score: WaveScore.PERFECT },
-      { range: [55.9, 61.8], score: WaveScore.PERFECT },
-      { range: [61.8, 78.6], score: WaveScore.PERFECT },
+      { range: [50, 78.6], score: WaveScore.PERFECT },
       { range: [78.6, 83.6], score: WaveScore.WORK },
       { range: [83.6, 99.9], score: WaveScore.WORSTCASESCENARIO },
     ];
@@ -107,12 +166,12 @@ export class MotiveExtended3 extends MotiveInterface {
 
   public getWave3ProjectionConfig(): ScoreRange[] {
     return [
-      { range: [101, 110], score: WaveScore.WORSTCASESCENARIO },
+      { range: [95, 110], score: WaveScore.WORSTCASESCENARIO },
       { range: [110, 138.2], score: WaveScore.WORK },
       { range: [138.2, 160], score: WaveScore.GOOD },
-      { range: [160, 268.1], score: WaveScore.PERFECT },
-      { range: [268.1, 468.1], score: WaveScore.WORK },
-      { range: [468.1, 1600], score: WaveScore.WORSTCASESCENARIO },
+      { range: [160, 368.1], score: WaveScore.PERFECT },
+      { range: [368.1, 468.1], score: WaveScore.WORK },
+      { range: [468.1, 861.8], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 
@@ -120,33 +179,31 @@ export class MotiveExtended3 extends MotiveInterface {
     return [
       { range: [10, 18.9], score: WaveScore.WORSTCASESCENARIO },
       { range: [18.9, 23.6], score: WaveScore.WORK },
-      { range: [23.6, 30.9], score: WaveScore.GOOD },
-      { range: [30.9, 38.2], score: WaveScore.PERFECT },
-      { range: [38.2, 44.1], score: WaveScore.GOOD },
-      { range: [44.1, 50], score: WaveScore.WORK },
+      { range: [23.6, 38.2], score: WaveScore.PERFECT },
+      { range: [38.2, 42], score: WaveScore.GOOD },
+      { range: [42, 50], score: WaveScore.WORK },
       { range: [50, 61.8], score: WaveScore.WORSTCASESCENARIO }, // we can use the candles to see the close and check if was a wick test of a close.
     ];
   }
 
   public getWave4DeepRetracementConfig(): ScoreRange[] {
     return [
-      { range: [10, 23.6], score: WaveScore.WORSTCASESCENARIO },
-      { range: [23.6, 50], score: WaveScore.WORK },
-      { range: [50, 60], score: WaveScore.PERFECT },
-      { range: [60, 64], score: WaveScore.GOOD },
-      { range: [64, 78.6], score: WaveScore.WORSTCASESCENARIO },
+      { range: [10, 18.9], score: WaveScore.WORSTCASESCENARIO },
+      { range: [18.9, 23.6], score: WaveScore.WORK },
+      { range: [23.6, 38.2], score: WaveScore.PERFECT },
+      { range: [38.2, 42], score: WaveScore.PERFECT },
+      { range: [42, 50], score: WaveScore.WORK },
+      { range: [50, 61.8], score: WaveScore.WORSTCASESCENARIO }, // we can use the candles to see the close and check if was a wick test of a close.
     ];
   }
 
   public getWave5ProjectionConfig(): ScoreRange[] {
     return [
-      { range: [14.2, 38.2], score: WaveScore.WORSTCASESCENARIO },
-      { range: [38.2, 60], score: WaveScore.WORK },
-      { range: [60, 78.6], score: WaveScore.PERFECT },
-      { range: [78.6, 88.6], score: WaveScore.GOOD },
-      { range: [88.6, 138.2], score: WaveScore.WORK },
-      { range: [138.2, 261.8], score: WaveScore.WORK },
-      { range: [261.8, 861.8], score: WaveScore.WORSTCASESCENARIO },
+      { range: [38.2, 50], score: WaveScore.WORSTCASESCENARIO },
+      { range: [50, 78.6], score: WaveScore.WORK },
+      { range: [78.6, 105], score: WaveScore.PERFECT },
+      { range: [105, 138.2], score: WaveScore.WORK },
+      { range: [138.2, 300], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 }

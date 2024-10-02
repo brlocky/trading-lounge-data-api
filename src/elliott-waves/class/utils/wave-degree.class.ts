@@ -18,7 +18,7 @@ export class WaveDegreeCalculator {
     { degree: WaveDegree.SUBMILLENNIUM, minDays: 18250, maxDays: 73000, useLogScale: true }, // minDays: ~50 years, maxDays: ~200 years
     { degree: WaveDegree.GRANDSUPERCYCLE, minDays: 7300, maxDays: 18250, useLogScale: true }, // minDays: ~20 years, maxDays: ~50 years
     { degree: WaveDegree.SUPERCYCLE, minDays: 3650, maxDays: 7300, useLogScale: true }, // minDays: ~10 years, maxDays: ~20 years
-    { degree: WaveDegree.CYCLE, minDays: 365, maxDays: 3650, useLogScale: false }, // minDays: ~1 year, maxDays: ~10 years
+    { degree: WaveDegree.CYCLE, minDays: 365, maxDays: 3650, useLogScale: true }, // minDays: ~1 year, maxDays: ~10 years
     { degree: WaveDegree.PRIMARY, minDays: 30, maxDays: 365, useLogScale: false }, // minDays: ~1 month, maxDays: ~1 year
     { degree: WaveDegree.INTERMEDIATE, minDays: 7, maxDays: 30, useLogScale: false }, // minDays: ~1 week, maxDays: ~1 month
     { degree: WaveDegree.MINOR, minDays: 1, maxDays: 7, useLogScale: false }, // minDays: 1 day, maxDays: ~1 week

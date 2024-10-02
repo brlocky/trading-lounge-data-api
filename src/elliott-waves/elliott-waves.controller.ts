@@ -17,8 +17,8 @@ export class ElliottWavesController {
 
   @Post('wave-counts')
   async getWaveCounts(@Body() req: WaveCountClusterRequest): Promise<WaveCountClusterResponse> {
-    const { candles, degree, logScale, definition } = req;
-    const waveCounts = await this.elliottWaveService.getWaveCounts(candles as Candle[], degree, logScale, definition);
+    const { candles, definition } = req;
+    const waveCounts = await this.elliottWaveService.getWaveCounts(candles as Candle[], definition);
     return {
       clusters: waveCounts.map((w) => WaveClusterResponseFactory.create(w)),
     };
@@ -26,8 +26,8 @@ export class ElliottWavesController {
 
   @Post('sub-wave-counts')
   async getSubWaveCounts(@Body() req: SubWaveCountClusterRequest): Promise<WaveCountClusterResponse> {
-    const { candles, startIndex, endIndex, degree, logScale } = req;
-    const waveCounts = await this.elliottWaveService.getSubWaveCounts(candles as Candle[], degree, startIndex, endIndex, logScale);
+    const { candles, startIndex, endIndex, degree } = req;
+    const waveCounts = await this.elliottWaveService.getSubWaveCounts(candles as Candle[], degree, startIndex, endIndex);
     return {
       clusters: waveCounts.map((w) => WaveClusterResponseFactory.create(w)),
     };
@@ -35,8 +35,8 @@ export class ElliottWavesController {
 
   @Post('wave-info')
   async getWaveInfo(@Body() req: WaveInfoRequest): Promise<WaveInfo[]> {
-    const { candles, pivots } = req;
-    return this.elliottWaveService.getWaveInfo(candles as Candle[], pivots);
+    const { candles, pivots, degree } = req;
+    return this.elliottWaveService.getWaveInfo(candles as Candle[], pivots, degree);
   }
 
   @Get('waves-config')

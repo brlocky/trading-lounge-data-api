@@ -66,9 +66,9 @@ export class Fibonacci {
       const logP1 = Math.log(p1);
       const logP2 = Math.log(p2);
       const logP3 = Math.log(p3);
-      return ((logP2 - logP3) / (logP2 - logP1)) * 100;
+      return Math.abs((logP2 - logP3) / (logP2 - logP1)) * 100;
     } else {
-      return ((p2 - p3) / (p2 - p1)) * 100;
+      return Math.abs((p2 - p3) / (p2 - p1)) * 100;
     }
   }
 
@@ -115,7 +115,7 @@ export class Fibonacci {
     }
 
     const calculatePercentage = (start: number, end: number, target: number): number => {
-      return ((target - start) / (end - start)) * 100;
+      return Math.abs((target - start) / (end - start)) * 100;
     };
 
     if (this.useLogScale) {

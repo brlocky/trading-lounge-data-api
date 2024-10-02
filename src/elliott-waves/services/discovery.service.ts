@@ -528,7 +528,6 @@ export class DiscoveryService {
     const { isValid } = bestWaveInfo;
     if (!isValid.structure) return false;
     if (!isValid.wave) return false;
-    if (!isValid.time) return false;
 
     return true;
   }
@@ -543,7 +542,6 @@ export class DiscoveryService {
     const { isValid } = bestWaveInfo;
     if (!isValid.structure) return false;
     if (!isValid.wave) return false;
-    if (!isValid.time) return false;
 
     return true;
   }

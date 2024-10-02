@@ -1,14 +1,17 @@
 import { Wave } from '../class';
 import { Fibonacci } from '../class/utils/fibonacci.class';
 import { WaveScore, WaveType } from '../enums';
+import { ChannelValidationService } from '../services';
 import { ScoreRange, WaveConfig } from '../types';
 
 export abstract class MotiveInterface {
   protected waveType: WaveType;
   protected fibonacci: Fibonacci;
+  protected channelService: ChannelValidationService;
   constructor(waveType: WaveType) {
     this.waveType = waveType;
     this.fibonacci = new Fibonacci();
+    this.channelService = new ChannelValidationService();
   }
 
   // Configuration methods
@@ -20,6 +23,7 @@ export abstract class MotiveInterface {
   protected abstract getWave3ProjectionConfig(): ScoreRange[];
   protected abstract getWave4RetracementConfig(): ScoreRange[];
   protected abstract getWave5ProjectionConfig(): ScoreRange[];
+  public abstract validateChannel(waves: Wave[], useLogScale: boolean): WaveScore;
   public abstract allowWave4Overlap(): boolean;
 
   public abstract calculateWave5Projection(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave, useLogScale: boolean): number;
@@ -107,7 +111,7 @@ export abstract class MotiveInterface {
   }
 
   protected getScore(value: number, config: ScoreRange[]): WaveScore {
-    const range = config.find((r) => value >= r.range[0] && value < r.range[1]);
+    const range = config.find((r) => value >= r.range[0] && value <= r.range[1]);
     return range ? range.score : WaveScore.INVALID;
   }
 
