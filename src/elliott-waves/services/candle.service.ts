@@ -283,24 +283,24 @@ export class CandleService {
 
     for (const pivot of pivots) {
       if (trend === Trend.UP) {
-        if (!currentHigh || pivot.price > currentHigh.price) {
+        if (!currentHigh || pivot.price >= currentHigh.price) {
           if (currentHigh && currentLow) {
             extremePivots.push(currentHigh, currentLow);
           }
           currentHigh = pivot;
           currentLow = null;
-        } else if (!currentLow || pivot.price < currentLow.price) {
+        } else if (!currentLow || pivot.price <= currentLow.price) {
           currentLow = pivot;
         }
       } else {
         // Trend.DOWN
-        if (!currentLow || pivot.price < currentLow.price) {
+        if (!currentLow || pivot.price <= currentLow.price) {
           if (currentLow && currentHigh) {
             extremePivots.push(currentLow, currentHigh);
           }
           currentLow = pivot;
           currentHigh = null;
-        } else if (!currentHigh || pivot.price > currentHigh.price) {
+        } else if (!currentHigh || pivot.price >= currentHigh.price) {
           currentHigh = pivot;
         }
       }
