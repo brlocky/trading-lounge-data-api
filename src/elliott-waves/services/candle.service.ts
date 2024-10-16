@@ -1,51 +1,52 @@
-import { BadRequestException, Injectable, PreconditionFailedException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, PreconditionFailedException } from '@nestjs/common';
 import { Pivot } from '../class';
 import { CandleTime, WaveDegreeCalculator } from '../class/utils';
 import { Fibonacci } from '../class/utils/fibonacci.class';
-import { findPivotIndex, getHHBeforeBreak, getLLBeforeBreak, getTrend } from '../class/utils/pivot.utils';
+import { findPivotIndex, getHHBeforeBreak, getLLBeforeBreak, getPivotsAfter, getTrend } from '../class/utils/pivot.utils';
 import { PivotType, Trend } from '../enums';
-import { Candle } from '../types';
+import { Candle, PivotTest } from '../types';
+import { uniqBy } from 'lodash';
+
+interface PivotInfo {
+  startPivot: Pivot;
+  endPivot: Pivot;
+  distance: number;
+}
 
 @Injectable()
 export class CandleService {
-  // Method to calculate ZigZag pivots from an array of candles
   getZigZag(candles: Candle[]): Pivot[] {
     // Check if there are enough candles to process
     if (candles.length < 2) {
       throw new PreconditionFailedException(`${this.constructor.name}:getZigZag: The candles array must have at least 2 elements.`);
     }
 
-    // Initialize arrays to mark all pivot as highs and lows
+    // Initialize arrays to mark all candles as potential highs and lows
     const pivotHigh = new Array(candles.length).fill(1);
     const pivotLow = new Array(candles.length).fill(1);
 
-    // Determine the trend based on initial candle break
+    // Determine the initial trend based on the first candle
     const trend = getTrend(candles);
-
     if (trend === Trend.UP && this.isRedCandle(candles[0])) {
-      pivotHigh[0] = 0;
+      pivotHigh[0] = 0; // First candle can't be a high in an uptrend if it's red
     }
-
     if (trend === Trend.DOWN && this.isGreenCandle(candles[0])) {
-      pivotLow[0] = 0;
+      pivotLow[0] = 0; // First candle can't be a low in a downtrend if it's green
     }
 
     // Create pivot objects based on the identified pivot points
     const pivots = [];
-
     for (let i = 0; i < candles.length; i++) {
       const candle = candles[i];
       if (pivotHigh[i] && pivotLow[i]) {
-        // Create two pivots for a spike
+        // Create two pivots for a spike (both high and low)
         const p1 = this.createPivot(candle, i, PivotType.HIGH);
         const p2 = this.createPivot(candle, i, PivotType.LOW);
         if (this.isRedCandle(candle)) {
-          pivots.push(p1);
-          pivots.push(p2);
+          pivots.push(p1, p2); // For red candles, high comes before low
         }
         if (this.isGreenCandle(candle)) {
-          pivots.push(p2);
-          pivots.push(p1);
+          pivots.push(p2, p1); // For green candles, low comes before high
         }
       } else if (pivotHigh[i]) {
         pivots.push(this.createPivot(candle, i, PivotType.HIGH));
@@ -54,29 +55,47 @@ export class CandleService {
       }
     }
 
+    this.cleanPivots(pivots);
+
+    return pivots;
+  }
+
+  protected cleanPivots(pivots: Pivot[]) {
+    // Clean up consecutive pivots of the same type
     let i = 0;
     while (i < pivots.length - 1) {
       const p1 = pivots[i];
       const p2 = pivots[i + 1];
       if (p1.isHigh() === p2.isHigh() || p1.isLow() === p2.isLow()) {
         // Found two consecutive pivots of the same type
-
         if (p1.isHigh()) {
           if (p2.price >= p1.price) {
-            pivots.splice(i, 1);
+            pivots.splice(i, 1); // Remove the lower high
           } else {
-            pivots.splice(i + 1, 1);
+            pivots.splice(i + 1, 1); // Remove the lower high
           }
         }
         if (p1.isLow()) {
           if (p2.price <= p1.price) {
-            pivots.splice(i, 1);
+            pivots.splice(i, 1); // Remove the higher low
           } else {
-            pivots.splice(i + 1, 1);
+            pivots.splice(i + 1, 1); // Remove the higher low
           }
         }
       } else {
-        i++;
+        i++; // Move to next pivot if no cleanup needed
+      }
+    }
+
+    // Clean up consecutive pivots with wrong prices
+    i = 0;
+    while (i < pivots.length - 1) {
+      const p1 = pivots[i];
+      const p2 = pivots[i + 1];
+      if ((p1.isHigh() && p1.price <= p2.price) || (p1.isLow() && p1.price >= p2.price)) {
+        pivots.splice(i, 2);
+      } else {
+        i++; // Move to next pivot if no cleanup needed
       }
     }
 
@@ -85,11 +104,14 @@ export class CandleService {
       const lastPivot = pivots[i - 1];
       const currentPivot = pivots[i];
       if ((lastPivot.isHigh() && currentPivot.isHigh()) || (lastPivot.isLow() && currentPivot.isLow())) {
-        throw new BadRequestException('found pivots out of sequence');
+        console.error('Found pivots out of sequence');
+        throw new InternalServerErrorException('Found pivots out of sequence');
+      }
+      if ((lastPivot.isHigh() && lastPivot.price <= currentPivot.price) || (lastPivot.isLow() && lastPivot.price >= currentPivot.price)) {
+        console.error('Found wrong pivots pivots prices');
+        throw new BadRequestException('Found wrong pivots pivots prices');
       }
     }
-
-    return pivots;
   }
 
   // Method to get wave pivot retracements based on a minimum number of waves
@@ -122,238 +144,200 @@ export class CandleService {
     return this.getMarketStructurePivots(pivots, retracementValue, extremePivotsOnly);
   }
 
-  protected getMarketStructurePivots2(pivots: Pivot[], retracementThreshold: number, extremePivotsOnly: boolean = false): Pivot[] {
-    const significantPivots: Pivot[] = [];
-    const fibonacci = new Fibonacci();
-    let trend: 'up' | 'down' | null = null;
-    let lastSignificantHigh: Pivot | null = null;
-    let lastSignificantLow: Pivot | null = null;
-    let currentHigh: Pivot | null = null;
-    let currentLow: Pivot | null = null;
+  getMarketStructureTimePivots(pivots: Pivot[], retracementThreshold: number): Pivot[] {
+    const structurePivots = this.getMarketStructurePivots(pivots, retracementThreshold, true);
 
-    for (let i = 0; i < pivots.length; i++) {
-      const currentPivot = pivots[i];
+    const pivotInfo: PivotInfo[] = [];
+    const scaleFactor = 100; // Adjust this value to balance time and price scales
 
-      if (trend === null || trend === 'up') {
-        if (!currentHigh || currentPivot.price > currentHigh.price) {
-          currentHigh = currentPivot;
-        } else if (currentHigh) {
-          const retracement = fibonacci.calculatePercentageDecrease(currentHigh.price, currentPivot.price);
-          const retracement2 = lastSignificantLow?.price
-            ? fibonacci.getRetracementPercentage(lastSignificantLow.price, currentHigh.price, currentPivot.price)
-            : 0;
-          if (retracement >= retracementThreshold || retracement2 >= retracementThreshold) {
-            if (lastSignificantHigh !== currentHigh) {
-              significantPivots.push(currentHigh);
-              lastSignificantHigh = currentHigh;
-            }
-            trend = 'down';
-            currentLow = currentPivot;
-          }
-        }
-      }
+    for (let i = 0; i < structurePivots.length - 1; i += 2) {
+      const timeDuration = structurePivots[i + 1].candleIndex - structurePivots[i].candleIndex + 1;
+      const startPrice = structurePivots[i].price;
+      const endPrice = structurePivots[i + 1].price;
 
-      if (trend === null || trend === 'down') {
-        if (!currentLow || currentPivot.price < currentLow.price) {
-          currentLow = currentPivot;
-        } else if (currentLow) {
-          const retracement = fibonacci.calculatePercentageDecrease(currentPivot.price, currentLow.price);
-          const retracement2 = lastSignificantHigh?.price
-            ? fibonacci.getRetracementPercentage(lastSignificantHigh.price, currentLow.price, currentPivot.price)
-            : 0;
-          if (retracement >= retracementThreshold || retracement2 >= retracementThreshold) {
-            if (lastSignificantLow !== currentLow) {
-              significantPivots.push(currentLow);
-              lastSignificantLow = currentLow;
-            }
-            trend = 'up';
-            currentHigh = currentPivot;
-          }
-        }
-      }
+      // Calculate price difference in log scale and adjust it with the scale factor
+      const priceDifference = Math.abs(Math.log(endPrice) - Math.log(startPrice)) * scaleFactor;
+
+      // Calculate the distance using Pythagorean theorem
+      const distance = Math.sqrt(Math.pow(timeDuration, 2) + Math.pow(priceDifference, 2));
+
+      pivotInfo.push({
+        startPivot: structurePivots[i],
+        endPivot: structurePivots[i + 1],
+        distance,
+      });
     }
 
-    // Add the last significant high or low if it exists
-    if (trend === 'up' && currentHigh && lastSignificantHigh !== currentHigh) {
-      significantPivots.push(currentHigh);
-    } else if (trend === 'down' && currentLow && lastSignificantLow !== currentLow) {
-      significantPivots.push(currentLow);
-    }
+    const distances = pivotInfo.map((p) => p.distance);
+    const mean = distances.reduce((sum, val) => sum + val, 0) / distances.length;
+    const variance = distances.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / distances.length;
+    const stdDev = Math.sqrt(variance);
 
-    if (extremePivotsOnly) {
-      return this.getExtremePivotsOnly(significantPivots);
-    }
+    const threshold = mean + 0.2 * stdDev; // Using 0.2 as the standard deviation multiplier
+    const significantPairs = pivotInfo.filter((p) => p.distance >= threshold);
 
-    return significantPivots;
-  }
-  protected getMarketStructurePivots(pivots: Pivot[], retracementThreshold: number, extremePivotsOnly: boolean = false): Pivot[] {
-    const significantPivots: Pivot[] = [];
-    const fibonacci = new Fibonacci();
-    fibonacci.setLogScale(false);
-    let trend: 'up' | 'down' | null = null;
-    let lastSignificantHigh: Pivot | null = null;
-    let lastSignificantLow: Pivot | null = null;
-    let currentHigh: Pivot | null = null;
-    let currentLow: Pivot | null = null;
-
-    for (let i = 0; i < pivots.length; i++) {
-      const currentPivot = pivots[i];
-
-      // Initialize trend and first high/low if not set
-      if (trend === null) {
-        if (i === 0) {
-          currentHigh = currentLow = currentPivot;
-          continue;
-        } else if (i === 1) {
-          trend = currentPivot.price > currentHigh!.price ? 'up' : 'down';
-          if (trend === 'up') {
-            currentHigh = currentPivot;
-            significantPivots.push(currentLow!);
-            lastSignificantLow = currentLow;
-          } else {
-            currentLow = currentPivot;
-            significantPivots.push(currentHigh!);
-            lastSignificantHigh = currentHigh;
-          }
-          continue;
-        }
-      }
-
-      if (trend === 'up') {
-        if (currentPivot.price > currentHigh!.price) {
-          currentHigh = currentPivot;
-        } else {
-          const retracement = currentHigh ? fibonacci.calculatePercentageDecrease(currentHigh.price, currentPivot.price) : 0;
-          const retracement2 =
-            lastSignificantLow && currentHigh
-              ? fibonacci.getRetracementPercentage(lastSignificantLow.price, currentHigh.price, currentPivot.price)
-              : 0;
-
-          if (retracement >= retracementThreshold || retracement2 >= retracementThreshold) {
-            if (lastSignificantHigh !== currentHigh) {
-              significantPivots.push(currentHigh!);
-              lastSignificantHigh = currentHigh;
-            }
-            trend = 'down';
-            currentLow = currentPivot;
-          }
-        }
-      } else if (trend === 'down') {
-        if (currentPivot.price < currentLow!.price) {
-          currentLow = currentPivot;
-        } else {
-          const retracement = currentLow ? fibonacci.calculatePercentageIncrease(currentLow.price, currentPivot.price) : 0;
-          const retracement2 =
-            lastSignificantHigh && currentLow
-              ? fibonacci.getRetracementPercentage(lastSignificantHigh.price, currentLow.price, currentPivot.price)
-              : 0;
-
-          if (retracement >= retracementThreshold || retracement2 >= retracementThreshold) {
-            if (lastSignificantLow !== currentLow) {
-              significantPivots.push(currentLow!);
-              lastSignificantLow = currentLow;
-            }
-            trend = 'up';
-            currentHigh = currentPivot;
-          }
-        }
-      }
-    }
-
-    // Add the last significant high or low if it exists
-    if (trend === 'up' && currentHigh && lastSignificantHigh !== currentHigh) {
-      significantPivots.push(currentHigh);
-    } else if (trend === 'down' && currentLow && lastSignificantLow !== currentLow) {
-      significantPivots.push(currentLow);
-    }
-
-    if (extremePivotsOnly) {
-      return this.getExtremePivotsOnly(significantPivots);
-    }
-
-    return significantPivots;
+    return significantPairs.map((p) => [p.startPivot, p.endPivot]).flat();
   }
 
-  protected getExtremePivotsOnly(pivots: Pivot[]): Pivot[] {
-    if (pivots.length < 2) return pivots;
-    const extremePivots: Pivot[] = [];
-    let currentHigh: Pivot | null = null;
-    let currentLow: Pivot | null = null;
-    const trend = pivots[1].price > pivots[0].price ? Trend.UP : Trend.DOWN;
+  getMarketStructurePivots(pivots: Pivot[], retracementThreshold: number, extremePivotsOnly: boolean = false): Pivot[] {
+    const significantPivots: Pivot[] = [];
+    const fibonacci = new Fibonacci();
+    let pivot1: Pivot | null = null;
 
-    for (const pivot of pivots) {
-      if (trend === Trend.UP) {
-        if (!currentHigh || pivot.price >= currentHigh.price) {
-          if (currentHigh && currentLow) {
-            extremePivots.push(currentHigh, currentLow);
-          }
-          currentHigh = pivot;
-          currentLow = null;
-        } else if (!currentLow || pivot.price <= currentLow.price) {
-          currentLow = pivot;
+    let i = 0;
+    while (true) {
+      if (i >= pivots.length) break;
+      pivot1 = pivots[i];
+
+      const { pivot } = this.getOppositePivot(pivot1, pivots);
+
+      if (!pivot) {
+        break;
+      }
+
+      let foundRetracement = false;
+      const retracements = this.getRetracements(pivot1, pivot, pivots);
+
+      if (!retracements.length) {
+        i = pivots.findIndex((p) => p.id === pivot.id);
+        continue;
+      }
+
+      fibonacci.setLogScale(false);
+
+      for (let j = 2; j < retracements.length; j += 2) {
+        const pivot2 = retracements[j - 2];
+        const pivot3 = retracements[j - 1];
+        const retracement = fibonacci.getRetracementPercentage(pivot1.price, pivot2.price, pivot3.price);
+        const retracement2 = pivot1.isLow()
+          ? fibonacci.calculatePercentageDecrease(pivot3.price, pivot2.price)
+          : fibonacci.calculatePercentageDecrease(pivot3.price, pivot2.price);
+        if (retracement >= retracementThreshold || retracement2 >= retracementThreshold) {
+          significantPivots.push(pivot1, pivot2, pivot3);
+          i = pivots.findIndex((p) => p.id === pivot3.id);
+          foundRetracement = true;
+          break;
         }
-      } else {
-        // Trend.DOWN
-        if (!currentLow || pivot.price <= currentLow.price) {
-          if (currentLow && currentHigh) {
-            extremePivots.push(currentLow, currentHigh);
-          }
-          currentLow = pivot;
-          currentHigh = null;
-        } else if (!currentHigh || pivot.price >= currentHigh.price) {
-          currentHigh = pivot;
-        }
+      }
+
+      if (!foundRetracement) {
+        significantPivots.push(pivot1, pivot);
+        i = pivots.findIndex((p) => p.id === pivot.id);
+        continue;
       }
     }
 
-    // Add the last extreme pivot pair if it exists
-    if (trend === Trend.UP && currentHigh && currentLow) {
-      extremePivots.push(currentHigh, currentLow);
-    } else if (trend === Trend.DOWN && currentLow && currentHigh) {
-      extremePivots.push(currentLow, currentHigh);
+    const uniquePivots = uniqBy(significantPivots, 'id');
+    this.cleanPivots(uniquePivots);
+
+    // Return only extreme pivots if requested
+    if (extremePivotsOnly && uniquePivots.length > 1) {
+      const trend = uniquePivots[0].price < uniquePivots[uniquePivots.length - 1].price ? Trend.UP : Trend.DOWN;
+      const clearPivots = this.clearCorrectiveTrend(uniquePivots, trend);
+      this.cleanPivots(clearPivots);
+      return clearPivots;
     }
+
+    return uniquePivots;
+  }
+
+  protected getOppositePivot(initialPivot: Pivot, pivots: Pivot[]): PivotTest {
+    const filteredPivots = getPivotsAfter(pivots, initialPivot, false);
+
+    let test: PivotTest | null = null;
+    if (initialPivot.isHigh()) {
+      test = getLLBeforeBreak(filteredPivots, initialPivot);
+    } else {
+      test = getHHBeforeBreak(filteredPivots, initialPivot);
+    }
+
+    return test;
+  }
+
+  protected getRetracements(from: Pivot, to: Pivot, pivots: Pivot[]): Pivot[] {
+    const filteredPivots = getPivotsAfter(pivots, from, true).filter((p) => p.time <= to.time);
+    const trend = from.isLow() ? Trend.UP : Trend.DOWN;
+    const extremePivots = this.clearCorrectiveTrend(filteredPivots, trend);
 
     return extremePivots;
   }
 
-  /*  protected analyzeWaveRetracements(pivots: Pivot[], threshold: number): WaveRetracement[] {
-    const retracements: WaveRetracement[] = [];
-    const fibonacci = new Fibonacci();
-    let index = 0;
+  protected clearCorrectiveTrend(pivots: Pivot[], trend: Trend): Pivot[] {
+    if (pivots.length < 2) return [];
 
-    let lastMax = -Infinity;
-    // Iterate through pivots to find retracements
-    while (index < pivots.length) {
-      const pivot = pivots[index];
-      let pivotSearchResult: PivotTest;
+    const extremePivots: Pivot[] = [];
+    const goodType = trend === Trend.UP ? PivotType.HIGH : PivotType.LOW; // We look for the opposite pivots, for a low pivot we look for a high
 
-      // Search for the next pivot based on the trend
-      if (pivot.isHigh() && pivot.price > lastMax && index + 1 < pivots.length) {
-        lastMax = pivot.price;
-        pivotSearchResult = getLLBeforeBreak(pivots.slice(index + 1), pivot);
+    let i = 0;
+    while (i < pivots.length) {
+      const currentPivot = pivots[i];
+      if (currentPivot.type === goodType) {
+        const { pivot } = this.getOppositePivot(currentPivot, pivots);
+        if (!pivot) {
+          break;
+        }
+        extremePivots.push(currentPivot);
+        extremePivots.push(pivot);
+        i = pivots.findIndex((p) => p.id === pivot.id) + 1;
       } else {
-        index += 1;
-        continue;
+        i++;
       }
-
-      const { pivot: nextPivot } = pivotSearchResult;
-
-      if (!nextPivot) {
-        index += 1;
-        continue;
-      }
-
-      // Calculate retracement and add to the list if it exceeds the threshold
-      const retracementValue = fibonacci.calculatePercentageDecrease(pivot.price, nextPivot.price);
-      if (retracementValue >= threshold) {
-        retracements.push({ p1: pivot, p2: nextPivot, retracement: retracementValue });
-      }
-      index = pivots.indexOf(nextPivot) + 1;
     }
 
-    return retracements;
-  } */
+    return uniqBy(extremePivots, 'id');
+  }
 
+  protected getExtremePivotsOnly2(pivots: Pivot[]): Pivot[] {
+    if (pivots.length < 2) return pivots;
+
+    const extremePivots: Pivot[] = [];
+    let currentPivot: Pivot | undefined = pivots[1];
+    const isUpTrend = currentPivot.isHigh(); // Assume trend is determined by whether the first pivot is a low.
+
+    while (currentPivot) {
+      if (isUpTrend) {
+        // Get the next pivots after the current one for the search
+        const remainingPivots = getPivotsAfter(pivots, currentPivot);
+        if (remainingPivots.length === 0) break;
+
+        // Get the next low before the current high breaks the resistance
+        const { pivot: nextLow, type } = getLLBeforeBreak(remainingPivots, currentPivot);
+
+        if (type === 'NOT-FOUND-WITH-BREAK' || type === 'NOT-FOUND-NO-BREAK') break;
+
+        // Add the current high and the next low if found
+        extremePivots.push(currentPivot);
+        if (nextLow) {
+          extremePivots.push(nextLow);
+          // Now, we need to continue from the next high after the found low
+          currentPivot = getPivotsAfter(pivots, nextLow).find((p) => p.isHigh());
+        } else {
+          break;
+        }
+      } else {
+        // Get the next pivots after the current one for the search
+        const remainingPivots = getPivotsAfter(pivots, currentPivot);
+        if (remainingPivots.length === 0) break;
+
+        // Get the next high before the current low breaks the support
+        const { pivot: nextHigh, type } = getHHBeforeBreak(remainingPivots, currentPivot);
+
+        if (type === 'NOT-FOUND-WITH-BREAK' || type === 'NOT-FOUND-NO-BREAK') break;
+
+        // Add the current low and the next high if found
+        extremePivots.push(currentPivot);
+        if (nextHigh) {
+          extremePivots.push(nextHigh);
+          // Now, we need to continue from the next high after the found low
+          currentPivot = getPivotsAfter(pivots, nextHigh).find((p) => p.isLow());
+        } else {
+          break;
+        }
+      }
+    }
+
+    return extremePivots;
+  }
   // Helper method to create a Pivot object
   protected createPivot(candle: Candle, index: number, type: PivotType): Pivot {
     return new Pivot(index, type, type === PivotType.HIGH ? candle.high : candle.low, candle.time);
@@ -369,6 +353,7 @@ export class CandleService {
   }
 
   findFirstImpulsiveWave(pivots: Pivot[], candles: Candle[]): [Pivot, Pivot, Pivot][] {
+    console.log('candles', candles);
     if (!Array.isArray(pivots) || pivots.length < 3) {
       return [];
     }

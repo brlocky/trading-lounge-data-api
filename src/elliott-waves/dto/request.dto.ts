@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { CandleDto } from 'src/search/dto';
+import { CandleDto, PivotDto } from 'src/search/dto';
 import { Pivot } from '../class';
 import { WaveDegree } from '../enums';
 import { Candle } from '../types';
@@ -39,8 +39,25 @@ export class WaveInfoRequest {
   candles: CandleDto[] | Candle[];
 
   @ApiProperty()
-  pivots: Pivot[];
+  pivots: PivotDto[] | Pivot[];
 
   @ApiProperty()
   degree: WaveDegree;
+}
+
+export class PivotsInfoRequest {
+  @ApiProperty()
+  candles: CandleDto[] | Candle[];
+
+  @ApiProperty()
+  clearTrend: boolean;
+
+  @ApiProperty()
+  complete: boolean;
+
+  @ApiProperty()
+  timed: boolean;
+
+  @ApiProperty()
+  retracement: number;
 }

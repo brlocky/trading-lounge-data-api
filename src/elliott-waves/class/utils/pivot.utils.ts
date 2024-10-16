@@ -122,6 +122,7 @@ export const getLocalLow = (pivots: Pivot[], length: number = 3): Pivot | null =
 
 export const getTrend = (data: Candle[]): Trend => {
   if (data.length < 2) {
+    console.error('Trend Error - getTrend: The data array must have at least 2 elements.');
     throw new PreconditionFailedException(`getTrend: The data array must have at least 2 elements.`);
   }
 
@@ -142,6 +143,7 @@ export const getTrend = (data: Candle[]): Trend => {
   }
 
   // If no break occurred, throw an error
+  console.error("getTrend: Unable to determine trend. No break of the first candle's high or low occurred");
   throw new BadRequestException(`getTrend: Unable to determine trend. No break of the first candle's high or low occurred.`);
 };
 
@@ -186,10 +188,10 @@ export function groupClustersByWaves(clusters: ClusterWaves[], waveCount: number
 
     for (const group of groups) {
       const groupWaves = group[0].waves.slice(0, waveCount);
-      let matches = true;
+      let matches = false;
 
       for (let i = 0; i < waveCount; i++) {
-        if (targetWaves[i].id !== groupWaves[i].id) {
+        if (targetWaves[i].pStart.price !== groupWaves[i].pStart.price || targetWaves[i].pEnd.price !== groupWaves[i].pEnd.price) {
           matches = false;
           break;
         }
@@ -218,4 +220,12 @@ export function findPivotIndex(pivots: Pivot[], targetPivot: Pivot | ClusterPivo
   }
 
   return index;
+}
+
+export function getPivotsAfter(pivots: Pivot[], pivot: Pivot, includeStart = false): Pivot[] {
+  const index = pivots.findIndex((p) => p.id === pivot.id);
+  if (index === -1) {
+    return [];
+  }
+  return pivots.slice(index + (includeStart ? 0 : 1));
 }

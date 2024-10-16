@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ClusterWaves, Wave } from '../class';
 import { WaveDegreeCalculator } from '../class/utils';
 import { Fibonacci } from '../class/utils/fibonacci.class';
-import { WaveScore, WaveType } from '../enums';
+import { WaveScore } from '../enums';
 import { MotiveInterface } from '../interfaces/motive.interface';
 import { WaveInfo, WavesConfig } from '../types';
 import { MotiveContractingDiagonal, MotiveExpandingDiagonal, MotiveExtended1, MotiveExtended3, MotiveExtended5 } from '../waves';
@@ -134,12 +134,12 @@ export class WaveInfoService {
         wave4Validation !== WaveScore.INVALID &&
         (!wave5 || wave5Validation !== WaveScore.INVALID);
 
-      /*       const isTimeValid =
+      const isTimeValid =
         wave2TimeValidation !== WaveScore.INVALID &&
         wave3TimeValidation !== WaveScore.INVALID &&
         wave4TimeValidation !== WaveScore.INVALID &&
-        (!wave5 || wave5TimeValidation !== WaveScore.INVALID); */
-      const isTimeValid = wave4TimeValidation !== WaveScore.INVALID;
+        (!wave5 || wave5TimeValidation !== WaveScore.INVALID);
+      //const isTimeValid = wave4TimeValidation !== WaveScore.INVALID;
       const expectedWaveDegree = wave5
         ? WaveDegreeCalculator.calculateWaveDegreeFromCandles([wave1.pStart, wave5.pEnd])
         : WaveDegreeCalculator.calculateWaveDegreeFromCandles([wave1.pStart, wave1.pEnd], 'wave1');

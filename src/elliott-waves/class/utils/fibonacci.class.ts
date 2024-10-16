@@ -1,4 +1,4 @@
-import { PreconditionFailedException } from '@nestjs/common';
+import { InternalServerErrorException } from '@nestjs/common';
 
 export class Fibonacci {
   private useLogScale: boolean;
@@ -30,11 +30,11 @@ export class Fibonacci {
    * @param {number} p2 - The final price.
    * @param {number} percentage - The retracement percentage.
    * @returns {number} The retracement price.
-   * @throws {PreconditionFailedException} If p1 is equal to p2.
+   * @throws {InternalServerErrorException} If p1 is equal to p2.
    */
   getRetracementPrice(p1: number, p2: number, percentage: number): number {
     if (p1 === p2) {
-      throw new PreconditionFailedException('Cannot calculate Retracement.');
+      throw new InternalServerErrorException('Cannot calculate Retracement.');
     }
 
     if (this.useLogScale) {
@@ -55,11 +55,11 @@ export class Fibonacci {
    * @param {number} p2 - The final price.
    * @param {number} p3 - The retracement price.
    * @returns {number} The retracement percentage.
-   * @throws {PreconditionFailedException} If p1 is equal to p2.
+   * @throws {InternalServerErrorException} If p1 is equal to p2.
    */
   getRetracementPercentage(p1: number, p2: number, p3: number): number {
     if (p1 === p2) {
-      throw new PreconditionFailedException(`Cannot calculate retracement.`);
+      throw new InternalServerErrorException(`Cannot calculate retracement.`);
     }
 
     if (this.useLogScale) {
@@ -80,11 +80,11 @@ export class Fibonacci {
    * @param {number} p3 - The final price.
    * @param {number} percentage - The projection percentage.
    * @returns {number} The projection price.
-   * @throws {PreconditionFailedException} If p1 is equal to p2.
+   * @throws {InternalServerErrorException} If p1 is equal to p2.
    */
   getProjectionPrice(p1: number, p2: number, p3: number, percentage: number): number {
     if (p1 === p2) {
-      throw new PreconditionFailedException('Cannot calculate Projection.');
+      return p3;
     }
 
     if (this.useLogScale) {
@@ -107,11 +107,11 @@ export class Fibonacci {
    * @param {number} p3 - The third price.
    * @param {number} p4 - The projection price.
    * @returns {number} The projection percentage.
-   * @throws {PreconditionFailedException} If p1 is equal to p2.
+   * @throws {InternalServerErrorException} If p1 is equal to p2.
    */
   getProjectionPercentage(p1: number, p2: number, p3: number, p4: number): number {
     if (p1 === p2) {
-      throw new PreconditionFailedException('Cannot calculate Projection.');
+      throw new InternalServerErrorException('Cannot calculate Projection percentage.');
     }
 
     const calculatePercentage = (start: number, end: number, target: number): number => {
@@ -143,7 +143,10 @@ export class Fibonacci {
     if (p1 === 0) {
       return 0;
     }
-    return Math.abs((p1 - p2) / p1) * 100;
+    if (p2 > p1) {
+      return 0; // No decrease if p2 is greater than p1
+    }
+    return ((p1 - p2) / p1) * 100;
   }
 
   /**
@@ -154,8 +157,11 @@ export class Fibonacci {
    */
   calculatePercentageIncrease(p1: number, p2: number): number {
     if (p1 === 0) {
-      return 0;
+      return p2 > 0 ? Infinity : 0; // Special case for increase from 0
     }
-    return Math.abs((p2 - p1) / p1) * 100;
+    if (p2 < p1) {
+      return 0; // No increase if p2 is less than p1
+    }
+    return ((p2 - p1) / p1) * 100;
   }
 }

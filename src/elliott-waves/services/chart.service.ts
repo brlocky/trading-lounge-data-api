@@ -8,22 +8,24 @@ export class ChartService {
   async createCandlestickChart(candles: Candle[], pivots: Pivot[], outputFilename: string, useLogScale = true, showRsi = false) {
     const chart = new QuickChart();
 
+    const candlestickData = candles
+      .map((candle, index) => ({
+        x: index,
+        o: candle.open,
+        h: candle.high,
+        l: candle.low,
+        c: candle.close,
+      }))
+      .slice(0, 250);
+
     const markerData = pivots.map((pivot) => ({
-      x: new Date(pivot.time).getTime(),
+      x: candles.findIndex((c) => c.time === pivot.time),
       y: pivot.price,
     }));
 
-    const candlestickData = candles.map((candle) => ({
-      x: new Date(candle.time).getTime(),
-      o: candle.open,
-      h: candle.high,
-      l: candle.low,
-      c: candle.close,
-    }));
-
     const rsiData = showRsi
-      ? candles.map((candle) => ({
-          x: new Date(candle.time).getTime(),
+      ? candles.map((candle, index) => ({
+          x: index,
           y: candle.rsi,
         }))
       : [];
@@ -33,8 +35,9 @@ export class ChartService {
     const maxPrice = Math.max(...priceValues, ...markerData.map((d) => d.y));
 
     chart.setConfig({
-      type: 'bar',
+      type: 'candlestick',
       data: {
+        labels: candlestickData.map((c) => c.x),
         datasets: [
           {
             type: 'candlestick',
@@ -68,26 +71,19 @@ export class ChartService {
         ],
       },
       options: {
-        responsive: true,
         maintainAspectRatio: false,
         layout: {
           padding: {
             left: 10,
             right: 10,
-            top: 10,
-            bottom: 10,
+            top: 3,
+            bottom: 3,
           },
         },
         scales: {
           x: {
-            type: 'time',
+            type: 'category',
             position: 'bottom',
-            time: {
-              unit: 'day',
-              displayFormats: {
-                day: 'MMM d',
-              },
-            },
             ticks: {
               source: 'data',
               autoSkip: true,
@@ -105,6 +101,7 @@ export class ChartService {
             },
             ticks: {
               beginAtZero: false,
+              stepSize: (maxPrice - minPrice) / 10,
             },
             min: minPrice * 0.95,
             max: maxPrice * 1.05,
@@ -125,19 +122,7 @@ export class ChartService {
           },
         },
         plugins: {
-          annotation: {
-            annotations: pivots.map((pivot, index) => ({
-              type: 'label',
-              xValue: new Date(pivot.time).getTime(),
-              yValue: pivot.price,
-              backgroundColor: 'rgba(255, 255, 255, 0.7)',
-              content: `${index}`, // Display price with 2 decimal places
-              font: {
-                size: 12,
-                weight: 'bold',
-              },
-            })),
-          },
+          annotation: {},
           legend: {
             display: true,
           },

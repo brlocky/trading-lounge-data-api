@@ -8,17 +8,20 @@ import {
   WaveClusterResponseFactory,
   SubWaveCountClusterRequest,
   WaveInfoRequest,
+  PivotsInfoRequest,
+  TransformPivotInterceptor,
 } from './dto';
+import { Pivot } from './class';
 
 @Controller('elliott-waves')
-@UseInterceptors(TransformCandleInterceptor)
+@UseInterceptors(TransformCandleInterceptor, TransformPivotInterceptor)
 export class ElliottWavesController {
   constructor(private readonly elliottWaveService: ElliottWavesService) {}
 
   @Post('wave-counts')
   async getWaveCounts(@Body() req: WaveCountClusterRequest): Promise<WaveCountClusterResponse> {
-    const { candles, definition } = req;
-    const waveCounts = await this.elliottWaveService.getWaveCounts(candles as Candle[], definition);
+    const { candles } = req;
+    const waveCounts = await this.elliottWaveService.getWaveCounts(candles as Candle[]);
     return {
       clusters: waveCounts.map((w) => WaveClusterResponseFactory.create(w)),
     };
@@ -36,7 +39,12 @@ export class ElliottWavesController {
   @Post('wave-info')
   async getWaveInfo(@Body() req: WaveInfoRequest): Promise<WaveInfo[]> {
     const { candles, pivots, degree } = req;
-    return this.elliottWaveService.getWaveInfo(candles as Candle[], pivots, degree);
+    return this.elliottWaveService.getWaveInfo(candles as Candle[], pivots as Pivot[], degree);
+  }
+
+  @Post('pivots')
+  async getPivots(@Body() req: PivotsInfoRequest): Promise<Pivot[]> {
+    return this.elliottWaveService.getPivotsInfo(req.candles as Candle[], req.complete, req.timed, req.retracement, req.clearTrend);
   }
 
   @Get('waves-config')

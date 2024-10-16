@@ -15,9 +15,9 @@ export class ElliottWavesService {
     private chartService: ChartService,
   ) {}
 
-  getWaveCounts(candles: Candle[], definition: number): Promise<ClusterWaves[]> {
+  getWaveCounts(candles: Candle[]): Promise<ClusterWaves[]> {
     const pivots = this.candleService.getZigZag(candles);
-    return this.clusterService.findMajorStructure(pivots, candles, definition, 1);
+    return this.clusterService.findMajorStructure(pivots, candles, 10);
 
     //return this.discoveryService.findMajorStructure(candles, definition);
   }
@@ -30,21 +30,22 @@ export class ElliottWavesService {
 
     const pivots = this.candleService.getZigZag(candles);
 
-    const lastCandle = candles[candles.length - 1];
+    //const lastCandle = candles[candles.length - 1];
     const endCandle = endIndex && endIndex <= candles.length - 1 ? candles[endIndex] : null;
 
-    const waveClusters = await this.clusterService.findMajorStructure(pivots, candles, 50, 0);
+    const waveClusters = await this.clusterService.findMajorStructure(pivots, candles, 1);
     const filteredCluster = waveClusters
       .filter((w) => {
         if (w.waves.length !== 5) return false;
         const w5 = w.waves[w.waves.length - 1];
 
         if (!endCandle) {
-          const w0 = w.waves[0];
+          return true;
+          /*  const w0 = w.waves[0];
           const isUpTrend = w0.pStart.price < w0.pEnd.price ? true : false;
           if (isUpTrend && w5.pEnd.price >= lastCandle.high) return true;
           if (!isUpTrend && w5.pEnd.price <= lastCandle.low) return true;
-          return false;
+          return false; */
         }
         if (w5.pEnd.time === endCandle.time) return true;
         return false;
@@ -54,7 +55,8 @@ export class ElliottWavesService {
         return w;
       });
 
-    return new Promise((r) => r(filteredCluster));
+    const sortedClusters = this.clusterService.sortClustersByScore(filteredCluster, candles);
+    return new Promise((r) => r(sortedClusters));
   }
 
   getCandlesInfo(candles: Candle[], definition: number): CandlesInfo {
@@ -91,6 +93,14 @@ export class ElliottWavesService {
       commonInterval,
     );
     return allPossibleWaveInformations.filter((w) => w.isValid.structure && w.isValid.wave);
+  }
+
+  getPivotsInfo(candles: Candle[], complete: boolean, timed: boolean, retracementThreshold: number, extremePivotsOnly: boolean): Pivot[] {
+    const pivots = this.candleService.getZigZag(candles);
+    if (complete) return pivots;
+    return timed
+      ? this.candleService.getMarketStructureTimePivots(pivots, retracementThreshold)
+      : this.candleService.getMarketStructurePivots(pivots, retracementThreshold, extremePivotsOnly);
   }
 
   getGeneralConfig(): GeneralConfig {

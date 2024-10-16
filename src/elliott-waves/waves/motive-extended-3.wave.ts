@@ -18,7 +18,7 @@ export class MotiveExtended3 extends MotiveInterface {
     const trend = w1.trend();
     const isUpTrend = trend === Trend.UP;
 
-    const wave3BreakOut = this.channelService.isBeyondLine(w3.pEnd, isUpTrend ? base.upperLine : base.lowerLine, trend, useLogScale);
+    const wave3BreakOut = this.channelService.isBeyondLine(w3.pEnd, isUpTrend ? base.lowerLine : base.upperLine, trend, useLogScale);
     const wave3BreakOutMiddle = this.channelService.isBeyondLine(w3.pEnd, base.middleLine, trend, useLogScale);
     if (!wave3BreakOut && !wave3BreakOutMiddle) return WaveScore.INVALID;
 
@@ -97,9 +97,9 @@ export class MotiveExtended3 extends MotiveInterface {
 
   public getWave2TimeConfig(): ScoreRange[] {
     return [
-      { range: [1, 5], score: WaveScore.WORSTCASESCENARIO },
-      { range: [5, 10], score: WaveScore.WORK },
-      { range: [10, 38.2], score: WaveScore.GOOD },
+      /*       { range: [1, 5], score: WaveScore.WORSTCASESCENARIO },
+      { range: [5, 10], score: WaveScore.WORK }, */
+      { range: [10, 38.2], score: WaveScore.WORSTCASESCENARIO },
       { range: [38.2, 300], score: WaveScore.PERFECT },
       { range: [300, 400], score: WaveScore.WORK },
       { range: [400, 10000], score: WaveScore.WORSTCASESCENARIO },
@@ -109,11 +109,9 @@ export class MotiveExtended3 extends MotiveInterface {
   public getWave3TimeConfig(): ScoreRange[] {
     return [
       { range: [23.6, 38.2], score: WaveScore.WORSTCASESCENARIO },
-      { range: [38.2, 68.1], score: WaveScore.WORK },
-      { range: [68.1, 100], score: WaveScore.WORK },
+      { range: [38.2, 100], score: WaveScore.WORK },
       { range: [100, 161.8], score: WaveScore.PERFECT },
-      { range: [161.8, 250], score: WaveScore.GOOD },
-      { range: [250, 350], score: WaveScore.GOOD },
+      { range: [161.8, 350], score: WaveScore.GOOD },
       { range: [350, 800], score: WaveScore.WORK },
       { range: [800, 10000], score: WaveScore.WORSTCASESCENARIO },
     ];
@@ -121,8 +119,8 @@ export class MotiveExtended3 extends MotiveInterface {
 
   public getWave4TimeConfig(): ScoreRange[] {
     return [
-      { range: [0, 10], score: WaveScore.INVALID },
-      { range: [10, 100], score: WaveScore.WORK },
+      { range: [0, 50], score: WaveScore.INVALID },
+      { range: [50, 100], score: WaveScore.GOOD },
       { range: [100, 125], score: WaveScore.GOOD },
       { range: [125, 250], score: WaveScore.PERFECT },
       { range: [250, 300], score: WaveScore.GOOD },
@@ -156,17 +154,17 @@ export class MotiveExtended3 extends MotiveInterface {
 
   public getWave2RetracementConfig(): ScoreRange[] {
     return [
-      { range: [14.2, 23.6], score: WaveScore.WORSTCASESCENARIO },
+      { range: [10, 23.6], score: WaveScore.WORSTCASESCENARIO },
       { range: [23.6, 50], score: WaveScore.WORK },
       { range: [50, 78.6], score: WaveScore.PERFECT },
-      { range: [78.6, 83.6], score: WaveScore.WORK },
-      { range: [83.6, 99.9], score: WaveScore.WORSTCASESCENARIO },
+      { range: [78.6, 88], score: WaveScore.WORK },
+      { range: [88, 99.9], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 
   public getWave3ProjectionConfig(): ScoreRange[] {
     return [
-      { range: [95, 110], score: WaveScore.WORSTCASESCENARIO },
+      { range: [100, 110], score: WaveScore.WORSTCASESCENARIO },
       { range: [110, 138.2], score: WaveScore.WORK },
       { range: [138.2, 160], score: WaveScore.GOOD },
       { range: [160, 368.1], score: WaveScore.PERFECT },
@@ -199,11 +197,9 @@ export class MotiveExtended3 extends MotiveInterface {
 
   public getWave5ProjectionConfig(): ScoreRange[] {
     return [
-      { range: [38.2, 50], score: WaveScore.WORSTCASESCENARIO },
-      { range: [50, 78.6], score: WaveScore.WORK },
-      { range: [78.6, 105], score: WaveScore.PERFECT },
-      { range: [105, 138.2], score: WaveScore.WORK },
-      { range: [138.2, 300], score: WaveScore.WORSTCASESCENARIO },
+      { range: [38.2, 50], score: WaveScore.PERFECT },
+      { range: [50, 78.6], score: WaveScore.GOOD },
+      { range: [78.6, 300], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 }

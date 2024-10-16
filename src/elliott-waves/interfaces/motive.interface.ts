@@ -50,8 +50,19 @@ export abstract class MotiveInterface {
   }
 
   public calculateTimeRetracement(waveA: Wave, waveB: Wave, commonInterval: number): number {
-    const waveATime = waveA.duration() || commonInterval * 24 * 3600;
-    const waveBTime = waveB.duration() || commonInterval * 24 * 3600;
+    const waveACandlesLength = waveA.candles();
+    const waveBCandlesLength = waveB.candles();
+
+    let waveATime = 0;
+    let waveBTime = 0;
+    if (waveACandlesLength !== -1 && waveBCandlesLength !== -1) {
+      waveATime = waveACandlesLength;
+      waveBTime = waveBCandlesLength;
+    } else {
+      waveATime = waveA.duration() || commonInterval * 24 * 3600;
+      waveBTime = waveB.duration() || commonInterval * 24 * 3600;
+    }
+
     return Math.abs(waveBTime / waveATime) * 100;
   }
 

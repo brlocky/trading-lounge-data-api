@@ -3,18 +3,12 @@ import { v4 } from 'uuid';
 import { PivotType } from '../enums';
 
 export class Pivot {
-  constructor(candleIndex: number, type: PivotType, price: number, time: number) {
-    this.id = v4();
+  constructor(candleIndex: number, type: PivotType, price: number, time: number, id = v4()) {
+    this.id = id;
     this.candleIndex = candleIndex;
     this.type = type;
     this.price = price;
     this.time = time;
-  }
-
-  public copy(): Pivot {
-    const copyPivot = new Pivot(this.candleIndex, this.type, this.price, this.time);
-    copyPivot.id = this.id;
-    return copyPivot;
   }
 
   public isHigh(): boolean {
@@ -23,6 +17,12 @@ export class Pivot {
 
   public isLow(): boolean {
     return this.type === PivotType.LOW;
+  }
+
+  public copy(): Pivot {
+    const copyPivot = new Pivot(this.candleIndex, this.type, this.price, this.time);
+    copyPivot.id = this.id;
+    return copyPivot;
   }
 
   @ApiProperty()

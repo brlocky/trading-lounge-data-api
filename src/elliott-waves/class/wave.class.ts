@@ -63,6 +63,11 @@ export class Wave {
     return this.pEnd.time - this.pStart.time;
   }
 
+  public candles(): number {
+    if (this.pStart.candleIndex === -1 || this.pEnd.candleIndex === -1) return -1;
+    return this.pEnd.candleIndex - this.pStart.candleIndex;
+  }
+
   public trend(): Trend {
     return this.pEnd.price > this.pStart.price ? Trend.UP : Trend.DOWN;
   }
