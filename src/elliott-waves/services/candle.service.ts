@@ -192,7 +192,7 @@ export class CandleService {
     const stdDev = Math.sqrt(variance);
 
     // Adjust this value to control sensitivity
-    const sensitivityFactor = 0.2;
+    const sensitivityFactor = 0.8;
     const threshold = mean + sensitivityFactor * stdDev;
 
     const significantPairs = pivotInfo.filter((p) => p.distance >= threshold);
