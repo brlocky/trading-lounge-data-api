@@ -146,6 +146,66 @@ export class CandleService {
 
   getMarketStructureTimePivots(pivots: Pivot[], retracementThreshold: number): Pivot[] {
     const structurePivots = this.getMarketStructurePivots(pivots, retracementThreshold, true);
+    const pivotInfo: PivotInfo[] = [];
+
+    // First pass: Calculate maximum values
+    let maxTimeDuration = 0;
+    let maxLogPriceChange = 0;
+
+    for (let i = 0; i < structurePivots.length - 1; i++) {
+      const timeDuration = structurePivots[i + 1].candleIndex - structurePivots[i].candleIndex + 1;
+      const startPrice = structurePivots[i].price;
+      const endPrice = structurePivots[i + 1].price;
+
+      maxTimeDuration = Math.max(maxTimeDuration, timeDuration);
+      const logPriceChange = Math.abs(Math.log(endPrice / startPrice));
+      maxLogPriceChange = Math.max(maxLogPriceChange, logPriceChange);
+    }
+
+    // Second pass: Calculate normalized distances
+    for (let i = 0; i < structurePivots.length - 1; i += 2) {
+      const timeDuration = structurePivots[i + 1].candleIndex - structurePivots[i].candleIndex + 1;
+      const startPrice = structurePivots[i].price;
+      const endPrice = structurePivots[i + 1].price;
+
+      // Normalize time component
+      const normalizedTime = timeDuration / maxTimeDuration;
+
+      // Normalize price component using log scale
+      const logPriceChange = Math.abs(Math.log(endPrice / startPrice));
+      const normalizedPrice = logPriceChange / maxLogPriceChange;
+
+      // Calculate the distance using normalized components
+      const distance = Math.sqrt(Math.pow(normalizedTime, 2) + Math.pow(normalizedPrice, 2));
+
+      pivotInfo.push({
+        startPivot: structurePivots[i],
+        endPivot: structurePivots[i + 1],
+        distance,
+      });
+    }
+
+    // Calculate mean and standard deviation
+    const distances = pivotInfo.map((p) => p.distance);
+    const mean = distances.reduce((sum, val) => sum + val, 0) / distances.length;
+    const variance = distances.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / distances.length;
+    const stdDev = Math.sqrt(variance);
+
+    // Adjust this value to control sensitivity
+    const sensitivityFactor = 0.2;
+    const threshold = mean + sensitivityFactor * stdDev;
+
+    const significantPairs = pivotInfo.filter((p) => p.distance >= threshold);
+
+    // Create a set of significant pivots to easily check for inclusion
+    const significantPivotsSet = new Set(significantPairs.flatMap((p) => [p.startPivot, p.endPivot]));
+
+    // Filter the original structurePivots to keep only significant ones, maintaining order
+    return structurePivots.filter((pivot) => significantPivotsSet.has(pivot));
+  }
+
+  getMarketStructureTimePivots2(pivots: Pivot[], retracementThreshold: number): Pivot[] {
+    const structurePivots = this.getMarketStructurePivots(pivots, retracementThreshold, true);
 
     const pivotInfo: PivotInfo[] = [];
     const scaleFactor = 100; // Adjust this value to balance time and price scales
