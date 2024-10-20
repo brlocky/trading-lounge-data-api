@@ -131,8 +131,8 @@ export class MotiveExtended3 extends MotiveInterface {
 
   public getWave4LongTimeConfig(): ScoreRange[] {
     return [
-      { range: [0, 10], score: WaveScore.INVALID },
-      { range: [10, 100], score: WaveScore.WORK },
+      { range: [0, 5], score: WaveScore.INVALID },
+      { range: [5, 100], score: WaveScore.WORK },
       { range: [100, 125], score: WaveScore.GOOD },
       { range: [125, 250], score: WaveScore.PERFECT },
       { range: [250, 300], score: WaveScore.GOOD },
@@ -148,7 +148,7 @@ export class MotiveExtended3 extends MotiveInterface {
       { range: [38.2, 61.8], score: WaveScore.WORK },
       { range: [61.8, 161.8], score: WaveScore.PERFECT },
       { range: [161.8, 200], score: WaveScore.WORK },
-      { range: [200, 300], score: WaveScore.WORSTCASESCENARIO },
+      { range: [200, 1000], score: WaveScore.WORSTCASESCENARIO },
     ];
   }
 
