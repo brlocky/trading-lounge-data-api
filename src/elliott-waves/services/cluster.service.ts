@@ -26,7 +26,8 @@ export class ClusterService {
   async findMajorStructure(pivots: Pivot[], candles: Candle[], loop = 0): Promise<ClusterWaves[]> {
     // Get wave pivot retracements
     //const retracements = this.candleService.getWavePivotRetracementsByNumberOfWaves(pivots.slice(0, 1000), 10);
-    const retracements = this.candleService.getMarketStructureTimePivots(pivots, 30);
+    //const retracements = this.candleService.getMarketStructureTimePivots(pivots, 30);
+    const retracements = this.candleService.getMarketStructurePivots(pivots, 10, true);
     //const retracements = this.candleService.getWavePivotRetracementsByRetracementValue(pivots, 80);
 
     // Create candlestick chart for visualization

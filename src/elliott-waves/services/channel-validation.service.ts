@@ -23,6 +23,7 @@ interface GenericChannels {
   base: Channel;
   temporary: Channel;
   final: Channel;
+  converging: Channel;
 }
 
 interface DiagonalValidationResult {
@@ -40,16 +41,17 @@ export class ChannelValidationService {
     const base = this.createChannel(w1.pStart, w2.pEnd, w1.pEnd, useLogScale);
     const temporary = this.createChannel(w1.pEnd, w3.pEnd, w2.pEnd, useLogScale);
     const final = this.createChannel(w2.pEnd, w4.pEnd, w1.pEnd, useLogScale);
+    const converging = this.createChannel(w2.pEnd, w4.pEnd, w1.pEnd, useLogScale, w3.pEnd);
 
-    return { base, temporary, final };
+    return { base, temporary, final, converging };
   }
 
   /**
    * Create a channel between two points.
    */
-  createChannel(p1: Point, p2: Point, p3: Point, useLogScale: boolean = false): Channel {
+  createChannel(p1: Point, p2: Point, p3: Point, useLogScale: boolean = false, p4: Point | null = null): Channel {
     const line1 = this.calculateLine(p1, p2, useLogScale);
-    const line2 = this.calculateParallelLine(line1, p3, useLogScale);
+    const line2 = p4 ? this.calculateLine(p3, p4, useLogScale) : this.calculateParallelLine(line1, p3, useLogScale);
 
     // Determine which line is lower based on the price points
     let lowerLine, upperLine;
@@ -123,14 +125,6 @@ export class ChannelValidationService {
   }
 
   /**
-   * Convert a Wave's start or end point to a Point interface.
-   */
-  wavePoint(wave: Wave, start: boolean): Point {
-    const pivot = start ? wave.pStart : wave.pEnd;
-    return { time: pivot.time, price: pivot.price };
-  }
-
-  /**
    * Validate contracting or expanding diagonals.
    */
   validateDiagonal(waves: Wave[], useLogScale: boolean = false): DiagonalValidationResult {
@@ -139,12 +133,10 @@ export class ChannelValidationService {
     }
 
     // Extract points
-    const p1 = this.wavePoint(waves[0], true);
-    const p3 = this.wavePoint(waves[2], true);
-    const p5 = this.wavePoint(waves[4], true);
-
-    const p2 = this.wavePoint(waves[1], true);
-    const p4 = this.wavePoint(waves[3], true);
+    const p1 = waves[0].pEnd;
+    const p2 = waves[1].pEnd;
+    const p3 = waves[2].pEnd;
+    const p4 = waves[3].pEnd;
 
     // Calculate trendlines
     const upperTrendline = this.calculateLine(p1, p3, useLogScale);

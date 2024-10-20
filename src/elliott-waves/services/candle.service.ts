@@ -177,7 +177,7 @@ export class CandleService {
 
       // Calculate the distance using normalized components
       const distance = Math.sqrt(Math.pow(normalizedTime, 2) + Math.pow(normalizedPrice, 2));
-
+      console.log(structurePivots[i].price, structurePivots[i + 1].price, distance);
       pivotInfo.push({
         startPivot: structurePivots[i],
         endPivot: structurePivots[i + 1],
@@ -192,7 +192,7 @@ export class CandleService {
     const stdDev = Math.sqrt(variance);
 
     // Adjust this value to control sensitivity
-    const sensitivityFactor = 0.8;
+    const sensitivityFactor = 0.1;
     const threshold = mean + sensitivityFactor * stdDev;
 
     const significantPairs = pivotInfo.filter((p) => p.distance >= threshold);

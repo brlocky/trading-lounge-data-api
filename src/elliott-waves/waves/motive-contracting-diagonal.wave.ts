@@ -13,55 +13,39 @@ export class MotiveContractingDiagonal extends MotiveInterface {
   }
 
   public validateChannel(waves: [Wave, Wave, Wave, Wave, Wave], useLogScale: boolean): WaveScore {
-    const [w1, w2, w3, w4, w5] = waves;
-    const { base, temporary, final } = this.channelService.createChannels(waves, useLogScale);
+    const [w1, , , w4, w5] = waves;
+    const { isValid, type } = this.channelService.validateDiagonal(waves, useLogScale);
+    const isContracting = isValid && type === 'contracting';
+
+    const { temporary, converging } = this.channelService.createChannels(waves, useLogScale);
     const trend = w1.trend();
     const isUpTrend = trend === Trend.UP;
 
-    const wave3BreakOut = this.channelService.isBeyondLine(w3.pEnd, isUpTrend ? base.upperLine : base.lowerLine, trend, useLogScale);
-    const wave3BreakOutMiddle = this.channelService.isBeyondLine(w3.pEnd, base.middleLine, trend, useLogScale);
-    if (!wave3BreakOut && !wave3BreakOutMiddle) return WaveScore.INVALID;
-
-    const wave4BreakTemporaryBottom = this.channelService.isBeyondLine(
-      w4.pEnd,
-      isUpTrend ? temporary.lowerLine : temporary.upperLine,
-      reverseTrend(trend),
-      useLogScale,
-    );
     const wave4BreakTemporaryMiddle = this.channelService.isBeyondLine(
       w4.pEnd,
       isUpTrend ? temporary.middleLine : temporary.middleLine,
       reverseTrend(trend),
       useLogScale,
     );
-    const wave5InisideTemporaryChannel = this.channelService.isBeyondLine(
+    const wave5AboveTemporaryChannel = this.channelService.isBeyondLine(
       w5.pEnd,
-      isUpTrend ? temporary.lowerLine : temporary.upperLine,
+      isUpTrend ? temporary.upperLine : temporary.lowerLine,
       trend,
       useLogScale,
     );
 
-    const wave5InsideFinalChannel = this.channelService.isBeyondLine(
+    const wave5BreakTopConvergingChannel = this.channelService.isBeyondLine(
       w5.pEnd,
-      isUpTrend ? final.lowerLine : final.upperLine,
-      trend,
-      useLogScale,
-    );
-
-    const wave5BrealTopFinalChannel = this.channelService.isBeyondLine(
-      w5.pEnd,
-      isUpTrend ? final.upperLine : final.lowerLine,
+      isUpTrend ? converging.upperLine : converging.lowerLine,
       trend,
       useLogScale,
     );
 
     let score = 0;
-    if (wave3BreakOut || wave3BreakOutMiddle) score += 1;
-    if (wave4BreakTemporaryBottom) score += 1;
+    if (isContracting) score += 2;
     if (wave4BreakTemporaryMiddle) score += 1;
-    if (wave5InisideTemporaryChannel) score += 1;
-    if (wave5InsideFinalChannel) score += 1;
-    if (wave5BrealTopFinalChannel) score += 1;
+    if (wave5AboveTemporaryChannel) score += 1;
+    if (wave5BreakTopConvergingChannel) score += 1;
 
     return mapScoreToWaveScore(score);
   }
