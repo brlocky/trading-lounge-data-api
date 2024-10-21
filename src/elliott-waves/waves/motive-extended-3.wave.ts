@@ -71,8 +71,16 @@ export class MotiveExtended3 extends MotiveInterface {
     return this.fibonacci.getProjectionPercentage(wave1.pStart.price, wave1.pEnd.price, wave4.pEnd.price, wave5.pEnd.price);
   }
 
-  public calculateWave5ProjectionTime(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave, commonInterval: number): number {
-    return this.calculateTimeRetracement(wave1, wave5, commonInterval);
+  public calculateWave5ProjectionTime(
+    wave1: Wave,
+    wave2: Wave,
+    wave3: Wave,
+    wave4: Wave,
+    wave5: Wave,
+    commonInterval: number,
+    useLogScale: boolean,
+  ): number {
+    return this.calculateLengthRetracement(wave1, wave5, commonInterval, useLogScale);
   }
 
   public validateWaveStructure(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave, useLogScale: boolean): boolean {
@@ -119,8 +127,8 @@ export class MotiveExtended3 extends MotiveInterface {
 
   public getWave4TimeConfig(): ScoreRange[] {
     return [
-      { range: [0, 50], score: WaveScore.INVALID },
-      { range: [50, 100], score: WaveScore.GOOD },
+      { range: [0, 30], score: WaveScore.INVALID },
+      { range: [30, 100], score: WaveScore.WORK },
       { range: [100, 125], score: WaveScore.GOOD },
       { range: [125, 250], score: WaveScore.PERFECT },
       { range: [250, 300], score: WaveScore.GOOD },
@@ -197,6 +205,7 @@ export class MotiveExtended3 extends MotiveInterface {
 
   public getWave5ProjectionConfig(): ScoreRange[] {
     return [
+      { range: [0.236, 38.2], score: WaveScore.GOOD },
       { range: [38.2, 50], score: WaveScore.PERFECT },
       { range: [50, 78.6], score: WaveScore.GOOD },
       { range: [78.6, 300], score: WaveScore.WORSTCASESCENARIO },

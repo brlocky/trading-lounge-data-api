@@ -125,6 +125,7 @@ export class ClusterService {
 
       const completedClusters = results.flatMap((r) => r.completed);
       const imcompleteClusters = results.flatMap((r) => r.incompleted);
+      currentIncompletedClusters.push(...imcompleteClusters);
 
       processClusters = completedClusters
         .map((c) => this.processWave2Test(c, pivots))
@@ -182,8 +183,10 @@ export class ClusterService {
     pivots: Pivot[],
     useLogScale: boolean,
   ): Promise<{ completed: ClusterWaves[]; incompleted: ClusterWaves[] }> {
-    const response: { completed: ClusterWaves[]; incompleted: ClusterWaves[] } = { completed: [], incompleted: [] };
-
+    const response: { completed: ClusterWaves[]; incompleted: ClusterWaves[] } = {
+      completed: [],
+      incompleted: [],
+    };
     const commonInterval = WaveDegreeCalculator.determineCommonInterval(candles);
 
     // Helper function to test for wave breaks
@@ -198,10 +201,10 @@ export class ClusterService {
     const testPivotBreak = (fromPivot: Pivot, trend: Trend): boolean => {
       if (trend === Trend.UP) {
         // For uptrend, check if any of the next 300 candles break above the pivot high
-        return !!candles.slice(0, 300).find((c) => c.time > fromPivot.time && c.low < fromPivot.price);
+        return !!candles.filter((c) => c.time > fromPivot.time).find((c) => c.low < fromPivot.price);
       } else {
         // For downtrend, check if any of the next 300 candles break below the pivot low
-        return !!candles.slice(0, 300).find((c) => c.time > fromPivot.time && c.high > fromPivot.price);
+        return !!candles.filter((c) => c.time > fromPivot.time).find((c) => c.high > fromPivot.price);
       }
     };
     const wave1 = majorCluster.waves[0];
@@ -211,10 +214,7 @@ export class ClusterService {
     let wave5: Wave | null = null;
 
     // Check for wave breaks
-    if (testWaveBreak(wave1.pStart, wave1.pEnd)) {
-      return response;
-    }
-    if (testWaveBreak(wave2.pStart, wave2.pEnd)) {
+    if (testWaveBreak(wave1.pStart, wave1.pEnd) || testWaveBreak(wave2.pStart, wave2.pEnd)) {
       return response;
     }
     // Get wave 3 retracements
@@ -222,8 +222,8 @@ export class ClusterService {
     if (!wave3Retracements.length) {
       if (!testPivotBreak(wave2.pEnd, wave1.trend())) {
         response.incompleted.push(majorCluster);
-        return response;
       }
+      return response;
     }
 
     // Process wave 3 and 4 retracements
@@ -249,7 +249,7 @@ export class ClusterService {
       const wave5Pivots = this.getWave5Pivots(candles, pivots, wave1, wave2, wave3, wave4);
       if (!wave5Pivots.length) {
         if (
-          !testPivotBreak(wave4.pEnd, wave3.trend()) &&
+          !testPivotBreak(wave4.pEnd, wave1.trend()) &&
           this.indentifyImpulse(wave1, wave2, wave3, wave4, null, useLogScale, commonInterval).length
         ) {
           response.incompleted.push(branchCluster);
@@ -270,6 +270,29 @@ export class ClusterService {
         if (waveTypes.length) {
           response.completed.push(finalCluster);
         }
+      }
+    }
+
+    // If no valid clusters were found, add the original cluster as invalidated
+    if (response.completed.length === 0 && response.incompleted.length === 0) {
+      console.log(majorCluster.waves.length);
+
+      switch (majorCluster.waves.length) {
+        case 2:
+          if (!testPivotBreak(wave2.pEnd, wave1.trend())) {
+            response.incompleted.push(majorCluster);
+          }
+          break;
+        case 4:
+          if (
+            wave3 &&
+            wave4 &&
+            !testPivotBreak(wave4.pEnd, wave1.trend()) &&
+            this.indentifyImpulse(wave1, wave2, wave3, wave4, null, useLogScale, commonInterval).length
+          ) {
+            response.incompleted.push(majorCluster);
+          }
+          break;
       }
     }
 

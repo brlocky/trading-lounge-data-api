@@ -34,6 +34,7 @@ export abstract class MotiveInterface {
     wave4: Wave,
     wave5: Wave,
     commonInterval: number,
+    useLogScale: boolean,
   ): number;
   public abstract validateWaveStructure(wave1: Wave, wave2: Wave, wave3: Wave, wave4: Wave, wave5: Wave, useLogScale: boolean): boolean;
 
@@ -49,21 +50,45 @@ export abstract class MotiveInterface {
     return this.getWave4TimeConfig();
   }
 
-  public calculateTimeRetracement(waveA: Wave, waveB: Wave, commonInterval: number): number {
-    const waveACandlesLength = waveA.candles();
-    const waveBCandlesLength = waveB.candles();
-
-    let waveATime = 0;
-    let waveBTime = 0;
-    if (waveACandlesLength !== -1 && waveBCandlesLength !== -1) {
-      waveATime = waveACandlesLength;
-      waveBTime = waveBCandlesLength;
-    } else {
-      waveATime = waveA.duration() || commonInterval * 24 * 3600;
-      waveBTime = waveB.duration() || commonInterval * 24 * 3600;
-    }
+  /*   public calculateLengthRetracement(waveA: Wave, waveB: Wave, commonInterval: number): number {
+    const waveATime = this.calculateWaveTime(waveA, commonInterval);
+    const waveBTime = this.calculateWaveTime(waveB, commonInterval);
 
     return Math.abs(waveBTime / waveATime) * 100;
+  } */
+
+  public calculateLengthRetracement(waveA: Wave, waveB: Wave, commonInterval: number, useLogScale: boolean): number {
+    const waveALength = this.calculateWaveLength(waveA, commonInterval, useLogScale);
+    const waveBLength = this.calculateWaveLength(waveB, commonInterval, useLogScale);
+
+    return Math.abs(waveBLength / waveALength) * 100;
+  }
+
+  private calculateWaveLength(wave: Wave, commonInterval: number, useLogScale: boolean): number {
+    const waveHeight = this.calculateWaveHeight(wave, useLogScale);
+    const waveTime = this.calculateWaveTime(wave, commonInterval);
+
+    return Math.sqrt(Math.pow(waveHeight, 2) + Math.pow(waveTime, 2));
+  }
+
+  private calculateWaveHeight(wave: Wave, useLogScale: boolean): number {
+    const startPrice = wave.pStart.price;
+    const endPrice = wave.pEnd.price;
+
+    if (useLogScale) {
+      return Math.abs(Math.log(endPrice) - Math.log(startPrice));
+    } else {
+      return Math.abs(endPrice - startPrice);
+    }
+  }
+
+  private calculateWaveTime(wave: Wave, commonInterval: number): number {
+    const candlesLength = wave.candles();
+    if (candlesLength !== -1) {
+      return candlesLength;
+    } else {
+      return wave.duration() || commonInterval * 24 * 3600;
+    }
   }
 
   public calculateWave2Retracement(wave1: Wave, wave2: Wave, useLogScale: boolean): number {

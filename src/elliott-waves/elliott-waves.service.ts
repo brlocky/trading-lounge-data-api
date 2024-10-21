@@ -15,9 +15,9 @@ export class ElliottWavesService {
     private chartService: ChartService,
   ) {}
 
-  getWaveCounts(candles: Candle[]): Promise<ClusterWaves[]> {
+  getWaveCounts(candles: Candle[], subCounts: number): Promise<ClusterWaves[]> {
     const pivots = this.candleService.getZigZag(candles);
-    return this.clusterService.findMajorStructure(pivots, candles, 10);
+    return this.clusterService.findMajorStructure(pivots, candles, subCounts);
 
     //return this.discoveryService.findMajorStructure(candles, definition);
   }

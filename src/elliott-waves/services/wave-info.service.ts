@@ -98,20 +98,20 @@ export class WaveInfoService {
         wave5Validation = p.validateWave5Projection(projectionWave5);
       }
 
-      const projectionTimeWave2 = p.calculateTimeRetracement(wave1, wave2, commonInterval);
+      const projectionTimeWave2 = p.calculateLengthRetracement(wave1, wave2, commonInterval, useLogScale);
       const wave2TimeValidation = p.validateWave2Time(projectionTimeWave2);
 
-      const projectionTimeWave3 = p.calculateTimeRetracement(wave1, wave3, commonInterval);
+      const projectionTimeWave3 = p.calculateLengthRetracement(wave1, wave3, commonInterval, useLogScale);
       const wave3TimeValidation = p.validateWave3Time(projectionTimeWave3);
 
-      const projectionTimeWave4 = p.calculateTimeRetracement(wave2, wave4, commonInterval);
+      const projectionTimeWave4 = p.calculateLengthRetracement(wave2, wave4, commonInterval, useLogScale);
       const wave4TimeValidation =
         projectionTimeWave2 > 100 ? p.validateWave4DeepTime(projectionTimeWave4) : p.validateWave4Time(projectionTimeWave4);
 
       let projectionTimeWave5: number | null = 0;
       let wave5TimeValidation = WaveScore.INVALID;
       if (wave5) {
-        projectionTimeWave5 = p.calculateWave5ProjectionTime(wave1, wave2, wave3, wave4, wave5, commonInterval);
+        projectionTimeWave5 = p.calculateWave5ProjectionTime(wave1, wave2, wave3, wave4, wave5, commonInterval, useLogScale);
         wave5TimeValidation = p.validateWave5Time(projectionTimeWave5);
       }
 
